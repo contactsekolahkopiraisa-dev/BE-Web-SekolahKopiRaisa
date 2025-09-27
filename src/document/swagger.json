@@ -11,8 +11,12 @@
       "description": "Local Development Server"
     },
     {
+      "url": "https://sekolahkopiraisa.vercel.app",
+      "description": "Vercel Production Server"
+    },
+    {
       "url": "https://sekolah-kopi-raisa.up.railway.app",
-      "description": "Production Server"
+      "description": "Railway Production Server"
     }
   ],
   "components": {
