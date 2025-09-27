@@ -112,7 +112,7 @@ app.get("/swagger.json", (req, res) => {
   res.json(swaggerDocument);
 });
 
-// Swagger UI with fallback for Vercel
+// Swagger UI
 app.use(
   "/api-docs",
   swaggerUi.serve,
@@ -120,12 +120,6 @@ app.use(
     explorer: true,
     customCss: ".swagger-ui .topbar { display: none }",
     customSiteTitle: "API Sekolah Kopi Raisa",
-    swaggerOptions: {
-      url:
-        process.env.NODE_ENV === "production"
-          ? "https://be-web-sekolah-kopi-raisa.vercel.app/swagger.json"
-          : "http://localhost:2000/swagger.json",
-    },
   })
 );
 
