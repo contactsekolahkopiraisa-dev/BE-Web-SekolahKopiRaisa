@@ -114,6 +114,13 @@ app.get("/swagger.json", (req, res) => {
 
 // Custom Swagger UI HTML with CDN
 app.get("/api-docs", (req, res) => {
+  const protocol =
+    req.secure || req.headers["x-forwarded-proto"] === "https"
+      ? "https"
+      : "http";
+  const host = req.get("host");
+  const swaggerJsonUrl = `${protocol}://${host}/swagger.json`;
+
   const html = `
   <!DOCTYPE html>
   <html>
@@ -134,7 +141,7 @@ app.get("/api-docs", (req, res) => {
       <script>
         window.onload = function() {
           const ui = SwaggerUIBundle({
-            url: '${req.protocol}://${req.get("host")}/swagger.json',
+            url: '${swaggerJsonUrl}',
             dom_id: '#swagger-ui',
             deepLinking: true,
             presets: [
