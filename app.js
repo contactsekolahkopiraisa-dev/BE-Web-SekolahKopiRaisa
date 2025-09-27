@@ -112,16 +112,52 @@ app.get("/swagger.json", (req, res) => {
   res.json(swaggerDocument);
 });
 
-// Swagger UI
-app.use(
-  "/api-docs",
-  swaggerUi.serve,
-  swaggerUi.setup(swaggerDocument, {
-    explorer: true,
-    customCss: ".swagger-ui .topbar { display: none }",
-    customSiteTitle: "API Sekolah Kopi Raisa",
-  })
-);
+// Custom Swagger UI HTML with CDN
+app.get("/api-docs", (req, res) => {
+  const html = `
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <title>API Sekolah Kopi Raisa</title>
+      <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui.css" />
+      <style>
+        .swagger-ui .topbar { display: none }
+        html { box-sizing: border-box; overflow: -moz-scrollbars-vertical; overflow-y: scroll; }
+        *, *:before, *:after { box-sizing: inherit; }
+        body { margin:0; background: #fafafa; }
+      </style>
+    </head>
+    <body>
+      <div id="swagger-ui"></div>
+      <script src="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui-bundle.js"></script>
+      <script src="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui-standalone-preset.js"></script>
+      <script>
+        window.onload = function() {
+          const ui = SwaggerUIBundle({
+            url: '${req.protocol}://${req.get("host")}/swagger.json',
+            dom_id: '#swagger-ui',
+            deepLinking: true,
+            presets: [
+              SwaggerUIBundle.presets.apis,
+              SwaggerUIStandalonePreset
+            ],
+            plugins: [
+              SwaggerUIBundle.plugins.DownloadUrl
+            ],
+            layout: "StandaloneLayout"
+          });
+        };
+      </script>
+    </body>
+  </html>`;
+
+  res.send(html);
+});
+
+// Redirect /api-docs/ to /api-docs
+app.get("/api-docs/", (req, res) => {
+  res.redirect("/api-docs");
+});
 
 // === Error Handler ===
 app.use((err, req, res, next) => {
