@@ -22,7 +22,7 @@ const port = process.env.PORT || 2000;
 
 // === CORS Config ===
 const allowedOrigins = [
-  "https://sekolahkopiraisa.vercel.app",
+  "https://sekolah-kopi-raisa.vercel.app",
   "https://be-web-sekolah-kopi-raisa.vercel.app",
   "http://localhost:3000",
   "http://localhost:2000",
