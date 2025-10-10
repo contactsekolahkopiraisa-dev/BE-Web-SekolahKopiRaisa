@@ -23,30 +23,40 @@ const port = process.env.PORT || 2000;
 // === CORS Config ===
 const allowedOrigins = [
   "https://sekolah-kopi-raisa.vercel.app",
+  "https://sekolahkopiraisa.vercel.app",
   "https://be-web-sekolah-kopi-raisa.vercel.app",
   "http://localhost:3000",
+  "http://localhost:5000", // Frontend local port
   "http://localhost:2000",
   "http://127.0.0.1:2000",
   "http://127.0.0.1:3000",
+  "http://127.0.0.1:5000", // Frontend local port
 ];
 
 const corsOptions = {
   origin: function (origin, callback) {
+    console.log("🔍 CORS Request from origin:", origin);
+
     // Allow requests with no origin (like mobile apps, Postman, etc.)
     if (!origin) {
+      console.log("✅ No origin - allowing request");
       callback(null, true);
       return;
     }
 
-    // Allow localhost in development
-    if (process.env.NODE_ENV !== "production" && origin.includes("localhost")) {
+    // Allow localhost always (for development)
+    if (origin && origin.includes("localhost")) {
+      console.log("✅ Localhost detected - allowing request");
       callback(null, true);
       return;
     }
 
     if (allowedOrigins.includes(origin)) {
+      console.log("✅ Origin allowed:", origin);
       callback(null, true);
     } else {
+      console.log("❌ Origin blocked:", origin);
+      console.log("📝 Allowed origins:", allowedOrigins);
       callback(new Error("Not allowed by CORS"));
     }
   },
