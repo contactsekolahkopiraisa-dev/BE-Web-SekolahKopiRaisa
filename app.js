@@ -34,33 +34,11 @@ const allowedOrigins = [
 ];
 
 const corsOptions = {
-  origin: function (origin, callback) {
-    console.log("🔍 CORS Request from origin:", origin);
-
-    // Allow requests with no origin (like mobile apps, Postman, etc.)
-    if (!origin) {
-      console.log("✅ No origin - allowing request");
-      callback(null, true);
-      return;
-    }
-
-    // Allow localhost always (for development)
-    if (origin && origin.includes("localhost")) {
-      console.log("✅ Localhost detected - allowing request");
-      callback(null, true);
-      return;
-    }
-
-    if (allowedOrigins.includes(origin)) {
-      console.log("✅ Origin allowed:", origin);
-      callback(null, true);
-    } else {
-      console.log("❌ Origin blocked:", origin);
-      console.log("📝 Allowed origins:", allowedOrigins);
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
+  origin: "*", // Allow ALL origins (ONLY FOR TESTING!)
   credentials: true,
+  methods: "*",
+  allowedHeaders: "*",
+  optionsSuccessStatus: 200,
 };
 
 // === Middleware ===
@@ -69,6 +47,41 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors(corsOptions));
 
+// === Manual CORS Headers (Backup) ===
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  console.log("🌐 Manual CORS - Origin:", origin);
+
+  // Always set these headers
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET,POST,PUT,DELETE,PATCH,OPTIONS"
+  );
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin,X-Requested-With,Content-Type,Accept,Authorization,Cookie"
+  );
+  res.header("Access-Control-Expose-Headers", "Set-Cookie");
+
+  // Allow specific origins
+  if (
+    origin &&
+    (origin.includes("localhost") || allowedOrigins.includes(origin))
+  ) {
+    res.header("Access-Control-Allow-Origin", origin);
+    console.log("✅ Manual CORS - Origin allowed:", origin);
+  }
+
+  // Handle preflight OPTIONS request
+  if (req.method === "OPTIONS") {
+    console.log("✅ Manual CORS - Handling OPTIONS preflight");
+    return res.sendStatus(200);
+  }
+
+  next();
+});
+
 // === Session Middleware ===
 app.use(
   session({
@@ -76,9 +89,9 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: process.env.NODE_ENV === "production", // true untuk Vercel
+      secure: false, // Set false for localhost testing
       httpOnly: true,
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      sameSite: "lax", // Use lax for localhost
       maxAge: 24 * 60 * 60 * 1000, // 1 hari
     },
   })
