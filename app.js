@@ -34,10 +34,40 @@ const allowedOrigins = [
 ];
 
 const corsOptions = {
-  origin: "*", // Allow ALL origins (ONLY FOR TESTING!)
+  origin: function (origin, callback) {
+    console.log("🔍 CORS middleware - Origin:", origin);
+
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) {
+      console.log("✅ No origin - allowing request");
+      return callback(null, true);
+    }
+
+    // Allow localhost always
+    if (origin.includes("localhost")) {
+      console.log("✅ Localhost detected - allowing request");
+      return callback(null, true);
+    }
+
+    // Allow specific origins
+    if (allowedOrigins.includes(origin)) {
+      console.log("✅ Origin in allowedOrigins - allowing request");
+      return callback(null, true);
+    }
+
+    console.log("❌ Origin not allowed:", origin);
+    return callback(null, true); // Temporary: allow all for debugging
+  },
   credentials: true,
-  methods: "*",
-  allowedHeaders: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: [
+    "Origin",
+    "X-Requested-With",
+    "Content-Type",
+    "Accept",
+    "Authorization",
+    "Cookie",
+  ],
   optionsSuccessStatus: 200,
 };
 
@@ -47,38 +77,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors(corsOptions));
 
-// === Manual CORS Headers (Backup) ===
+// === Request Logging ===
 app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  console.log("🌐 Manual CORS - Origin:", origin);
-
-  // Always set these headers
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.header(
-    "Access-Control-Allow-Methods",
-    "GET,POST,PUT,DELETE,PATCH,OPTIONS"
-  );
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin,X-Requested-With,Content-Type,Accept,Authorization,Cookie"
-  );
-  res.header("Access-Control-Expose-Headers", "Set-Cookie");
-
-  // Allow specific origins
-  if (
-    origin &&
-    (origin.includes("localhost") || allowedOrigins.includes(origin))
-  ) {
-    res.header("Access-Control-Allow-Origin", origin);
-    console.log("✅ Manual CORS - Origin allowed:", origin);
-  }
-
-  // Handle preflight OPTIONS request
-  if (req.method === "OPTIONS") {
-    console.log("✅ Manual CORS - Handling OPTIONS preflight");
-    return res.sendStatus(200);
-  }
-
+  console.log(`📝 ${req.method} ${req.url} - Origin: ${req.headers.origin}`);
   next();
 });
 
