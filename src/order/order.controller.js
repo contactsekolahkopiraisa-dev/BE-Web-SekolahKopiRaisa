@@ -32,7 +32,8 @@ const {
     updatedOrderStatus,
     readNotification,
     contactPartner,
-    cancelOrder
+    cancelOrder,
+    removeOrders
 } = require("./order.service");
 const { order } = require("../db");
 
@@ -624,7 +625,7 @@ router.delete("/:id", authMiddleware, async (req, res) => {
     }
     try {
         const { id } = req.params;
-        const order = await deleteOrders(id);
+        const order = await removeOrders(id);
         res.status(200).json({
             message: "Order berhasil dihapus!",
             data: order,

@@ -401,8 +401,25 @@ const updateItemOrders = async (orderId, updatedData) => {
 };
 
 const deleteOrders = async (orderId) => {
+    // Hapus semua OrderItem terkait
+    await prisma.orderItem.deleteMany({
+        where: { order_id: parseInt(orderId) }
+    });
+
+    // Hapus data lain jika perlu (payment, shippingAddress, dsb)
+    await prisma.payment.deleteMany({
+        where: { order_id: parseInt(orderId) }
+    });
+    await prisma.shippingAddress.deleteMany({
+        where: { order_id: parseInt(orderId) }
+    });
+    await prisma.shippingDetail.deleteMany({
+        where: { order_id: parseInt(orderId) }
+    });
+
+    // Terakhir, hapus order-nya
     return await prisma.order.delete({
-        where: { id: parseInt(orderId) },
+        where: { id: parseInt(orderId) }
     });
 };
 
