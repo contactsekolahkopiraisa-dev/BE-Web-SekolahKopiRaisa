@@ -914,9 +914,23 @@
         "tags": ["Orders"],
         "summary": "Search shipping address",
         "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Masukkan kata kunci alamat yang ingin dicari (contoh: Malang)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Address search completed successfully"
+          },
+          "400": {
+            "description": "Validasi gagal! Parameter 'search' tidak ditemukan"
           }
         }
       }
@@ -926,9 +940,37 @@
         "tags": ["Orders"],
         "summary": "Calculate shipping cost",
         "security": [{ "cookieAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "destination": {
+                    "type": "string",
+                    "description": "Alamat tujuan pengiriman (contoh: 68121)"
+                  },
+                  "weight": {
+                    "type": "integer",
+                    "description": "Berat barang dalam gram (contoh: 1500)"
+                  }
+                },
+                "required": ["destination", "weight"]
+              },
+              "example": {
+                "destination": "68121",
+                "weight": 1500
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Shipping cost calculated successfully"
+          },
+          "400": {
+            "description": "Validasi gagal! Pastikan 'destination' dan 'weight' diisi"
           }
         }
       }
