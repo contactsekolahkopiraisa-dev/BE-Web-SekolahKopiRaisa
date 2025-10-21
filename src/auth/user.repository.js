@@ -9,7 +9,8 @@ const insertUser = async (newUserData) => {
             image: newUserData.image || null,
             phone_number: newUserData.phone_number,
             admin: newUserData.admin || false,
-            verified: newUserData.verified || false
+            verified: newUserData.verified || false,
+            role: newUserData.role || undefined,
         }
     });
 
