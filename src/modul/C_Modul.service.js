@@ -1,4 +1,4 @@
-const ApiError = require("../utils/ApiError.js");
+const ApiError = require("../utils/apiError.js");
 const { modulRepository } = require("./C_Modul.repository.js");
 const { uploadToCloudinary } = require('../services/cloudinaryUpload.service.js');
 
