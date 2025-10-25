@@ -1,945 +1,945 @@
-generator client {
-  provider = "prisma-client-js"
-}
+// generator client {
+//   provider = "prisma-client-js"
+// }
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
+// datasource db {
+//   provider = "postgresql"
+//   url      = env("DATABASE_URL")
+// }
 
-model User {
-  id                 Int                 @id @default(autoincrement())
-  name               String
-  image              String?
-  email              String              @unique
-  password           String?
-  phone_number       String?             @unique
-  admin              Boolean             @default(false)
-  verified           Boolean             @default(false)
-  createdAt          DateTime            @default(now())
-  updated_at         DateTime            @updatedAt
-  google_id          String?             @unique
-  role               role?             
+// model User {
+//   id                 Int                 @id @default(autoincrement())
+//   name               String
+//   image              String?
+//   email              String              @unique
+//   password           String?
+//   phone_number       String?             @unique
+//   admin              Boolean             @default(false)
+//   verified           Boolean             @default(false)
+//   createdAt          DateTime            @default(now())
+//   updated_at         DateTime            @updatedAt
+//   google_id          String?             @unique
+//   role               role?             
 
-  carts              Cart?
-  facebookAccount    FacebookAccount?
-  formEntries        FormEntry[]
-  news               News[]
-  notifications      Notification[]
-  orders             Order[]
-  orderCancellations OrderCancellation[]
-  reviews            Review[]
-  transactions       Transaction[]
-  financialReport    FinancialReport[]
-  profile            Profile[]
-  verifikasiUMKM     VerifikasiUMKM[]
-  layanan            Layanan[]
-  modul              Modul[]
-}
+//   carts              Cart?
+//   facebookAccount    FacebookAccount?
+//   formEntries        FormEntry[]
+//   news               News[]
+//   notifications      Notification[]
+//   orders             Order[]
+//   orderCancellations OrderCancellation[]
+//   reviews            Review[]
+//   transactions       Transaction[]
+//   financialReport    FinancialReport[]
+//   profile            Profile[]
+//   verifikasiUMKM     VerifikasiUMKM[]
+//   layanan            Layanan[]
+//   modul              Modul[]
+// }
 
-model FacebookAccount {
-  id                  String   @id @default(uuid())
-  facebook_id         String   @unique
-  access_token        String
-  token_expires       DateTime
-  page_id             String
-  page_name           String
-  name                String
-  image               String?
-  email               String
-  userId              Int      @unique
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-  page_access_token   String?
-  ig_user_id          String?
-  instagramAccount_id String?
-  instagram_username  String?
+// model FacebookAccount {
+//   id                  String   @id @default(uuid())
+//   facebook_id         String   @unique
+//   access_token        String
+//   token_expires       DateTime
+//   page_id             String
+//   page_name           String
+//   name                String
+//   image               String?
+//   email               String
+//   userId              Int      @unique
+//   createdAt           DateTime @default(now())
+//   updatedAt           DateTime @updatedAt
+//   page_access_token   String?
+//   ig_user_id          String?
+//   instagramAccount_id String?
+//   instagram_username  String?
 
-  // BAWAH INI user DI DB : User                User     @relation(fields: [userId], references: [id])
-  user                User     @relation(fields: [userId], references: [id])
-}
+//   // BAWAH INI user DI DB : User                User     @relation(fields: [userId], references: [id])
+//   user                User     @relation(fields: [userId], references: [id])
+// }
 
-model Notification {
-  id          Int      @id @default(autoincrement())
-  name        String
-  viewed      Boolean  @default(false)
-  description String
-  user_id     Int
-  order_id    Int?
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+// model Notification {
+//   id          Int      @id @default(autoincrement())
+//   name        String
+//   viewed      Boolean  @default(false)
+//   description String
+//   user_id     Int
+//   order_id    Int?
+//   created_at  DateTime @default(now())
+//   updated_at  DateTime @updatedAt
 
-  // BAWAH INI user order DI DB :
-  // Order       Order?   @relation(fields: [order_id], references: [id])
-  // User        User     @relation(fields: [user_id], references: [id])
-  user        User     @relation(fields: [user_id], references: [id])
-  order       Order?   @relation(fields: [order_id], references: [id])
-}
+//   // BAWAH INI user order DI DB :
+//   // Order       Order?   @relation(fields: [order_id], references: [id])
+//   // User        User     @relation(fields: [user_id], references: [id])
+//   user        User     @relation(fields: [user_id], references: [id])
+//   order       Order?   @relation(fields: [order_id], references: [id])
+// }
 
-model Partner {
-  id                 Int         @id @default(autoincrement())
-  name               String
-  owner_name         String
-  phone_number       String
-  created_at         DateTime    @default(now())
-  updated_at         DateTime    @updatedAt
+// model Partner {
+//   id                 Int         @id @default(autoincrement())
+//   name               String
+//   owner_name         String
+//   phone_number       String
+//   created_at         DateTime    @default(now())
+//   updated_at         DateTime    @updatedAt
 
-  // BAWAH INI ordersItems products DI DB :
-  // OrderItem    OrderItem[]
-  // Product      Product[]
-  ordersItems        OrderItem[]
-  products           Product[]
-}
+//   // BAWAH INI ordersItems products DI DB :
+//   // OrderItem    OrderItem[]
+//   // Product      Product[]
+//   ordersItems        OrderItem[]
+//   products           Product[]
+// }
 
-model Product {
-  id          Int         @id @default(autoincrement())
-  name        String
-  price       Int
-  description String?
-  image       String?
-  weight      Int?
-  partner_id  Int
-  created_at  DateTime    @default(now())
-  updated_at  DateTime    @updatedAt
+// model Product {
+//   id          Int         @id @default(autoincrement())
+//   name        String
+//   price       Int
+//   description String?
+//   image       String?
+//   weight      Int?
+//   partner_id  Int
+//   created_at  DateTime    @default(now())
+//   updated_at  DateTime    @updatedAt
 
-  cartItems   CartItem[]
-  inventory   Inventory?
-  orderItems  OrderItem[]
-  partner     Partner     @relation(fields: [partner_id], references: [id])
-  reviews     Review[]
-  detailTransaction DetailTransaction[]
-  salesReport   SalesReport[]
-}
-// MODEL Product DI DB :
-//model Product {
-//  id                 Int                  @id @default(autoincrement())
-//  name               String
-//  price              Int
-//  description        String?
-//  image              String?
-//  partner_id         Int
-//  created_at         DateTime             @default(now())
-//  updated_at         DateTime
-//  weight             Int
-//
-//  CartItem           CartItem[]
-//  Inventory          Inventory?
-//  OrderItem          OrderItem[]
-//  Partner            Partner              @relation(fields: [partner_id], references: [id])
-//  Review             Review[]
-//  detail_transaction detail_transaction[]
-//  sales_report       sales_report[]
-//}
+//   cartItems   CartItem[]
+//   inventory   Inventory?
+//   orderItems  OrderItem[]
+//   partner     Partner     @relation(fields: [partner_id], references: [id])
+//   reviews     Review[]
+//   detailTransaction DetailTransaction[]
+//   salesReport   SalesReport[]
+// }
+// // MODEL Product DI DB :
+// //model Product {
+// //  id                 Int                  @id @default(autoincrement())
+// //  name               String
+// //  price              Int
+// //  description        String?
+// //  image              String?
+// //  partner_id         Int
+// //  created_at         DateTime             @default(now())
+// //  updated_at         DateTime
+// //  weight             Int
+// //
+// //  CartItem           CartItem[]
+// //  Inventory          Inventory?
+// //  OrderItem          OrderItem[]
+// //  Partner            Partner              @relation(fields: [partner_id], references: [id])
+// //  Review             Review[]
+// //  detail_transaction detail_transaction[]
+// //  sales_report       sales_report[]
+// //}
 
-model Inventory {
-  id          Int      @id @default(autoincrement())
-  products_id Int      @unique
-  stock       Int
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+// model Inventory {
+//   id          Int      @id @default(autoincrement())
+//   products_id Int      @unique
+//   stock       Int
+//   created_at  DateTime @default(now())
+//   updated_at  DateTime @updatedAt
 
-  // BAWAH INI product DI DB : Product     Product  @relation(fields: [products_id], references: [id], onDelete: Cascade)
-  product     Product  @relation(fields: [products_id], references: [id], onDelete: Cascade)
-}
+//   // BAWAH INI product DI DB : Product     Product  @relation(fields: [products_id], references: [id], onDelete: Cascade)
+//   product     Product  @relation(fields: [products_id], references: [id], onDelete: Cascade)
+// }
 
-model Transaction {
-  id           Int               @id @default(autoincrement())
-  user_id      Int
-  status       TransactionStatus
-  total_amount Int
-  created_at   DateTime          @default(now())
-  updated_at   DateTime          @updatedAt
-
-  user         User              @relation(fields: [user_id], references: [id])
-  detailTransaction DetailTransaction[]
-  salesReport       SalesReport[]
-}
-// MODEL Transaction DI DB :
 // model Transaction {
-//   id                 Int                  @id @default(autoincrement())
-//   user_id            Int
-//   status             TransactionStatus
-//   total_amount       Int
-//   created_at         DateTime             @default(now())
-//   updated_at         DateTime
-//   payment_id         Int
-//
-//   User               User                 @relation(fields: [user_id], references: [id])
-//   Payment            Payment              @relation(fields: [payment_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payment_id")
-//   detail_transaction detail_transaction[]
-//   sales_report       sales_report[]
-//}
+//   id           Int               @id @default(autoincrement())
+//   user_id      Int
+//   status       TransactionStatus
+//   total_amount Int
+//   created_at   DateTime          @default(now())
+//   updated_at   DateTime          @updatedAt
+
+//   user         User              @relation(fields: [user_id], references: [id])
+//   detailTransaction DetailTransaction[]
+//   salesReport       SalesReport[]
+// }
+// // MODEL Transaction DI DB :
+// // model Transaction {
+// //   id                 Int                  @id @default(autoincrement())
+// //   user_id            Int
+// //   status             TransactionStatus
+// //   total_amount       Int
+// //   created_at         DateTime             @default(now())
+// //   updated_at         DateTime
+// //   payment_id         Int
+// //
+// //   User               User                 @relation(fields: [user_id], references: [id])
+// //   Payment            Payment              @relation(fields: [payment_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payment_id")
+// //   detail_transaction detail_transaction[]
+// //   sales_report       sales_report[]
+// //}
 
 
-model Cart {
-  id         Int        @id @default(autoincrement())
-  user_id    Int        @unique
-  created_at DateTime   @default(now())
-  updated_at DateTime   @updatedAt
+// model Cart {
+//   id         Int        @id @default(autoincrement())
+//   user_id    Int        @unique
+//   created_at DateTime   @default(now())
+//   updated_at DateTime   @updatedAt
 
-  // BAWAH INI user cartItems DI DB :
-  // User       User       @relation(fields: [user_id], references: [id])
-  // CartItem   CartItem[]
-  user       User       @relation(fields: [user_id], references: [id])
-  cartItems  CartItem[]
-}
+//   // BAWAH INI user cartItems DI DB :
+//   // User       User       @relation(fields: [user_id], references: [id])
+//   // CartItem   CartItem[]
+//   user       User       @relation(fields: [user_id], references: [id])
+//   cartItems  CartItem[]
+// }
 
-model CartItem {
-  id          Int      @id @default(autoincrement())
-  cart_id     Int
-  products_id Int
-  quantity    Int
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+// model CartItem {
+//   id          Int      @id @default(autoincrement())
+//   cart_id     Int
+//   products_id Int
+//   quantity    Int
+//   created_at  DateTime @default(now())
+//   updated_at  DateTime @updatedAt
 
-  // BAWAH INI cart product DI DB:
-  // Cart        Cart     @relation(fields: [cart_id], references: [id])
-  // Product     Product  @relation(fields: [products_id], references: [id], onDelete: Cascade)
-  cart        Cart     @relation(fields: [cart_id], references: [id])
-  product     Product  @relation(fields: [products_id], references: [id], onDelete: Cascade)
-}
+//   // BAWAH INI cart product DI DB:
+//   // Cart        Cart     @relation(fields: [cart_id], references: [id])
+//   // Product     Product  @relation(fields: [products_id], references: [id], onDelete: Cascade)
+//   cart        Cart     @relation(fields: [cart_id], references: [id])
+//   product     Product  @relation(fields: [products_id], references: [id], onDelete: Cascade)
+// }
 
-model Order {
-  id                Int                @id @default(autoincrement())
-  user_id           Int
-  status            OrderStatus
-  created_at        DateTime           @default(now())
-  updated_at        DateTime           @updatedAt
+// model Order {
+//   id                Int                @id @default(autoincrement())
+//   user_id           Int
+//   status            OrderStatus
+//   created_at        DateTime           @default(now())
+//   updated_at        DateTime           @updatedAt
 
-  // BAWAH INI user OrderCancellation orderItems payment review shippingAddress shippingDetail notification DI DB :
-  // Notification      Notification[]
-  // User              User               @relation(fields: [user_id], references: [id])
-  // OrderCancellation OrderCancellation?
-  // OrderItem         OrderItem[]
-  // Payment           Payment?
-  // Review            Review[]
-  // ShippingAddress   ShippingAddress?
-  // ShippingDetail    ShippingDetail?
-  user              User               @relation(fields: [user_id], references: [id])
-  OrderCancellation OrderCancellation?
-  orderItems        OrderItem[]
-  payment           Payment?
-  reviews           Review[]
-  shippingAddress   ShippingAddress?
-  shippingDetail ShippingDetail?
-  notifications Notification[] 
-}
+//   // BAWAH INI user OrderCancellation orderItems payment review shippingAddress shippingDetail notification DI DB :
+//   // Notification      Notification[]
+//   // User              User               @relation(fields: [user_id], references: [id])
+//   // OrderCancellation OrderCancellation?
+//   // OrderItem         OrderItem[]
+//   // Payment           Payment?
+//   // Review            Review[]
+//   // ShippingAddress   ShippingAddress?
+//   // ShippingDetail    ShippingDetail?
+//   user              User               @relation(fields: [user_id], references: [id])
+//   OrderCancellation OrderCancellation?
+//   orderItems        OrderItem[]
+//   payment           Payment?
+//   reviews           Review[]
+//   shippingAddress   ShippingAddress?
+//   shippingDetail ShippingDetail?
+//   notifications Notification[] 
+// }
 
-model OrderItem {
-  id                     Int       @id @default(autoincrement())
-  order_id               Int
-  products_id            Int
-  quantity               Int
-  price                  Int
-  custom_note            String?
-  created_at             DateTime  @default(now())
-  updated_at             DateTime  @updatedAt
-  partner_id             Int?
-  notified_to_partner_at DateTime?
+// model OrderItem {
+//   id                     Int       @id @default(autoincrement())
+//   order_id               Int
+//   products_id            Int
+//   quantity               Int
+//   price                  Int
+//   custom_note            String?
+//   created_at             DateTime  @default(now())
+//   updated_at             DateTime  @updatedAt
+//   partner_id             Int?
+//   notified_to_partner_at DateTime?
 
-  // BAWAH INI order partner product DI DB :
-  // Order                  Order     @relation(fields: [order_id], references: [id])
-  // Partner                Partner?  @relation(fields: [partner_id], references: [id])
-  // Product                Product   @relation(fields: [products_id], references: [id], onDelete: Cascade)
-  order                  Order     @relation(fields: [order_id], references: [id])
-  partner                Partner?  @relation(fields: [partner_id], references: [id])
-  product                Product   @relation(fields: [products_id], references: [id], onDelete: Cascade)
-}
+//   // BAWAH INI order partner product DI DB :
+//   // Order                  Order     @relation(fields: [order_id], references: [id])
+//   // Partner                Partner?  @relation(fields: [partner_id], references: [id])
+//   // Product                Product   @relation(fields: [products_id], references: [id], onDelete: Cascade)
+//   order                  Order     @relation(fields: [order_id], references: [id])
+//   partner                Partner?  @relation(fields: [partner_id], references: [id])
+//   product                Product   @relation(fields: [products_id], references: [id], onDelete: Cascade)
+// }
 
-model ShippingAddress {
-  id         Int      @id @default(autoincrement())
-  order_id   Int      @unique
-  address    String
-  destination_id          Int?
-  destination_province    String?
-  destination_city        String?
-  destination_district    String?
-  destination_subdistrict String?
-  destination_zip_code    Int?
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  order      Order    @relation(fields: [order_id], references: [id])
-}
-// MODEL ShippingAddress DI DB :
 // model ShippingAddress {
-//   id                      Int      @id @default(autoincrement())
-//   order_id                Int      @unique
-//   address                 String
-//   created_at              DateTime @default(now())
-//   updated_at              DateTime
-//   destination_city        String?
-//   destination_district    String?
+//   id         Int      @id @default(autoincrement())
+//   order_id   Int      @unique
+//   address    String
 //   destination_id          Int?
 //   destination_province    String?
+//   destination_city        String?
+//   destination_district    String?
 //   destination_subdistrict String?
 //   destination_zip_code    Int?
-// 
-//   Order                   Order    @relation(fields: [order_id], references: [id])
-//}
+//   created_at DateTime @default(now())
+//   updated_at DateTime @updatedAt
+//   order      Order    @relation(fields: [order_id], references: [id])
+// }
+// // MODEL ShippingAddress DI DB :
+// // model ShippingAddress {
+// //   id                      Int      @id @default(autoincrement())
+// //   order_id                Int      @unique
+// //   address                 String
+// //   created_at              DateTime @default(now())
+// //   updated_at              DateTime
+// //   destination_city        String?
+// //   destination_district    String?
+// //   destination_id          Int?
+// //   destination_province    String?
+// //   destination_subdistrict String?
+// //   destination_zip_code    Int?
+// // 
+// //   Order                   Order    @relation(fields: [order_id], references: [id])
+// //}
 
 
-model ShippingDetail {
-  id                 Int      @id @default(autoincrement())
-  order_id          Int      @unique
-  shipping_name     String?   
-  service_name      String?   // e.g. REG, YES, EZ
-  shipping_code     String?
-  shipping_cost     Int?      // biaya kirim awal
-  shipping_cashback Int?      // diskon atau subsidi ongkir
-  shipping_cost_net Int?      // biaya ongkir bersih setelah cashback
-  service_fee       Int?      // biaya layanan platform
-  net_income        Int?      // pendapatan bersih partner
-  etd               String?  // estimasi waktu pengiriman
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
+// model ShippingDetail {
+//   id                 Int      @id @default(autoincrement())
+//   order_id          Int      @unique
+//   shipping_name     String?   
+//   service_name      String?   // e.g. REG, YES, EZ
+//   shipping_code     String?
+//   shipping_cost     Int?      // biaya kirim awal
+//   shipping_cashback Int?      // diskon atau subsidi ongkir
+//   shipping_cost_net Int?      // biaya ongkir bersih setelah cashback
+//   service_fee       Int?      // biaya layanan platform
+//   net_income        Int?      // pendapatan bersih partner
+//   etd               String?  // estimasi waktu pengiriman
+//   created_at        DateTime @default(now())
+//   updated_at        DateTime @updatedAt
 
-  // BAWAH INI order DI DB : Order             Order    @relation(fields: [order_id], references: [id])
-  order             Order    @relation(fields: [order_id], references: [id])
-}
+//   // BAWAH INI order DI DB : Order             Order    @relation(fields: [order_id], references: [id])
+//   order             Order    @relation(fields: [order_id], references: [id])
+// }
 
 
-model Payment {
-  id                Int            @id @default(autoincrement())
-  order_id          Int            @unique
-  amount            Int
-  status            PaymentStatus
-  method            PaymentMethod?
-  snap_token        String?
-  snap_redirect_url String?
-  payment_info      String?
-  created_at        DateTime       @default(now())
-  updated_at        DateTime       @updatedAt
+// model Payment {
+//   id                Int            @id @default(autoincrement())
+//   order_id          Int            @unique
+//   amount            Int
+//   status            PaymentStatus
+//   method            PaymentMethod?
+//   snap_token        String?
+//   snap_redirect_url String?
+//   payment_info      String?
+//   created_at        DateTime       @default(now())
+//   updated_at        DateTime       @updatedAt
 
-  // BAWAH INI order DI DB :
-  // Order             Order          @relation(fields: [order_id], references: [id])
-  // Transaction       Transaction[]
-  order             Order          @relation(fields: [order_id], references: [id])
-}
+//   // BAWAH INI order DI DB :
+//   // Order             Order          @relation(fields: [order_id], references: [id])
+//   // Transaction       Transaction[]
+//   order             Order          @relation(fields: [order_id], references: [id])
+// }
 
-model OrderCancellation {
-  id         Int      @id @default(autoincrement())
-  order_id   Int      @unique
-  user_id    Int
-  reason     String
-  created_at DateTime @default(now())
+// model OrderCancellation {
+//   id         Int      @id @default(autoincrement())
+//   order_id   Int      @unique
+//   user_id    Int
+//   reason     String
+//   created_at DateTime @default(now())
 
-  // BAWAH INI order user DI DB :
-  // Order      Order    @relation(fields: [order_id], references: [id])
-  // User       User     @relation(fields: [user_id], references: [id])
-  order      Order    @relation(fields: [order_id], references: [id])
-  user       User     @relation(fields: [user_id], references: [id])
-}
+//   // BAWAH INI order user DI DB :
+//   // Order      Order    @relation(fields: [order_id], references: [id])
+//   // User       User     @relation(fields: [user_id], references: [id])
+//   order      Order    @relation(fields: [order_id], references: [id])
+//   user       User     @relation(fields: [user_id], references: [id])
+// }
 
-model FormTemplate {
-  id               Int         @id @default(autoincrement())
-  title            String
-  google_form_link String
-  created_at       DateTime    @default(now())
-  updated_at       DateTime    @updatedAt
+// model FormTemplate {
+//   id               Int         @id @default(autoincrement())
+//   title            String
+//   google_form_link String
+//   created_at       DateTime    @default(now())
+//   updated_at       DateTime    @updatedAt
 
-  // BAWAH INI formEntries formFields DI DB :
-  // FormEntry        FormEntry[]
-  // FormField        FormField[]
-  formEntries      FormEntry[]
-  formFields       FormField[]
-}
+//   // BAWAH INI formEntries formFields DI DB :
+//   // FormEntry        FormEntry[]
+//   // FormField        FormField[]
+//   formEntries      FormEntry[]
+//   formFields       FormField[]
+// }
 
-model FormEntry {
-  id               Int              @id @default(autoincrement())
-  form_template_id Int
-  user_id          Int
-  submitted_at     DateTime?
+// model FormEntry {
+//   id               Int              @id @default(autoincrement())
+//   form_template_id Int
+//   user_id          Int
+//   submitted_at     DateTime?
 
-  // BAWAH INI formTemplate user formEntryValue DI DB :
-  // FormTemplate     FormTemplate     @relation(fields: [form_template_id], references: [id])
-  // User             User             @relation(fields: [user_id], references: [id])
-  // FormEntryValue   FormEntryValue[]
-  formTemplate     FormTemplate     @relation(fields: [form_template_id], references: [id])
-  user             User             @relation(fields: [user_id], references: [id])
-  FormEntryValue   FormEntryValue[]
-}
+//   // BAWAH INI formTemplate user formEntryValue DI DB :
+//   // FormTemplate     FormTemplate     @relation(fields: [form_template_id], references: [id])
+//   // User             User             @relation(fields: [user_id], references: [id])
+//   // FormEntryValue   FormEntryValue[]
+//   formTemplate     FormTemplate     @relation(fields: [form_template_id], references: [id])
+//   user             User             @relation(fields: [user_id], references: [id])
+//   FormEntryValue   FormEntryValue[]
+// }
 
-model FormField {
-  id               Int              @id @default(autoincrement())
-  form_template_id Int
-  field_name       String
-  field_type       String
-  field_key        String
+// model FormField {
+//   id               Int              @id @default(autoincrement())
+//   form_template_id Int
+//   field_name       String
+//   field_type       String
+//   field_key        String
 
-  // BAWAH INI formTemplate DI DB : FormTemplate     FormTemplate     @relation(fields: [form_template_id], references: [id])
-  FormEntryValue   FormEntryValue[]
-  formTemplate     FormTemplate     @relation(fields: [form_template_id], references: [id])
-}
+//   // BAWAH INI formTemplate DI DB : FormTemplate     FormTemplate     @relation(fields: [form_template_id], references: [id])
+//   FormEntryValue   FormEntryValue[]
+//   formTemplate     FormTemplate     @relation(fields: [form_template_id], references: [id])
+// }
 
-model News {
-  id         Int         @id @default(autoincrement())
-  title      String
-  content    String
-  user_id    Int
-  created_at DateTime    @default(now())
-  updated_at DateTime    @updatedAt
+// model News {
+//   id         Int         @id @default(autoincrement())
+//   title      String
+//   content    String
+//   user_id    Int
+//   created_at DateTime    @default(now())
+//   updated_at DateTime    @updatedAt
 
-  // BAWAH INI user newsMedia DI DB :
-  // User       User        @relation(fields: [user_id], references: [id])
-  // NewsMedia  NewsMedia[]
-  user       User        @relation(fields: [user_id], references: [id])
-  newsMedia  NewsMedia[]
-}
+//   // BAWAH INI user newsMedia DI DB :
+//   // User       User        @relation(fields: [user_id], references: [id])
+//   // NewsMedia  NewsMedia[]
+//   user       User        @relation(fields: [user_id], references: [id])
+//   newsMedia  NewsMedia[]
+// }
 
-model NewsMedia {
-  id          Int     @id @default(autoincrement())
-  news_id     Int
-  media_url   String
-  media_type  String
-  isThumbnail Boolean @default(false)
+// model NewsMedia {
+//   id          Int     @id @default(autoincrement())
+//   news_id     Int
+//   media_url   String
+//   media_type  String
+//   isThumbnail Boolean @default(false)
 
-  // BAWAH INI news DI DB : News        News    @relation(fields: [news_id], references: [id])
-  news        News    @relation(fields: [news_id], references: [id])
-}
+//   // BAWAH INI news DI DB : News        News    @relation(fields: [news_id], references: [id])
+//   news        News    @relation(fields: [news_id], references: [id])
+// }
 
-model Review {
-  id         Int      @id @default(autoincrement())
-  user_id    Int
-  product_id Int
-  order_id   Int
-  rating     Int
-  comment    String?
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+// model Review {
+//   id         Int      @id @default(autoincrement())
+//   user_id    Int
+//   product_id Int
+//   order_id   Int
+//   rating     Int
+//   comment    String?
+//   created_at DateTime @default(now())
+//   updated_at DateTime @updatedAt
 
-  // BAWAH INI order product user DI DB :
-  // Order      Order    @relation(fields: [order_id], references: [id])
-  // Product    Product  @relation(fields: [product_id], references: [id])
-  // User       User     @relation(fields: [user_id], references: [id])
-  order      Order    @relation(fields: [order_id], references: [id])
-  product    Product  @relation(fields: [product_id], references: [id])
-  user       User     @relation(fields: [user_id], references: [id])
-}
+//   // BAWAH INI order product user DI DB :
+//   // Order      Order    @relation(fields: [order_id], references: [id])
+//   // Product    Product  @relation(fields: [product_id], references: [id])
+//   // User       User     @relation(fields: [user_id], references: [id])
+//   order      Order    @relation(fields: [order_id], references: [id])
+//   product    Product  @relation(fields: [product_id], references: [id])
+//   user       User     @relation(fields: [user_id], references: [id])
+// }
 
-model FormEntryValue {
-  id            Int       @id @default(autoincrement())
-  form_entry_id Int
-  form_field_id Int
-  value         String
+// model FormEntryValue {
+//   id            Int       @id @default(autoincrement())
+//   form_entry_id Int
+//   form_field_id Int
+//   value         String
 
-  FormEntry     FormEntry @relation(fields: [form_entry_id], references: [id])
-  FormField     FormField @relation(fields: [form_field_id], references: [id])
-}
+//   FormEntry     FormEntry @relation(fields: [form_entry_id], references: [id])
+//   FormField     FormField @relation(fields: [form_field_id], references: [id])
+// }
 
-model AboutCompany {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String
-  image       String?
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+// model AboutCompany {
+//   id          Int      @id @default(autoincrement())
+//   title       String
+//   description String
+//   image       String?
+//   created_at  DateTime @default(now())
+//   updated_at  DateTime @updatedAt
 
-  // BAWAH INI G URUT
-  // AboutCompanyMedia  AboutCompanyMedia[]
-  // AboutOrganization  AboutOrganization[]
-  // AboutTeam          AboutTeam[]
-  // AboutVisionMission AboutVisionMission[]
-  media       AboutCompanyMedia[]
-  visionMission AboutVisionMission[]
-  organization AboutOrganization[]
-  team        AboutTeam[]
-}
+//   // BAWAH INI G URUT
+//   // AboutCompanyMedia  AboutCompanyMedia[]
+//   // AboutOrganization  AboutOrganization[]
+//   // AboutTeam          AboutTeam[]
+//   // AboutVisionMission AboutVisionMission[]
+//   media       AboutCompanyMedia[]
+//   visionMission AboutVisionMission[]
+//   organization AboutOrganization[]
+//   team        AboutTeam[]
+// }
 
-model AboutCompanyMedia {
-  id          Int      @id @default(autoincrement())
-  about_id    Int
-  media_url   String
-  media_type  String
-  description String?
-  created_at  DateTime @default(now())
-  isThumbnail Boolean @default(false)
+// model AboutCompanyMedia {
+//   id          Int      @id @default(autoincrement())
+//   about_id    Int
+//   media_url   String
+//   media_type  String
+//   description String?
+//   created_at  DateTime @default(now())
+//   isThumbnail Boolean @default(false)
 
-  // BAWAH INI about DI DB : AboutCompany @relation(fields: [about_id], references: [id])AboutCompany
-  about       AboutCompany @relation(fields: [about_id], references: [id])
-}
+//   // BAWAH INI about DI DB : AboutCompany @relation(fields: [about_id], references: [id])AboutCompany
+//   about       AboutCompany @relation(fields: [about_id], references: [id])
+// }
 
-model AboutVisionMission {
-  id          Int      @id @default(autoincrement())
-  title       VisionMission
-  description String
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
-  about_id    Int
+// model AboutVisionMission {
+//   id          Int      @id @default(autoincrement())
+//   title       VisionMission
+//   description String
+//   created_at  DateTime @default(now())
+//   updated_at  DateTime @updatedAt
+//   about_id    Int
 
-  // BAWAH INI about DI DB : AboutCompany AboutCompany @relation(fields: [about_id], references: [id])
-  about       AboutCompany @relation(fields: [about_id], references: [id])
-}
+//   // BAWAH INI about DI DB : AboutCompany AboutCompany @relation(fields: [about_id], references: [id])
+//   about       AboutCompany @relation(fields: [about_id], references: [id])
+// }
 
-model AboutOrganization {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String
-  image       String?
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
-  about_id    Int
+// model AboutOrganization {
+//   id          Int      @id @default(autoincrement())
+//   title       String
+//   description String
+//   image       String?
+//   created_at  DateTime @default(now())
+//   updated_at  DateTime @updatedAt
+//   about_id    Int
 
-  //  BAWAH INI about DI DB : AboutCompany AboutCompany @relation(fields: [about_id], references: [id])
-  about       AboutCompany @relation(fields: [about_id], references: [id])
-}
+//   //  BAWAH INI about DI DB : AboutCompany AboutCompany @relation(fields: [about_id], references: [id])
+//   about       AboutCompany @relation(fields: [about_id], references: [id])
+// }
 
-model AboutTeam {
-  id          Int      @id @default(autoincrement())
-  name        String
-  position    String
-  image       String?
-  description String?
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
-  about_id    Int
+// model AboutTeam {
+//   id          Int      @id @default(autoincrement())
+//   name        String
+//   position    String
+//   image       String?
+//   description String?
+//   created_at  DateTime @default(now())
+//   updated_at  DateTime @updatedAt
+//   about_id    Int
 
-  // BAWAH INI about DI DB : AboutCompany AboutCompany @relation(fields: [about_id], references: [id])
-  about       AboutCompany @relation(fields: [about_id], references: [id])
-}
+//   // BAWAH INI about DI DB : AboutCompany AboutCompany @relation(fields: [about_id], references: [id])
+//   about       AboutCompany @relation(fields: [about_id], references: [id])
+// }
 
-enum VisionMission {
-  VISI
-  MISI
-}
+// enum VisionMission {
+//   VISI
+//   MISI
+// }
 
-enum PaymentMethod {
-  QRIS
-  CREDIT_CARD
-  BANK_TRANSFER
-  COD
-}
+// enum PaymentMethod {
+//   QRIS
+//   CREDIT_CARD
+//   BANK_TRANSFER
+//   COD
+// }
 
-enum PaymentStatus {
-  PENDING
-  SUCCESS
-  FAILED
-  CANCEL
-  DENY
-  EXPIRE
-  REFUND
-}
+// enum PaymentStatus {
+//   PENDING
+//   SUCCESS
+//   FAILED
+//   CANCEL
+//   DENY
+//   EXPIRE
+//   REFUND
+// }
 
-enum TransactionStatus {
-  FAILED
-  REJECTED
-  EXPIRED
-  CANCELED
-  AUTHORIZED
-  REFUNDED
-  PENDING
-  COMPLETED
-  SUBMITTED
-}
+// enum TransactionStatus {
+//   FAILED
+//   REJECTED
+//   EXPIRED
+//   CANCELED
+//   AUTHORIZED
+//   REFUNDED
+//   PENDING
+//   COMPLETED
+//   SUBMITTED
+// }
 
-enum OrderStatus {
-  PENDING
-  PROCESSING
-  SHIPPED
-  DELIVERED
-  CANCELED
-}
+// enum OrderStatus {
+//   PENDING
+//   PROCESSING
+//   SHIPPED
+//   DELIVERED
+//   CANCELED
+// }
 
-// DI DB ADA TABEL address
-model address {
-  id_address      Int             @id @default(autoincrement())
-  id_umkm         Int
-  alamat          String?         @db.VarChar(255)
-  desa            String?         @db.VarChar(100)
-  kecamatan       String?         @db.VarChar(100)
-  kabupaten       String?         @db.VarChar(100)
-  provinsi        String?         @db.VarChar(100)
-  kode_pos        String?         @db.VarChar(10)
+// // DI DB ADA TABEL address
+// model address {
+//   id_address      Int             @id @default(autoincrement())
+//   id_umkm         Int
+//   alamat          String?         @db.VarChar(255)
+//   desa            String?         @db.VarChar(100)
+//   kecamatan       String?         @db.VarChar(100)
+//   kabupaten       String?         @db.VarChar(100)
+//   provinsi        String?         @db.VarChar(100)
+//   kode_pos        String?         @db.VarChar(10)
 
-  verifikasi_umkm VerifikasiUMKM @relation(fields: [id_umkm], references: [id_umkm], onDelete: NoAction, onUpdate: NoAction)
-}
+//   verifikasi_umkm VerifikasiUMKM @relation(fields: [id_umkm], references: [id_umkm], onDelete: NoAction, onUpdate: NoAction)
+// }
 
-// DI DB ADA TABEL detail_transaction
-model DetailTransaction {
-  id_detail      Int         @id @default(autoincrement())
-  id_transaction Int
-  id_product     Int
-  jumlah_produk  Int
- subtotal       Int
+// // DI DB ADA TABEL detail_transaction
+// model DetailTransaction {
+//   id_detail      Int         @id @default(autoincrement())
+//   id_transaction Int
+//   id_product     Int
+//   jumlah_produk  Int
+//  subtotal       Int
   
-  Product        Product     @relation(fields: [id_product], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  Transaction    Transaction @relation(fields: [id_transaction], references: [id], onDelete: NoAction, onUpdate: NoAction)
+//   Product        Product     @relation(fields: [id_product], references: [id], onDelete: NoAction, onUpdate: NoAction)
+//   Transaction    Transaction @relation(fields: [id_transaction], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@map("detail_transaction")
-}
+//   @@map("detail_transaction")
+// }
 
-// DI DB ADA TABEL financial_report
-model FinancialReport {
-  id_financialreport Int      @id @default(autoincrement())
-  id_user            Int
-  periode            String   @db.VarChar(50)
-  report_date        DateTime @db.Date
-  description        String?
-  income             Int
-  expenses           Int
+// // DI DB ADA TABEL financial_report
+// model FinancialReport {
+//   id_financialreport Int      @id @default(autoincrement())
+//   id_user            Int
+//   periode            String   @db.VarChar(50)
+//   report_date        DateTime @db.Date
+//   description        String?
+//   income             Int
+//   expenses           Int
 
-  User               User     @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction)
+//   User               User     @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@map("financial_report")
-}
+//   @@map("financial_report")
+// }
 
-// DI DB ADA TABEL profile
-model Profile {
-  id_profile Int  @id @default(autoincrement())
-  id_user    Int
+// // DI DB ADA TABEL profile
+// model Profile {
+//   id_profile Int  @id @default(autoincrement())
+//   id_user    Int
 
-  User       User @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction)
+//   User       User @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@map("profile")
-}
+//   @@map("profile")
+// }
 
-// DI DB ADA TABEL sales_report
-model SalesReport {
-  id_salesreport Int         @id @default(autoincrement())
-  id_product     Int
-  id_transaction Int
-  tanggal        DateTime    @db.Date
+// // DI DB ADA TABEL sales_report
+// model SalesReport {
+//   id_salesreport Int         @id @default(autoincrement())
+//   id_product     Int
+//   id_transaction Int
+//   tanggal        DateTime    @db.Date
 
-  Product        Product     @relation(fields: [id_product], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  Transaction    Transaction @relation(fields: [id_transaction], references: [id], onDelete: NoAction, onUpdate: NoAction)
+//   Product        Product     @relation(fields: [id_product], references: [id], onDelete: NoAction, onUpdate: NoAction)
+//   Transaction    Transaction @relation(fields: [id_transaction], references: [id], onDelete: NoAction, onUpdate: NoAction)
   
-  @@map("sales_report")
-}
+//   @@map("sales_report")
+// }
 
-// DI DB ADA TABEL verifikasi_umkm
-model VerifikasiUMKM {
-  id_umkm          Int       @id @default(autoincrement())
-  id_user          Int
-  nama_umkm        String    @db.VarChar(100)
-  ktp              String?   @db.VarChar(16)
-  sertifikat_halal String?   @db.VarChar(50)
+// // DI DB ADA TABEL verifikasi_umkm
+// model VerifikasiUMKM {
+//   id_umkm          Int       @id @default(autoincrement())
+//   id_user          Int
+//   nama_umkm        String    @db.VarChar(100)
+//   ktp              String?   @db.VarChar(16)
+//   sertifikat_halal String?   @db.VarChar(50)
 
-  address          address[]
-  User             User      @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction)
+//   address          address[]
+//   User             User      @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@map("verifikasi_umkm")
-}
+//   @@map("verifikasi_umkm")
+// }
 
-// DI DB ADA ENUM ROLE 
-enum role {
-  UMKM
-}
-
-
+// // DI DB ADA ENUM ROLE 
+// enum role {
+//   UMKM
+// }
 
 
 
 
 
-//// =========================
-//// MASUK KE TIM MITRA | 2025-GANJIL
-//// =========================
-
-// untuk tabel, create manual di pgadmin
-// lalu buat model manual juga di schema.prisma
-// JANGAN LUPA TIPE DATA SESUAIKAN
 
 
-// edited :
-// 2025-09-18 Mohammad Al Hikam
-// 2025-10-16 Mohammad Al Hikam
+// //// =========================
+// //// MASUK KE TIM MITRA | 2025-GANJIL
+// //// =========================
+
+// // untuk tabel, create manual di pgadmin
+// // lalu buat model manual juga di schema.prisma
+// // JANGAN LUPA TIPE DATA SESUAIKAN
 
 
-//// =========================
-//// enum di LAYANAN
-//// SEMUA TABEL INI BUTUH SEEDER
-//// =========================
+// // edited :
+// // 2025-09-18 Mohammad Al Hikam
+// // 2025-10-16 Mohammad Al Hikam
 
-model JenisLayanan {
-  // menyimpan jenis layanan yang ada
-  // misal pkl maganng narasumber kunjungan dst.
 
-  id                  Int         @id @default(autoincrement())
-  nama_jenis_layanan  String      @unique @db.VarChar(32)
-  deskripsi_singkat   String      @db.VarChar(64)
-  deskripsi_lengkap   String      @db.Text
-  image               String?     @db.Text
-  estimasi_waktu      String      @db.VarChar(32) // ex: string("4 - 6 Hari")
-  id_target_peserta   Int
+// //// =========================
+// //// enum di LAYANAN
+// //// SEMUA TABEL INI BUTUH SEEDER
+// //// =========================
 
-  target_peserta      TargetPeserta    @relation(fields: [id_target_peserta], references: [id])
-  layanan             Layanan[]
-  konfigurasi_layanan KonfigurasiLayanan[]
+// model JenisLayanan {
+//   // menyimpan jenis layanan yang ada
+//   // misal pkl maganng narasumber kunjungan dst.
 
-  @@map("jenis_layanan")
-  // buat ikonnya statis, validasi di FE
-}
+//   id                  Int         @id @default(autoincrement())
+//   nama_jenis_layanan  String      @unique @db.VarChar(32)
+//   deskripsi_singkat   String      @db.VarChar(64)
+//   deskripsi_lengkap   String      @db.Text
+//   image               String?     @db.Text
+//   estimasi_waktu      String      @db.VarChar(32) // ex: string("4 - 6 Hari")
+//   id_target_peserta   Int
 
-model TargetPeserta{
-  // menyimpan target peserta
-  // misalnya mahasiswa, umum, SMK dst
+//   target_peserta      TargetPeserta    @relation(fields: [id_target_peserta], references: [id])
+//   layanan             Layanan[]
+//   konfigurasi_layanan KonfigurasiLayanan[]
 
-  id            Int     @id @default(autoincrement())
-  nama_target   String  @unique @db.VarChar(16)
+//   @@map("jenis_layanan")
+//   // buat ikonnya statis, validasi di FE
+// }
 
-  jenis_layanan  JenisLayanan[]
+// model TargetPeserta{
+//   // menyimpan target peserta
+//   // misalnya mahasiswa, umum, SMK dst
 
-  @@map("target_peserta")
-}
+//   id            Int     @id @default(autoincrement())
+//   nama_target   String  @unique @db.VarChar(16)
 
-model StatusPelaksanaan {
-  // menyimpan status pelaksanaan
-  // misalnya pengajuan, pelaksanaan, selesai
+//   jenis_layanan  JenisLayanan[]
+
+//   @@map("target_peserta")
+// }
+
+// model StatusPelaksanaan {
+//   // menyimpan status pelaksanaan
+//   // misalnya pengajuan, pelaksanaan, selesai
  
-  id                        Int        @id @default(autoincrement())
-  nama_status_pelaksanaan   String     @unique @db.VarChar(16)
+//   id                        Int        @id @default(autoincrement())
+//   nama_status_pelaksanaan   String     @unique @db.VarChar(16)
 
-  layanan                   Layanan[]
+//   layanan                   Layanan[]
 
-  @@map("status_pelaksanaan")
-}
+//   @@map("status_pelaksanaan")
+// }
 
-model StatusPengajuan {
-  // menyimpan status pengajuan
-  // misalnya diproses, disetujui, ditolak
+// model StatusPengajuan {
+//   // menyimpan status pengajuan
+//   // misalnya diproses, disetujui, ditolak
  
-  id                      Int        @id @default(autoincrement())
-  nama_status_pengajuan   String     @unique @db.VarChar(16)
+//   id                      Int        @id @default(autoincrement())
+//   nama_status_pengajuan   String     @unique @db.VarChar(16)
 
-  layanan                 Layanan[]
-  mou                     Mou[]
+//   layanan                 Layanan[]
+//   mou                     Mou[]
 
-  @@map("status_pengajuan")
-}
-
-
-//// =========================
-//// LAYANAN
-//// =========================
-
-model Layanan {
-  // ini tabel utama dipakai untuk nyimpan kegiatannya
-  // 1 jenis_layanan banyak layanan
-
-  id                      Int       @id @default(autoincrement())
-  id_user                 Int
-  id_jenis_layanan        Int
-  id_konfigurasi_layanan  Int       // defautnya berdasarkan apa layanan yang dipilih lalu ambil id_konfigurasi nya
-  id_status_pengajuan     Int       // defaultnya yg pending
-  id_status_pelaksanaan   Int       // defaultnya yg pending
-  // nama_kegiatan, tempat_kegiatan cm di undangan narasumber
-  nama_kegiatan           String?   @db.Text
-  tempat_kegiatan         String?   @db.Text
-  // untuk nama_peserta ditaruh & diambil dari tabel peserta
-  // untuk kunjungan g perlu nama peserta jadi gaperlu add data ke tabel peserta
-  jumlah_peserta          Int       @default(1)
-  instansi_asal           String    @db.VarChar(64)
-  // kalau undangan narasumber & unjungan tanggal_mulai & tanggal_selesai dibuat auto sama
-  tanggal_mulai           DateTime
-  tanggal_selesai         DateTime
-  // logobook cuma untuk magang & pkl
-  link_logbook            String?   @db.Text  // link gdocs/sheet logbook mereka
-  // pelatihan cuma butuh surat_permohonan
-  proposal_atau_surat_permohonan String? @db.Text
-  surat_pengantar_atau_undangan  String? @db.Text
-  created_at              DateTime  @default(now())
-
-  user                  User @relation(fields: [id_user], references: [id])
-  jenis_layanan         JenisLayanan         @relation(fields: [id_jenis_layanan], references: [id])
-  status_pengajuan      StatusPengajuan      @relation(fields: [id_status_pengajuan], references: [id])
-  status_pelaksanaan    StatusPelaksanaan    @relation(fields: [id_status_pelaksanaan], references: [id])
-  konfigurasi_layanan   KonfigurasiLayanan   @relation(fields: [id_konfigurasi_layanan], references: [id])
-
-  peserta               Peserta[]
-  mou                   Mou?
-  laporan               Laporan[]
-  sertifikat            Sertifikat[]
-
-  @@map("layanan")
-}
+//   @@map("status_pengajuan")
+// }
 
 
-//// =========================
-//// KOMPONEN LAYANAN : 
-//// MOU PESERTA PELAKSANAAN LAPORAN SERTIFIKAT
-//// =========================
+// //// =========================
+// //// LAYANAN
+// //// =========================
 
-model Mou {
-  // nyimpan file mou
+// model Layanan {
+//   // ini tabel utama dipakai untuk nyimpan kegiatannya
+//   // 1 jenis_layanan banyak layanan
 
-  id                    Int       @id @default(autoincrement())
-  id_layanan            Int       @unique
-  id_status_pengajuan   Int
-  file_mou              String    @db.Text
-  tanggal_upload        DateTime  @default(now())
-  // ketika admin klik acc maka otomatis add tanggal_disetujui
-  tanggal_disetujui     DateTime?
+//   id                      Int       @id @default(autoincrement())
+//   id_user                 Int
+//   id_jenis_layanan        Int
+//   id_konfigurasi_layanan  Int       // defautnya berdasarkan apa layanan yang dipilih lalu ambil id_konfigurasi nya
+//   id_status_pengajuan     Int       // defaultnya yg pending
+//   id_status_pelaksanaan   Int       // defaultnya yg pending
+//   // nama_kegiatan, tempat_kegiatan cm di undangan narasumber
+//   nama_kegiatan           String?   @db.Text
+//   tempat_kegiatan         String?   @db.Text
+//   // untuk nama_peserta ditaruh & diambil dari tabel peserta
+//   // untuk kunjungan g perlu nama peserta jadi gaperlu add data ke tabel peserta
+//   jumlah_peserta          Int       @default(1)
+//   instansi_asal           String    @db.VarChar(64)
+//   // kalau undangan narasumber & unjungan tanggal_mulai & tanggal_selesai dibuat auto sama
+//   tanggal_mulai           DateTime
+//   tanggal_selesai         DateTime
+//   // logobook cuma untuk magang & pkl
+//   link_logbook            String?   @db.Text  // link gdocs/sheet logbook mereka
+//   // pelatihan cuma butuh surat_permohonan
+//   proposal_atau_surat_permohonan String? @db.Text
+//   surat_pengantar_atau_undangan  String? @db.Text
+//   created_at              DateTime  @default(now())
 
-  layanan           Layanan           @relation(fields: [id_layanan], references: [id])
-  statusPengajuan   StatusPengajuan   @relation(fields: [id_status_pengajuan], references: [id])
+//   user                  User @relation(fields: [id_user], references: [id])
+//   jenis_layanan         JenisLayanan         @relation(fields: [id_jenis_layanan], references: [id])
+//   status_pengajuan      StatusPengajuan      @relation(fields: [id_status_pengajuan], references: [id])
+//   status_pelaksanaan    StatusPelaksanaan    @relation(fields: [id_status_pelaksanaan], references: [id])
+//   konfigurasi_layanan   KonfigurasiLayanan   @relation(fields: [id_konfigurasi_layanan], references: [id])
 
-  @@map("mou")
-}
+//   peserta               Peserta[]
+//   mou                   Mou?
+//   laporan               Laporan[]
+//   sertifikat            Sertifikat[]
 
-model Peserta {
-  // nyimpan peserta tiap layanan
-  // bingung dibuat unik apa ngga karena kalau unik memang benar mengurangi db tapi sulit di kodingan pencari unik
-  // + ini ga butuh data update, 
-  // misal si peserta waktu sma daftar, jadi dia g ada fakultas
-  // lalu waktu kuliah ikut lagi, jadi ada fakultas
-  // itu dianggap 2 org berbeda
-  // kenapa? karena tabel ini untuk keperluan sertifikat
+//   @@map("layanan")
+// }
 
-  id              Int       @id @default(autoincrement())
-  id_layanan      Int
-  nama_peserta    String    @db.VarChar(128)
-  // dibawah ini dibutuhkan oleh PKL magang 
-  // buat pelatihan cm butuh nama_peserta dan instansi_asal, instansi ambil dari layanan.instansi_asal
-  instansi_asal   String?   @db.VarChar(64) // ex: "Politeknik Negeri Jember"
-  fakultas        String?   @db.VarChar(32) // ex: "Pertanian"
-  program_studi   String?   @db.VarChar(32) // ex: "Ilmu Tanah"
-  nim             String?   @db.VarChar(32) // ex: "232410101052"
-  // predikat ini diinput sm admin
-  predikat        String?   @db.VarChar(32) // ex: "Sangat Memuaskan"
 
-  layanan         Layanan @relation(fields: [id_layanan], references: [id])
+// //// =========================
+// //// KOMPONEN LAYANAN : 
+// //// MOU PESERTA PELAKSANAAN LAPORAN SERTIFIKAT
+// //// =========================
+
+// model Mou {
+//   // nyimpan file mou
+
+//   id                    Int       @id @default(autoincrement())
+//   id_layanan            Int       @unique
+//   id_status_pengajuan   Int
+//   file_mou              String    @db.Text
+//   tanggal_upload        DateTime  @default(now())
+//   // ketika admin klik acc maka otomatis add tanggal_disetujui
+//   tanggal_disetujui     DateTime?
+
+//   layanan           Layanan           @relation(fields: [id_layanan], references: [id])
+//   statusPengajuan   StatusPengajuan   @relation(fields: [id_status_pengajuan], references: [id])
+
+//   @@map("mou")
+// }
+
+// model Peserta {
+//   // nyimpan peserta tiap layanan
+//   // bingung dibuat unik apa ngga karena kalau unik memang benar mengurangi db tapi sulit di kodingan pencari unik
+//   // + ini ga butuh data update, 
+//   // misal si peserta waktu sma daftar, jadi dia g ada fakultas
+//   // lalu waktu kuliah ikut lagi, jadi ada fakultas
+//   // itu dianggap 2 org berbeda
+//   // kenapa? karena tabel ini untuk keperluan sertifikat
+
+//   id              Int       @id @default(autoincrement())
+//   id_layanan      Int
+//   nama_peserta    String    @db.VarChar(128)
+//   // dibawah ini dibutuhkan oleh PKL magang 
+//   // buat pelatihan cm butuh nama_peserta dan instansi_asal, instansi ambil dari layanan.instansi_asal
+//   instansi_asal   String?   @db.VarChar(64) // ex: "Politeknik Negeri Jember"
+//   fakultas        String?   @db.VarChar(32) // ex: "Pertanian"
+//   program_studi   String?   @db.VarChar(32) // ex: "Ilmu Tanah"
+//   nim             String?   @db.VarChar(32) // ex: "232410101052"
+//   // predikat ini diinput sm admin
+//   predikat        String?   @db.VarChar(32) // ex: "Sangat Memuaskan"
+
+//   layanan         Layanan @relation(fields: [id_layanan], references: [id])
   
-  @@map("peserta")
-}
+//   @@map("peserta")
+// }
 
-model Laporan {
-  // nyimpan isi form P4S biar admin bisa inputin manual ke form dari dinas
+// model Laporan {
+//   // nyimpan isi form P4S biar admin bisa inputin manual ke form dari dinas
 
-  id                Int       @id @default(autoincrement())
-  // nama ini manual meski di layanan ada, karena kebutuhan form P4S dinas
-  nama_p4s          String    @db.VarChar(64)
-  asal_kab_kota     String?   @db.VarChar(32) // ex: "Kabupaten Jember"
-  // pas di fe tampilin jenis_layanan
-  id_layanan        Int
-  // asal di fe ngambil dari layanan.asal
-  // jumlah_peserta di fe ambil dari layanan.jumlah_peserta
-  // tanggal_pelaksanaan di fe ambil dari layanan.tanggal_mulai
-  // lama pelaksanaan di fe ambil dari tanggal_selesai - tanggal_mulai
-  foto_kegiatan     String 
+//   id                Int       @id @default(autoincrement())
+//   // nama ini manual meski di layanan ada, karena kebutuhan form P4S dinas
+//   nama_p4s          String    @db.VarChar(64)
+//   asal_kab_kota     String?   @db.VarChar(32) // ex: "Kabupaten Jember"
+//   // pas di fe tampilin jenis_layanan
+//   id_layanan        Int
+//   // asal di fe ngambil dari layanan.asal
+//   // jumlah_peserta di fe ambil dari layanan.jumlah_peserta
+//   // tanggal_pelaksanaan di fe ambil dari layanan.tanggal_mulai
+//   // lama pelaksanaan di fe ambil dari tanggal_selesai - tanggal_mulai
+//   foto_kegiatan     String 
 
-  layanan     Layanan @relation(fields: [id_layanan], references: [id])
+//   layanan     Layanan @relation(fields: [id_layanan], references: [id])
   
-  @@map("laporan")
-}
+//   @@map("laporan")
+// }
 
-// model Sertifikat
-model Sertifikat {
-  // nyimpan metadata sertifikat
-  // untuk siapa yang dapat sertifnya pakai tabel layanan-peserta
+// // model Sertifikat
+// model Sertifikat {
+//   // nyimpan metadata sertifikat
+//   // untuk siapa yang dapat sertifnya pakai tabel layanan-peserta
 
-  id              Int @id @default(autoincrement())
-  id_layanan      Int
-  tanggal_terbit  DateTime @default(now())
-  no_sertifikat   String @db.VarChar(128)
+//   id              Int @id @default(autoincrement())
+//   id_layanan      Int
+//   tanggal_terbit  DateTime @default(now())
+//   no_sertifikat   String @db.VarChar(128)
 
-  // untuk barrage download, cek nama peserta dari layanan->peserta
+//   // untuk barrage download, cek nama peserta dari layanan->peserta
   
-  // TEMPLATE SERTIF :
-  // no, tanggal_terbit ada di tabel ini
-  // nama_jenis_layanan
-  // Telah menyelesaikan program {nama_jenis_layanan}, di Pusat Pelatihan Pertanian dan 
-  // Perdesaan Swadaya (P4S) Sekolah Kopi Raisa, selama {hitung tanggal_selesai-tanggal_mulai} hari  yang  
-  // dilaksanakan pada Tanggal {tanggal_dimulai [DD MMMM]} - tanggal_selesai [DD MMMM].  
-  // Dengan predikat “{layanan->peserta.predikat}” 
+//   // TEMPLATE SERTIF :
+//   // no, tanggal_terbit ada di tabel ini
+//   // nama_jenis_layanan
+//   // Telah menyelesaikan program {nama_jenis_layanan}, di Pusat Pelatihan Pertanian dan 
+//   // Perdesaan Swadaya (P4S) Sekolah Kopi Raisa, selama {hitung tanggal_selesai-tanggal_mulai} hari  yang  
+//   // dilaksanakan pada Tanggal {tanggal_dimulai [DD MMMM]} - tanggal_selesai [DD MMMM].  
+//   // Dengan predikat “{layanan->peserta.predikat}” 
 
-  layanan     Layanan @relation(fields: [id_layanan], references: [id])
+//   layanan     Layanan @relation(fields: [id_layanan], references: [id])
 
-  @@map("sertifikat")
-}
+//   @@map("sertifikat")
+// }
 
-//// =========================
-//// KOMPONEN LAYANAN :
-//// MENYIMPAN KEGIATAN YANG DIPILIH,
-//// DETAILING KEGIATAN YANG DILAKUKAN
-//// =========================
+// //// =========================
+// //// KOMPONEN LAYANAN :
+// //// MENYIMPAN KEGIATAN YANG DIPILIH,
+// //// DETAILING KEGIATAN YANG DILAKUKAN
+// //// =========================
 
-model Kegiatan {
-  // menyimpan umum seperti Pembibitan, Panen, Perawatan, Pengemasan dst
+// model Kegiatan {
+//   // menyimpan umum seperti Pembibitan, Panen, Perawatan, Pengemasan dst
 
-  id              Int       @id @default(autoincrement())
-  nama_kegiatan   String    @db.VarChar(32)
-  image           String    @db.Text
-  deskripsi       String?   @db.Text
+//   id              Int       @id @default(autoincrement())
+//   nama_kegiatan   String    @db.VarChar(32)
+//   image           String    @db.Text
+//   deskripsi       String?   @db.Text
 
-  sub_kegiatan          SubKegiatan[]
-  detail_konfigurasi    DetailKonfigurasi[]
+//   sub_kegiatan          SubKegiatan[]
+//   detail_konfigurasi    DetailKonfigurasi[]
 
-  @@map("kegiatan")
-}
+//   @@map("kegiatan")
+// }
 
-model SubKegiatan{
-  // sub dari kegiatan, misalnya Penyemaian, Kultur, dst
+// model SubKegiatan{
+//   // sub dari kegiatan, misalnya Penyemaian, Kultur, dst
 
-  id                  Int     @id @default(autoincrement())
-  id_kegiatan         Int
-  nama_sub_kegiatan   String  @db.VarChar(64)
-  jam_durasi          Int
-  deskripsi           String? @db.Text
+//   id                  Int     @id @default(autoincrement())
+//   id_kegiatan         Int
+//   nama_sub_kegiatan   String  @db.VarChar(64)
+//   jam_durasi          Int
+//   deskripsi           String? @db.Text
 
-  kegiatan Kegiatan   @relation(fields: [id_kegiatan], references: [id])
+//   kegiatan Kegiatan   @relation(fields: [id_kegiatan], references: [id])
 
-  detail_konfigurasi  DetailKonfigurasi[]
+//   detail_konfigurasi  DetailKonfigurasi[]
 
-  @@map("sub_kegiatan")
-}
+//   @@map("sub_kegiatan")
+// }
 
-model Modul {
-  // modulnya kek sistem perpus
-  // tapi ini desainnya masih 1 kegiatan banyak modul 1 modul 1 kegiatan
-  // perlu disempurnakan
+// model Modul {
+//   // modulnya kek sistem perpus
+//   // tapi ini desainnya masih 1 kegiatan banyak modul 1 modul 1 kegiatan
+//   // perlu disempurnakan
 
-  id              Int       @id @default(autoincrement())
-  id_dibuat_oleh  Int
-  judul_modul     String    @unique @db.VarChar(128)
-  deskripsi       String?   @db.Text
-  file_modul      String    @db.Text  // yg disave disini link cloud nya
-  created_at      DateTime  @default(now())
-  updated_at      DateTime  @updatedAt
+//   id              Int       @id @default(autoincrement())
+//   id_dibuat_oleh  Int
+//   judul_modul     String    @unique @db.VarChar(128)
+//   deskripsi       String?   @db.Text
+//   file_modul      String    @db.Text  // yg disave disini link cloud nya
+//   created_at      DateTime  @default(now())
+//   updated_at      DateTime  @updatedAt
 
-  user     User @relation(fields: [id_dibuat_oleh], references: [id])
+//   user     User @relation(fields: [id_dibuat_oleh], references: [id])
 
-  @@map("modul")
-}
+//   @@map("modul")
+// }
 
-model KonfigurasiLayanan {
-  // sebagai tempat "cart" kegiatan yang diambil
-  // UNTUK HASH : 
-  // [
-  // { kegiatan: 1, sub: [1, 2, 3] },
-  // { kegiatan: 2, sub: [] }
-  // ]
-  // Kalau kita ubah ke string yang konsisten:
-  // "1:[1,2,3];2:[]" nah ini di hash pakai SHA-256
-  // Hash ini untuk penanda keunikan kombinasi kegiatan dan sub_kegiatan,
-  // jadi kalau ada yang menyimpan konfigurasi_layanan yang sama persis dengan entri yang sudah ada maka dia akan pakai yang sudah ada
+// model KonfigurasiLayanan {
+//   // sebagai tempat "cart" kegiatan yang diambil
+//   // UNTUK HASH : 
+//   // [
+//   // { kegiatan: 1, sub: [1, 2, 3] },
+//   // { kegiatan: 2, sub: [] }
+//   // ]
+//   // Kalau kita ubah ke string yang konsisten:
+//   // "1:[1,2,3];2:[]" nah ini di hash pakai SHA-256
+//   // Hash ini untuk penanda keunikan kombinasi kegiatan dan sub_kegiatan,
+//   // jadi kalau ada yang menyimpan konfigurasi_layanan yang sama persis dengan entri yang sudah ada maka dia akan pakai yang sudah ada
 
-  id                  Int       @id @default(autoincrement())
-  id_jenis_layanan    Int       @unique
-  versi_konfig        DateTime  @default(now())
-  hash_konfigurasi    String    @db.Text
-  is_active           Boolean   @default(true)
-  catatan             String?   @db.Text
-  created_at          DateTime  @default(now())
+//   id                  Int       @id @default(autoincrement())
+//   id_jenis_layanan    Int       @unique
+//   versi_konfig        DateTime  @default(now())
+//   hash_konfigurasi    String    @db.Text
+//   is_active           Boolean   @default(true)
+//   catatan             String?   @db.Text
+//   created_at          DateTime  @default(now())
 
-  jenis_layanan       JenisLayanan  @relation(fields: [id_jenis_layanan], references: [id])
+//   jenis_layanan       JenisLayanan  @relation(fields: [id_jenis_layanan], references: [id])
 
-  layanan             Layanan[]
-  detail_konfigurasi  DetailKonfigurasi[]
+//   layanan             Layanan[]
+//   detail_konfigurasi  DetailKonfigurasi[]
 
-  @@map("konfigurasi_layanan")
-}
+//   @@map("konfigurasi_layanan")
+// }
 
-model DetailKonfigurasi {
-  // menyimpan rincian kegiatan-sub_kegiatan apa saja yang dipakai oleh konfigurasi_layanan tertentu
-  // Relasi kegiatan dan sub-kegiatan yang termasuk dalam satu versi konfigurasi
+// model DetailKonfigurasi {
+//   // menyimpan rincian kegiatan-sub_kegiatan apa saja yang dipakai oleh konfigurasi_layanan tertentu
+//   // Relasi kegiatan dan sub-kegiatan yang termasuk dalam satu versi konfigurasi
   
-  id                      Int @id @default(autoincrement())
-  id_konfigurasi_layanan  Int
-  id_kegiatan             Int
-  id_sub_kegiatan         Int
+//   id                      Int @id @default(autoincrement())
+//   id_konfigurasi_layanan  Int
+//   id_kegiatan             Int
+//   id_sub_kegiatan         Int
 
-  konfigurasiLayanan  KonfigurasiLayanan @relation(fields: [id_konfigurasi_layanan], references: [id])
-  kegiatan            Kegiatan  @relation(fields: [id_kegiatan], references: [id])
-  SubKegiatan         SubKegiatan @relation(fields: [id_sub_kegiatan], references: [id])
+//   konfigurasiLayanan  KonfigurasiLayanan @relation(fields: [id_konfigurasi_layanan], references: [id])
+//   kegiatan            Kegiatan  @relation(fields: [id_kegiatan], references: [id])
+//   SubKegiatan         SubKegiatan @relation(fields: [id_sub_kegiatan], references: [id])
 
-  @@map("detail_konfigurasi")
-}
+//   @@map("detail_konfigurasi")
+// }

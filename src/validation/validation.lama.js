@@ -82,107 +82,6 @@ const validateLogin = [
         .isLength({ min: 6 }).withMessage('*Password minimal 6 karakter')
 ];
 
-
-const validateCreateUMKM = [
-    // user fields are required only when caller is NOT authenticated (req.user not present)
-    body('name')
-        .custom((value, { req }) => {
-            if (!req.user) {
-                if (!value || String(value).trim() === '') throw new Error('*Nama wajib diisi');
-                if (String(value).trim().length < 3) throw new Error('*Nama minimal 3 karakter');
-            }
-            return true;
-        }),
-
-    body('email')
-        .custom((value, { req }) => {
-            if (!req.user) {
-                if (!value || String(value).trim() === '') throw new Error('*Email wajib diisi');
-                if (!validator.isEmail(String(value))) throw new Error('*Format email tidak valid');
-            }
-            return true;
-        }),
-
-    body('password')
-        .custom((value, { req }) => {
-            if (!req.user) {
-                if (!value || String(value).trim() === '') throw new Error('*Password wajib diisi');
-                if (String(value).length < 6) throw new Error('*Password minimal 6 karakter');
-            }
-            return true;
-        }),
-
-    body('phone_number')
-        .custom((value, { req }) => {
-            if (!req.user) {
-                if (!value || String(value).trim() === '') throw new Error('*Nomor telepon wajib diisi');
-                if (!validator.isMobilePhone(String(value), 'id-ID')) throw new Error('*Format nomor telepon tidak valid');
-            }
-            return true;
-        }),
-
-    body('namaUmkm')
-        .trim()
-        .notEmpty().withMessage('*Nama UMKM wajib diisi')
-        .isLength({ min: 3, max: 100 }).withMessage('*Nama UMKM 3-100 karakter'),
-
-    body('ktp')
-        .optional()
-        .trim()
-        .isNumeric().withMessage('*KTP harus berupa angka')
-        .isLength({ min: 16, max: 16 }).withMessage('*KTP harus 16 digit'),
-
-    body('addresses')
-        .optional()
-        .custom((value) => {
-            if (!Array.isArray(value)) {
-                try {
-                    const parsed = JSON.parse(value);
-                    if (!Array.isArray(parsed)) throw new Error();
-                } catch (e) {
-                    throw new Error('*Addresses harus berupa array JSON jika dikirim');
-                }
-            }
-            return true;
-        }),
-];
-
-const validateUpdateUMKM = [
-    body('namaUmkm')
-        .optional()
-        .trim()
-        .notEmpty().withMessage('*Nama UMKM tidak boleh kosong')
-        .isLength({ min: 3, max: 100 }).withMessage('*Nama UMKM 3-100 karakter'),
-
-    body('ktp')
-        .optional()
-        .trim()
-        .isNumeric().withMessage('*KTP harus berupa angka')
-        .isLength({ min: 16, max: 16 }).withMessage('*KTP harus 16 digit'),
-
-    body('addresses')
-        .optional()
-        .custom((value) => {
-            if (!Array.isArray(value)) {
-                try {
-                    const parsed = JSON.parse(value);
-                    if (!Array.isArray(parsed)) throw new Error();
-                } catch (e) {
-                    throw new Error('*Addresses harus berupa array JSON jika dikirim');
-                }
-            }
-            return true;
-        }),
-];
-
-// jangan lupa export:
-module.exports = {
-  // ... validator lainnya ...
-    validateCreateUMKM,
-  // ... rest ...
-};
-
-
 const createNewsValidator = [
     // Title wajib, tidak boleh kosong, dan maksimal 255 karakter
     body("title")
@@ -383,37 +282,9 @@ const validateCost =[
         .isNumeric().withMessage('Berat harus berupa angka'),
 ]
 
-// Validator untuk verifikasi UMKM (dipakai di controller UMKM)
-const validateVerifyUMKM = [
-    body('approved')
-        .notEmpty().withMessage('*approved wajib diisi')
-        .isBoolean().withMessage('*approved harus boolean'),
-    body('reason')
-        .optional()
-        .trim()
-        .isLength({ min: 5, max: 1000 }).withMessage('*Alasan harus 5-1000 karakter jika diberikan')
-        .custom((value, { req }) => {
-            if (req.body.approved === false && (!value || value.trim().length < 5)) {
-                throw new Error('*Alasan penolakan wajib diisi minimal 5 karakter ketika menolak');
-            }
-            return true;
-        })
-];
-
 module.exports = {
-    validateRegister,
-    validateLogin,
-    createNewsValidator,
-    updateNewsValidator,
-    validateUpdateProfile,
-    partnerValidator,
-    productValidator,
-    orderValidator,
-    validateQueryDomestic,
-    validateCost,
-    companyValidator,
-    validateCreateUMKM,
-    validateUpdateUMKM,
-    validateVerifyUMKM,
-    // ...other exports...
+    validateRegister, validateLogin, createNewsValidator,
+    updateNewsValidator, validateUpdateProfile, partnerValidator,
+    productValidator, orderValidator, validateQueryDomestic,validateCost,
+    companyValidator
 };

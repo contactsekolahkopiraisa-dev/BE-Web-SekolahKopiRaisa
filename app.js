@@ -103,6 +103,10 @@ const cartRoutes = require("./src/cart/cart.controller");
 const orderRoutes = require("./src/order/order.controller");
 const companyRoutes = require("./src/company/company.controller");
 
+// === LAPORAN
+const umkmRoutes = require("./src/auth/umkm.controller");
+
+// === MITRA
 const { jenisLayananRoutes, layananRoutes, targetPesertaRoutes } = require("./src/layanan/C_Layanan.routes");
 const { modulRoutes } = require("./src/modul/C_Modul.routes");
 
@@ -122,6 +126,10 @@ app.use("/api/v1/cart", cartRoutes);
 app.use("/api/v1/order", orderRoutes);
 app.use("/api/v1/company", companyRoutes);
 
+// === LAPORAN
+app.use("/api/v1/auth/umkm", umkmRoutes);
+
+// === MITRA
 app.use("/api/v1/layanan", layananRoutes);
 app.use("/api/v1/jenis-layanan", jenisLayananRoutes);
 app.use("/api/v1/target-peserta", targetPesertaRoutes);

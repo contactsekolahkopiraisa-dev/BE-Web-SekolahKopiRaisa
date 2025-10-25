@@ -4,8 +4,7 @@ const { insertUser, isEmailTaken, findUserNumber, findUserByIdentifier, updateBy
 const bcrypt = require('bcryptjs');
 const jsonwebtoken = require('jsonwebtoken');
 const dotenv = require('dotenv');
-// const nodemailer = require('nodemailer');
-const { sendEmail } = require('../utils/email');
+const nodemailer = require('nodemailer');
 
 const { deleteFromCloudinaryByUrl } = require('../utils/cloudinary');
 const { uploadToCloudinary } = require('../services/cloudinaryUpload.service');
@@ -16,25 +15,13 @@ dotenv.config();
 const JWT_EXPIRES = process.env.JWT_EXPIRES;
 
 const createUser = async (newUserData) => {
-    const email = newUserData.email ? String(newUserData.email).trim().toLowerCase() : null;
-    const phone = newUserData.phone_number ? String(newUserData.phone_number).replace(/\D/g, '') : null;
-    // gunakan findUserByIdentifier yang sudah normalisasi
-    const existingUser = (email && await findUserByIdentifier(email)) || (phone && await findUserByIdentifier(phone));
+
+    const existingUser = await findUserByIdentifier(newUserData.email) || (newUserData.phone_number && await findUserByIdentifier(newUserData.phone_number));
 
     if (existingUser) {
         throw new Error('*Email atau nomor HP sudah terdaftar');
     }
-
-    // ensure stored phone_number normalized to '0...' if possible
-    if (newUserData.phone_number) {
-        const digits = String(newUserData.phone_number).replace(/\D/g, '');
-        if (digits.startsWith('62')) newUserData.phone_number = '0' + digits.slice(2);
-        else if (digits.startsWith('0')) newUserData.phone_number = digits;
-        else newUserData.phone_number = digits;
-    }
-
-    // assume controller already hashed password (keep current convention)
-    const userData = await insertUser({ ...newUserData, email });
+    const userData = await insertUser(newUserData);
     return userData;
 };
 
@@ -130,33 +117,27 @@ const sendResetPasswordEmail = async (email) => {
         throw new Error(`*Gagal mengirim Email reset password. Akun ${user.email} telah terdaftar dengan metode lain. Silahkan coba dengan metode yang anda gunakan sebelumnya!`);
     }
 
-    if (!process.env.JWT_SECRET) {
-        console.error('JWT_SECRET belum dikonfigurasi.');
-        throw new Error('Server error: JWT secret tidak ditemukan!');
-    }
+    const resetToken = await jsonwebtoken.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '5m' });
+    // console.log('resetToken', resetToken);
 
-    // token berlaku 5 menit
-    const resetToken = jsonwebtoken.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '5m' });
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-
-    const mail = {
-        from: `"Kopi Raisa" <${process.env.EMAIL_USER || process.env.SMTP_USER}>`,
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+        },
+    });
+    const mailOptions = {
+        from: `"Kopi Raisa"<${process.env.EMAIL_USER}>`,
         to: email,
         subject: 'Reset Password',
-        html: `Klik link ini untuk mereset password Anda: <a href="${resetLink}">${resetLink}</a><br><small>Link berlaku 5 menit.</small>`
+        html: `Klik link ini untuk mereset password Anda:</p><a href="${resetLink}">${resetLink}</a><br><br><small>Link berlaku 5 menit.</small>`,
     };
 
-    try {
-        await sendEmail(mail);
-        console.log('Email reset password terkirim ke:', email);
-    } catch (err) {
-        if (err && err.code === 'NO_SMTP_CREDS') {
-            console.error('Tidak dapat mengirim email reset password: SMTP credentials belum dikonfigurasi.');
-            throw new Error('Server: layanan email belum dikonfigurasi. Hub admin.');
-        }
-        console.error('Gagal mengirim email reset password:', err.message || err);
-        throw new Error('Gagal mengirim email reset password. Silakan coba lagi nanti.');
-    }
+    await transporter.sendMail(mailOptions);
+    console.log('Email reset password terkirim ke:', email);
+
 };
 
 const resetPassword = async ({ token, newPassword }) => {

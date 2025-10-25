@@ -1,497 +1,497 @@
-// INI TABEL2 YANG ADA DI DB NYA
-// TAPI MEMANG NAMA RELASI HARUSNYA KECIL
-// DISINI BESAR SEMUA
+// // INI TABEL2 YANG ADA DI DB NYA
+// // TAPI MEMANG NAMA RELASI HARUSNYA KECIL
+// // DISINI BESAR SEMUA
 
-generator client {
-  provider = "prisma-client-js"
-}
+// generator client {
+//   provider = "prisma-client-js"
+// }
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
+// datasource db {
+//   provider = "postgresql"
+//   url      = env("DATABASE_URL")
+// }
 
-model User {
-  id                Int                 @id @default(autoincrement())
-  name              String
-  image             String?
-  email             String              @unique
-  password          String?
-  phone_number      String?             @unique
-  admin             Boolean             @default(false)
-  verified          Boolean             @default(false)
-  createdAt         DateTime            @default(now())
-  updated_at        DateTime
-  google_id         String?             @unique
-  role              String?             @db.VarChar(64)
+// model User {
+//   id                Int                 @id @default(autoincrement())
+//   name              String
+//   image             String?
+//   email             String              @unique
+//   password          String?
+//   phone_number      String?             @unique
+//   admin             Boolean             @default(false)
+//   verified          Boolean             @default(false)
+//   createdAt         DateTime            @default(now())
+//   updated_at        DateTime
+//   google_id         String?             @unique
+//   role              String?             @db.VarChar(64)
 
-  Cart              Cart?
-  FacebookAccount   FacebookAccount?
-  FormEntry         FormEntry[]
-  News              News[]
-  Notification      Notification[]
-  Order             Order[]
-  OrderCancellation OrderCancellation[]
-  Review            Review[]
-  Transaction       Transaction[]
-  financial_report  financial_report[]
-  profile           profile[]
-  verifikasi_umkm   verifikasi_umkm[]
-}
+//   Cart              Cart?
+//   FacebookAccount   FacebookAccount?
+//   FormEntry         FormEntry[]
+//   News              News[]
+//   Notification      Notification[]
+//   Order             Order[]
+//   OrderCancellation OrderCancellation[]
+//   Review            Review[]
+//   Transaction       Transaction[]
+//   financial_report  financial_report[]
+//   profile           profile[]
+//   verifikasi_umkm   verifikasi_umkm[]
+// }
 
-model AboutCompany {
-  id                 Int                  @id @default(autoincrement())
-  title              String
-  description        String
-  image              String?
-  created_at         DateTime             @default(now())
-  updated_at         DateTime
+// model AboutCompany {
+//   id                 Int                  @id @default(autoincrement())
+//   title              String
+//   description        String
+//   image              String?
+//   created_at         DateTime             @default(now())
+//   updated_at         DateTime
 
-  AboutCompanyMedia  AboutCompanyMedia[]
-  AboutOrganization  AboutOrganization[]
-  AboutTeam          AboutTeam[]
-  AboutVisionMission AboutVisionMission[]
-}
+//   AboutCompanyMedia  AboutCompanyMedia[]
+//   AboutOrganization  AboutOrganization[]
+//   AboutTeam          AboutTeam[]
+//   AboutVisionMission AboutVisionMission[]
+// }
 
-model AboutCompanyMedia {
-  id           Int          @id @default(autoincrement())
-  about_id     Int
-  media_url    String
-  media_type   String
-  description  String?
-  created_at   DateTime     @default(now())
-  isThumbnail  Boolean      @default(false)
+// model AboutCompanyMedia {
+//   id           Int          @id @default(autoincrement())
+//   about_id     Int
+//   media_url    String
+//   media_type   String
+//   description  String?
+//   created_at   DateTime     @default(now())
+//   isThumbnail  Boolean      @default(false)
 
-  AboutCompany AboutCompany @relation(fields: [about_id], references: [id])
-}
+//   AboutCompany AboutCompany @relation(fields: [about_id], references: [id])
+// }
 
-model AboutOrganization {
-  id           Int          @id @default(autoincrement())
-  title        String
-  description  String
-  image        String?
-  created_at   DateTime     @default(now())
-  updated_at   DateTime
-  about_id     Int
+// model AboutOrganization {
+//   id           Int          @id @default(autoincrement())
+//   title        String
+//   description  String
+//   image        String?
+//   created_at   DateTime     @default(now())
+//   updated_at   DateTime
+//   about_id     Int
 
-  AboutCompany AboutCompany @relation(fields: [about_id], references: [id])
-}
+//   AboutCompany AboutCompany @relation(fields: [about_id], references: [id])
+// }
 
-model AboutTeam {
-  id           Int          @id @default(autoincrement())
-  name         String
-  position     String
-  image        String?
-  description  String?
-  created_at   DateTime     @default(now())
-  updated_at   DateTime
-  about_id     Int
+// model AboutTeam {
+//   id           Int          @id @default(autoincrement())
+//   name         String
+//   position     String
+//   image        String?
+//   description  String?
+//   created_at   DateTime     @default(now())
+//   updated_at   DateTime
+//   about_id     Int
 
-  AboutCompany AboutCompany @relation(fields: [about_id], references: [id])
-}
+//   AboutCompany AboutCompany @relation(fields: [about_id], references: [id])
+// }
 
-model AboutVisionMission {
-  id           Int           @id @default(autoincrement())
-  description  String
-  created_at   DateTime      @default(now())
-  updated_at   DateTime
-  about_id     Int
-  title        
+// model AboutVisionMission {
+//   id           Int           @id @default(autoincrement())
+//   description  String
+//   created_at   DateTime      @default(now())
+//   updated_at   DateTime
+//   about_id     Int
+//   title        
   
-  AboutCompany AboutCompany  @relation(fields: [about_id], references: [id])
-}
+//   AboutCompany AboutCompany  @relation(fields: [about_id], references: [id])
+// }
 
-model Cart {
-  id         Int        @id @default(autoincrement())
-  user_id    Int        @unique
-  created_at DateTime   @default(now())
-  updated_at DateTime
+// model Cart {
+//   id         Int        @id @default(autoincrement())
+//   user_id    Int        @unique
+//   created_at DateTime   @default(now())
+//   updated_at DateTime
 
-  User       User       @relation(fields: [user_id], references: [id])
-  CartItem   CartItem[]
-}
+//   User       User       @relation(fields: [user_id], references: [id])
+//   CartItem   CartItem[]
+// }
 
-model CartItem {
-  id          Int      @id @default(autoincrement())
-  cart_id     Int
-  products_id Int
-  quantity    Int
-  created_at  DateTime @default(now())
-  updated_at  DateTime
+// model CartItem {
+//   id          Int      @id @default(autoincrement())
+//   cart_id     Int
+//   products_id Int
+//   quantity    Int
+//   created_at  DateTime @default(now())
+//   updated_at  DateTime
 
-  Cart        Cart     @relation(fields: [cart_id], references: [id])
-  Product     Product  @relation(fields: [products_id], references: [id], onDelete: Cascade)
-}
+//   Cart        Cart     @relation(fields: [cart_id], references: [id])
+//   Product     Product  @relation(fields: [products_id], references: [id], onDelete: Cascade)
+// }
 
-model FacebookAccount {
-  id                  String   @id
-  facebook_id         String   @unique
-  access_token        String
-  token_expires       DateTime
-  page_id             String
-  page_name           String
-  name                String
-  image               String?
-  email               String
-  userId              Int      @unique
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime
-  page_access_token   String?
-  ig_user_id          String?
-  instagramAccount_id String?
-  instagram_username  String?
+// model FacebookAccount {
+//   id                  String   @id
+//   facebook_id         String   @unique
+//   access_token        String
+//   token_expires       DateTime
+//   page_id             String
+//   page_name           String
+//   name                String
+//   image               String?
+//   email               String
+//   userId              Int      @unique
+//   createdAt           DateTime @default(now())
+//   updatedAt           DateTime
+//   page_access_token   String?
+//   ig_user_id          String?
+//   instagramAccount_id String?
+//   instagram_username  String?
 
-  User                User     @relation(fields: [userId], references: [id])
-}
+//   User                User     @relation(fields: [userId], references: [id])
+// }
 
-model FormEntry {
-  id               Int              @id @default(autoincrement())
-  form_template_id Int
-  user_id          Int
-  submitted_at     DateTime?
+// model FormEntry {
+//   id               Int              @id @default(autoincrement())
+//   form_template_id Int
+//   user_id          Int
+//   submitted_at     DateTime?
   
-  FormTemplate     FormTemplate     @relation(fields: [form_template_id], references: [id])
-  User             User             @relation(fields: [user_id], references: [id])
-  FormEntryValue   FormEntryValue[]
-}
+//   FormTemplate     FormTemplate     @relation(fields: [form_template_id], references: [id])
+//   User             User             @relation(fields: [user_id], references: [id])
+//   FormEntryValue   FormEntryValue[]
+// }
 
-model FormEntryValue {
-  id            Int       @id @default(autoincrement())
-  form_entry_id Int
-  form_field_id Int
-  value         String
+// model FormEntryValue {
+//   id            Int       @id @default(autoincrement())
+//   form_entry_id Int
+//   form_field_id Int
+//   value         String
 
-  FormEntry     FormEntry @relation(fields: [form_entry_id], references: [id])
-  FormField     FormField @relation(fields: [form_field_id], references: [id])
-}
+//   FormEntry     FormEntry @relation(fields: [form_entry_id], references: [id])
+//   FormField     FormField @relation(fields: [form_field_id], references: [id])
+// }
 
-model FormField {
-  id               Int              @id @default(autoincrement())
-  form_template_id Int
-  field_name       String
-  field_type       String
-  field_key        String
+// model FormField {
+//   id               Int              @id @default(autoincrement())
+//   form_template_id Int
+//   field_name       String
+//   field_type       String
+//   field_key        String
 
-  FormEntryValue   FormEntryValue[]
-  FormTemplate     FormTemplate     @relation(fields: [form_template_id], references: [id])
-}
+//   FormEntryValue   FormEntryValue[]
+//   FormTemplate     FormTemplate     @relation(fields: [form_template_id], references: [id])
+// }
 
-model FormTemplate {
-  id               Int         @id @default(autoincrement())
-  title            String
-  google_form_link String
-  created_at       DateTime    @default(now())
-  updated_at       DateTime
+// model FormTemplate {
+//   id               Int         @id @default(autoincrement())
+//   title            String
+//   google_form_link String
+//   created_at       DateTime    @default(now())
+//   updated_at       DateTime
 
-  FormEntry        FormEntry[]
-  FormField        FormField[]
-}
+//   FormEntry        FormEntry[]
+//   FormField        FormField[]
+// }
 
-model Inventory {
-  id          Int      @id @default(autoincrement())
-  products_id Int      @unique
-  stock       Int
-  created_at  DateTime @default(now())
-  updated_at  DateTime
+// model Inventory {
+//   id          Int      @id @default(autoincrement())
+//   products_id Int      @unique
+//   stock       Int
+//   created_at  DateTime @default(now())
+//   updated_at  DateTime
 
-  Product     Product  @relation(fields: [products_id], references: [id], onDelete: Cascade)
-}
+//   Product     Product  @relation(fields: [products_id], references: [id], onDelete: Cascade)
+// }
 
-model News {
-  id         Int         @id @default(autoincrement())
-  title      String
-  content    String
-  user_id    Int
-  created_at DateTime    @default(now())
-  updated_at DateTime
+// model News {
+//   id         Int         @id @default(autoincrement())
+//   title      String
+//   content    String
+//   user_id    Int
+//   created_at DateTime    @default(now())
+//   updated_at DateTime
 
-  User       User        @relation(fields: [user_id], references: [id])
-  NewsMedia  NewsMedia[]
-}
+//   User       User        @relation(fields: [user_id], references: [id])
+//   NewsMedia  NewsMedia[]
+// }
 
-model NewsMedia {
-  id          Int     @id @default(autoincrement())
-  news_id     Int
-  media_url   String
-  media_type  String
-  isThumbnail Boolean @default(false)
+// model NewsMedia {
+//   id          Int     @id @default(autoincrement())
+//   news_id     Int
+//   media_url   String
+//   media_type  String
+//   isThumbnail Boolean @default(false)
 
-  News        News    @relation(fields: [news_id], references: [id])
-}
+//   News        News    @relation(fields: [news_id], references: [id])
+// }
 
-model Notification {
-  id          Int      @id @default(autoincrement())
-  name        String
-  viewed      Boolean  @default(false)
-  description String
-  user_id     Int
-  created_at  DateTime @default(now())
-  updated_at  DateTime
-  order_id    Int?
+// model Notification {
+//   id          Int      @id @default(autoincrement())
+//   name        String
+//   viewed      Boolean  @default(false)
+//   description String
+//   user_id     Int
+//   created_at  DateTime @default(now())
+//   updated_at  DateTime
+//   order_id    Int?
 
-  Order       Order?   @relation(fields: [order_id], references: [id])
-  User        User     @relation(fields: [user_id], references: [id])
-}
+//   Order       Order?   @relation(fields: [order_id], references: [id])
+//   User        User     @relation(fields: [user_id], references: [id])
+// }
 
-model Order {
-  id                Int                @id @default(autoincrement())
-  user_id           Int
-  status            OrderStatus
-  created_at        DateTime           @default(now())
-  updated_at        DateTime
+// model Order {
+//   id                Int                @id @default(autoincrement())
+//   user_id           Int
+//   status            OrderStatus
+//   created_at        DateTime           @default(now())
+//   updated_at        DateTime
 
-  Notification      Notification[]
-  User              User               @relation(fields: [user_id], references: [id])
-  OrderCancellation OrderCancellation?
-  OrderItem         OrderItem[]
-  Payment           Payment?
-  Review            Review[]
-  ShippingAddress   ShippingAddress?
-  ShippingDetail    ShippingDetail?
-}
+//   Notification      Notification[]
+//   User              User               @relation(fields: [user_id], references: [id])
+//   OrderCancellation OrderCancellation?
+//   OrderItem         OrderItem[]
+//   Payment           Payment?
+//   Review            Review[]
+//   ShippingAddress   ShippingAddress?
+//   ShippingDetail    ShippingDetail?
+// }
 
-model OrderCancellation {
-  id         Int      @id @default(autoincrement())
-  order_id   Int      @unique
-  user_id    Int
-  reason     String
-  created_at DateTime @default(now())
+// model OrderCancellation {
+//   id         Int      @id @default(autoincrement())
+//   order_id   Int      @unique
+//   user_id    Int
+//   reason     String
+//   created_at DateTime @default(now())
 
-  Order      Order    @relation(fields: [order_id], references: [id])
-  User       User     @relation(fields: [user_id], references: [id])
-}
+//   Order      Order    @relation(fields: [order_id], references: [id])
+//   User       User     @relation(fields: [user_id], references: [id])
+// }
 
-model OrderItem {
-  id                     Int       @id @default(autoincrement())
-  order_id               Int
-  products_id            Int
-  quantity               Int
-  price                  Int
-  custom_note            String?
-  created_at             DateTime  @default(now())
-  updated_at             DateTime
-  partner_id             Int?
-  notified_to_partner_at DateTime?
+// model OrderItem {
+//   id                     Int       @id @default(autoincrement())
+//   order_id               Int
+//   products_id            Int
+//   quantity               Int
+//   price                  Int
+//   custom_note            String?
+//   created_at             DateTime  @default(now())
+//   updated_at             DateTime
+//   partner_id             Int?
+//   notified_to_partner_at DateTime?
 
-  Order                  Order     @relation(fields: [order_id], references: [id])
-  Partner                Partner?  @relation(fields: [partner_id], references: [id])
-  Product                Product   @relation(fields: [products_id], references: [id], onDelete: Cascade)
-}
+//   Order                  Order     @relation(fields: [order_id], references: [id])
+//   Partner                Partner?  @relation(fields: [partner_id], references: [id])
+//   Product                Product   @relation(fields: [products_id], references: [id], onDelete: Cascade)
+// }
 
-model Partner {
-  id           Int         @id @default(autoincrement())
-  name         String
-  owner_name   String
-  phone_number String
-  created_at   DateTime    @default(now())
-  updated_at   DateTime
+// model Partner {
+//   id           Int         @id @default(autoincrement())
+//   name         String
+//   owner_name   String
+//   phone_number String
+//   created_at   DateTime    @default(now())
+//   updated_at   DateTime
 
-  OrderItem    OrderItem[]
-  Product      Product[]
-}
+//   OrderItem    OrderItem[]
+//   Product      Product[]
+// }
 
-model Payment {
-  id                Int            @id @default(autoincrement())
-  order_id          Int            @unique
-  amount            Int
-  status            PaymentStatus
-  method            PaymentMethod?
-  snap_token        String?
-  snap_redirect_url String?
-  payment_info      String?
-  created_at        DateTime       @default(now())
-  updated_at        DateTime
+// model Payment {
+//   id                Int            @id @default(autoincrement())
+//   order_id          Int            @unique
+//   amount            Int
+//   status            PaymentStatus
+//   method            PaymentMethod?
+//   snap_token        String?
+//   snap_redirect_url String?
+//   payment_info      String?
+//   created_at        DateTime       @default(now())
+//   updated_at        DateTime
 
-  Order             Order          @relation(fields: [order_id], references: [id])
-  Transaction       Transaction[]
-}
+//   Order             Order          @relation(fields: [order_id], references: [id])
+//   Transaction       Transaction[]
+// }
 
-model Product {
-  id                 Int                  @id @default(autoincrement())
-  name               String
-  price              Int
-  description        String?
-  image              String?
-  partner_id         Int
-  created_at         DateTime             @default(now())
-  updated_at         DateTime
-  weight             Int
+// model Product {
+//   id                 Int                  @id @default(autoincrement())
+//   name               String
+//   price              Int
+//   description        String?
+//   image              String?
+//   partner_id         Int
+//   created_at         DateTime             @default(now())
+//   updated_at         DateTime
+//   weight             Int
 
-  CartItem           CartItem[]
-  Inventory          Inventory?
-  OrderItem          OrderItem[]
-  Partner            Partner              @relation(fields: [partner_id], references: [id])
-  Review             Review[]
-  detail_transaction detail_transaction[]
-  sales_report       sales_report[]
-}
+//   CartItem           CartItem[]
+//   Inventory          Inventory?
+//   OrderItem          OrderItem[]
+//   Partner            Partner              @relation(fields: [partner_id], references: [id])
+//   Review             Review[]
+//   detail_transaction detail_transaction[]
+//   sales_report       sales_report[]
+// }
 
-model Review {
-  id         Int      @id @default(autoincrement())
-  user_id    Int
-  product_id Int
-  order_id   Int
-  rating     Int
-  comment    String?
-  created_at DateTime @default(now())
-  updated_at DateTime
+// model Review {
+//   id         Int      @id @default(autoincrement())
+//   user_id    Int
+//   product_id Int
+//   order_id   Int
+//   rating     Int
+//   comment    String?
+//   created_at DateTime @default(now())
+//   updated_at DateTime
 
-  Order      Order    @relation(fields: [order_id], references: [id])
-  Product    Product  @relation(fields: [product_id], references: [id])
-  User       User     @relation(fields: [user_id], references: [id])
-}
+//   Order      Order    @relation(fields: [order_id], references: [id])
+//   Product    Product  @relation(fields: [product_id], references: [id])
+//   User       User     @relation(fields: [user_id], references: [id])
+// }
 
-model ShippingAddress {
-  id                      Int      @id @default(autoincrement())
-  order_id                Int      @unique
-  address                 String
-  created_at              DateTime @default(now())
-  updated_at              DateTime
-  destination_city        String?
-  destination_district    String?
-  destination_id          Int?
-  destination_province    String?
-  destination_subdistrict String?
-  destination_zip_code    Int?
+// model ShippingAddress {
+//   id                      Int      @id @default(autoincrement())
+//   order_id                Int      @unique
+//   address                 String
+//   created_at              DateTime @default(now())
+//   updated_at              DateTime
+//   destination_city        String?
+//   destination_district    String?
+//   destination_id          Int?
+//   destination_province    String?
+//   destination_subdistrict String?
+//   destination_zip_code    Int?
 
-  Order                   Order    @relation(fields: [order_id], references: [id])
-}
+//   Order                   Order    @relation(fields: [order_id], references: [id])
+// }
 
-model ShippingDetail {
-  id                Int      @id @default(autoincrement())
-  order_id          Int      @unique
-  shipping_name     String?
-  service_name      String?
-  shipping_code     String?
-  shipping_cost     Int?
-  shipping_cashback Int?
-  shipping_cost_net Int?
-  service_fee       Int?
-  net_income        Int?
-  etd               String?
-  created_at        DateTime @default(now())
-  updated_at        DateTime
+// model ShippingDetail {
+//   id                Int      @id @default(autoincrement())
+//   order_id          Int      @unique
+//   shipping_name     String?
+//   service_name      String?
+//   shipping_code     String?
+//   shipping_cost     Int?
+//   shipping_cashback Int?
+//   shipping_cost_net Int?
+//   service_fee       Int?
+//   net_income        Int?
+//   etd               String?
+//   created_at        DateTime @default(now())
+//   updated_at        DateTime
 
-  Order             Order    @relation(fields: [order_id], references: [id])
-}
+//   Order             Order    @relation(fields: [order_id], references: [id])
+// }
 
-model Transaction {
-  id                 Int                  @id @default(autoincrement())
-  user_id            Int
-  status             TransactionStatus
-  total_amount       Int
-  created_at         DateTime             @default(now())
-  updated_at         DateTime
-  payment_id         Int
+// model Transaction {
+//   id                 Int                  @id @default(autoincrement())
+//   user_id            Int
+//   status             TransactionStatus
+//   total_amount       Int
+//   created_at         DateTime             @default(now())
+//   updated_at         DateTime
+//   payment_id         Int
 
-  User               User                 @relation(fields: [user_id], references: [id])
-  Payment            Payment              @relation(fields: [payment_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payment_id")
-  detail_transaction detail_transaction[]
-  sales_report       sales_report[]
-}
+//   User               User                 @relation(fields: [user_id], references: [id])
+//   Payment            Payment              @relation(fields: [payment_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payment_id")
+//   detail_transaction detail_transaction[]
+//   sales_report       sales_report[]
+// }
 
-model address {
-  id_address      Int             @id @default(autoincrement())
-  id_umkm         Int
-  alamat          String?         @db.VarChar(255)
-  desa            String?         @db.VarChar(100)
-  kecamatan       String?         @db.VarChar(100)
-  kabupaten       String?         @db.VarChar(100)
-  provinsi        String?         @db.VarChar(100)
-  kode_pos        String?         @db.VarChar(10)
+// model address {
+//   id_address      Int             @id @default(autoincrement())
+//   id_umkm         Int
+//   alamat          String?         @db.VarChar(255)
+//   desa            String?         @db.VarChar(100)
+//   kecamatan       String?         @db.VarChar(100)
+//   kabupaten       String?         @db.VarChar(100)
+//   provinsi        String?         @db.VarChar(100)
+//   kode_pos        String?         @db.VarChar(10)
 
-  verifikasi_umkm verifikasi_umkm @relation(fields: [id_umkm], references: [id_umkm], onDelete: NoAction, onUpdate: NoAction)
-}
+//   verifikasi_umkm verifikasi_umkm @relation(fields: [id_umkm], references: [id_umkm], onDelete: NoAction, onUpdate: NoAction)
+// }
 
-model detail_transaction {
-  id_detail      Int         @id @default(autoincrement())
-  id_transaction Int
-  id_product     Int
-  jumlah_produk  Int
-  subtotal       Int
+// model detail_transaction {
+//   id_detail      Int         @id @default(autoincrement())
+//   id_transaction Int
+//   id_product     Int
+//   jumlah_produk  Int
+//   subtotal       Int
   
-  Product        Product     @relation(fields: [id_product], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  Transaction    Transaction @relation(fields: [id_transaction], references: [id], onDelete: NoAction, onUpdate: NoAction)
-}
+//   Product        Product     @relation(fields: [id_product], references: [id], onDelete: NoAction, onUpdate: NoAction)
+//   Transaction    Transaction @relation(fields: [id_transaction], references: [id], onDelete: NoAction, onUpdate: NoAction)
+// }
 
-model financial_report {
-  id_financialreport Int      @id @default(autoincrement())
-  id_user            Int
-  periode            String   @db.VarChar(50)
-  report_date        DateTime @db.Date
-  description        String?
-  income             Int
-  expenses           Int
+// model financial_report {
+//   id_financialreport Int      @id @default(autoincrement())
+//   id_user            Int
+//   periode            String   @db.VarChar(50)
+//   report_date        DateTime @db.Date
+//   description        String?
+//   income             Int
+//   expenses           Int
 
-  User               User     @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction)
-}
+//   User               User     @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction)
+// }
 
-model profile {
-  id_profile Int  @id @default(autoincrement())
-  id_user    Int
+// model profile {
+//   id_profile Int  @id @default(autoincrement())
+//   id_user    Int
 
-  User       User @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction)
-}
+//   User       User @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction)
+// }
 
-model sales_report {
-  id_salesreport Int         @id @default(autoincrement())
-  id_product     Int
-  id_transaction Int
-  tanggal        DateTime    @db.Date
+// model sales_report {
+//   id_salesreport Int         @id @default(autoincrement())
+//   id_product     Int
+//   id_transaction Int
+//   tanggal        DateTime    @db.Date
 
-  Product        Product     @relation(fields: [id_product], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  Transaction    Transaction @relation(fields: [id_transaction], references: [id], onDelete: NoAction, onUpdate: NoAction)
-}
+//   Product        Product     @relation(fields: [id_product], references: [id], onDelete: NoAction, onUpdate: NoAction)
+//   Transaction    Transaction @relation(fields: [id_transaction], references: [id], onDelete: NoAction, onUpdate: NoAction)
+// }
 
-model verifikasi_umkm {
-  id_umkm          Int       @id @default(autoincrement())
-  id_user          Int
-  nama_umkm        String    @db.VarChar(100)
-  ktp              String?   @db.VarChar(16)
-  sertifikat_halal String?   @db.VarChar(50)
+// model verifikasi_umkm {
+//   id_umkm          Int       @id @default(autoincrement())
+//   id_user          Int
+//   nama_umkm        String    @db.VarChar(100)
+//   ktp              String?   @db.VarChar(16)
+//   sertifikat_halal String?   @db.VarChar(50)
 
-  address          address[]
-  User             User      @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction)
-}
+//   address          address[]
+//   User             User      @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction)
+// }
 
-enum OrderStatus {
-  PENDING
-  PROCESSING
-  SHIPPED
-  DELIVERED
-  CANCELED
-}
+// enum OrderStatus {
+//   PENDING
+//   PROCESSING
+//   SHIPPED
+//   DELIVERED
+//   CANCELED
+// }
 
-enum PaymentMethod {
-  QRIS
-  CREDIT_CARD
-  BANK_TRANSFER
-  COD
-}
+// enum PaymentMethod {
+//   QRIS
+//   CREDIT_CARD
+//   BANK_TRANSFER
+//   COD
+// }
 
-enum PaymentStatus {
-  PENDING
-  SUCCESS
-  FAILED
-  CANCEL
-  DENY
-  EXPIRE
-  REFUND
-}
+// enum PaymentStatus {
+//   PENDING
+//   SUCCESS
+//   FAILED
+//   CANCEL
+//   DENY
+//   EXPIRE
+//   REFUND
+// }
 
-enum TransactionStatus {
-  FAILED
-  REJECTED
-  EXPIRED
-  CANCELED
-  AUTHORIZED
-  REFUNDED
-  PENDING
-  COMPLETED
-  SUBMITTED
-}
+// enum TransactionStatus {
+//   FAILED
+//   REJECTED
+//   EXPIRED
+//   CANCELED
+//   AUTHORIZED
+//   REFUNDED
+//   PENDING
+//   COMPLETED
+//   SUBMITTED
+// }
 
-enum VisionMission {
-  VISI
-  MISI
-}
+// enum VisionMission {
+//   VISI
+//   MISI
+// }
