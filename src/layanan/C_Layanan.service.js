@@ -1,4 +1,4 @@
-const ApiError = require ("../utils/ApiError.js");
+const ApiError = require ("../utils/apiError.js");
 const { jenisLayananRepository, targetPesertaRepository } = require ("./C_Layanan.repository.js");
 
 const jenisLayananService = {
