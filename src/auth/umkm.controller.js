@@ -1,5 +1,5 @@
 const express = require('express');
-const upload = require('../middleware/multer'); // memory storage multer
+const { upload } = require('../middleware/multer'); // memory storage multer
 const { multerErrorHandler, authMiddleware } = require('../middleware/middleware');
 const ApiError = require('../utils/apiError');
 const nodemailer = require('nodemailer');

@@ -1037,13 +1037,77 @@
                 "type": "object",
                 "properties": {
                   "items": {
-                    "type": "array"
+                    "type": "array",
+                    "MinItems": 1,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "products_id": {
+                          "type": "integer",
+                          "example": "17"
+                        },
+                        "quantity": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "price": {
+                          "type": "number",
+                          "example": 29000
+                        }
+                      }
+                    }
                   },
                   "shippingAddress": {
-                    "type": "string"
+                    "type": "string",
+                    "example": 139
                   },
                   "paymentMethod": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "BANK_TRANSFER"
+                  },
+                  "address": {
+                    "type": "string",
+                    "example": "Jl. Kopi No. 12, Jember"
+                  },
+                  "cost": {
+                    "type": "number",
+                    "example": 30000
+                  },
+                  "shipping_name": {
+                    "type": "string",
+                    "example": "J&T Express"
+                  },
+                  "shipping_code": {
+                    "type": "string",
+                    "example": "jnt"
+                  },
+                  "shipping_service": {
+                    "type": "string",
+                    "example": "darat"
+                  },
+                  "destination_id": {
+                    "type": "integer",
+                    "example": 31300
+                  },
+                  "destination_province": {
+                    "type": "string",
+                    "example": "Jawa Timur"
+                  },
+                  "destination_city": {
+                    "type": "string",
+                    "example": "Jember"
+                  },
+                  "destination_district": {
+                    "type": "string",
+                    "example": "Wirolegi"
+                  },
+                  "destination_subdistrict": {
+                    "type": "string",
+                    "example": "Sumbersari"
+                  },
+                  "destination_pos_code": {
+                    "type": "string",
+                    "example": "68124"
                   }
                 }
               }
@@ -1227,9 +1291,23 @@
             "cookieAuth": []
           }
         ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Masukkan kata kunci alamat yang ingin dicari (contoh: Malang)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Address search completed successfully"
+          },
+          "400": {
+            "description": "Validasi gagal! Parameter 'search' tidak ditemukan"
           }
         }
       }
@@ -1245,9 +1323,40 @@
             "cookieAuth": []
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "destination": {
+                    "type": "string",
+                    "description": "Alamat tujuan pengiriman (contoh: 68121)"
+                  },
+                  "weight": {
+                    "type": "integer",
+                    "description": "Berat barang dalam gram (contoh: 1500)"
+                  }
+                },
+                "required": [
+                  "destination",
+                  "weight"
+                ]
+              },
+              "example": {
+                "destination": "68121",
+                "weight": 1500
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Shipping cost calculated successfully"
+          },
+          "400": {
+            "description": "Validasi gagal! Pastikan 'destination' dan 'weight' diisi"
           }
         }
       }
@@ -1273,6 +1382,26 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "description": "Alasan pembatalan order",
+                    "example": "Barang tidak sesuai pesanan"
+                  }
+                },
+                "required": [
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Order cancelled successfully"
@@ -1301,6 +1430,26 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "description": "Status pengiriman baru untuk order",
+                    "example": "PROCESSING, SHIPPED, DELIVERED, CANCELLED"
+                  }
+                },
+                "required": [
+                  "status"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Order status updated successfully"
