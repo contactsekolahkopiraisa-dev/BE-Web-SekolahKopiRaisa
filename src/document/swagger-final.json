@@ -19,18 +19,40 @@
       "description": "Railway Production Server"
     }
   ],
-
   "tags": [
-    { "name": "default" },
-    { "name": "Authentication" },
-    { "name": "News" },
-    { "name": "Products" },
-    { "name": "Partners" },
-    { "name": "Cart" },
-    { "name": "Orders" },
-    { "name": "Company" }
+    {
+      "name": "default"
+    },
+    {
+      "name": "Authentication"
+    },
+    {
+      "name": "News"
+    },
+    {
+      "name": "Products"
+    },
+    {
+      "name": "Partners"
+    },
+    {
+      "name": "Cart"
+    },
+    {
+      "name": "Orders"
+    },
+    {
+      "name": "Company"
+    },
+    {
+      "name": "Jenis Layanan",
+      "description": "Mengelola jenis layanan seperti PKL, Magang, Pelatihan, dan lainnya"
+    },
+    {
+      "name": "Modul",
+      "description": "Mengelola modul"
+    }
   ],
-
   "components": {
     "securitySchemes": {
       "cookieAuth": {
@@ -53,7 +75,9 @@
     },
     "/api/v1/auth/daftar": {
       "post": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Register new user",
         "requestBody": {
           "required": true,
@@ -61,7 +85,12 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["name", "email", "password", "phone_number"],
+                "required": [
+                  "name",
+                  "email",
+                  "password",
+                  "phone_number"
+                ],
                 "properties": {
                   "name": {
                     "type": "string",
@@ -102,7 +131,9 @@
     },
     "/api/v1/auth/login": {
       "post": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Login user",
         "requestBody": {
           "required": true,
@@ -110,7 +141,10 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["emailOrPhone", "password"],
+                "required": [
+                  "emailOrPhone",
+                  "password"
+                ],
                 "properties": {
                   "emailOrPhone": {
                     "type": "string",
@@ -136,9 +170,15 @@
     },
     "/api/v1/auth/user": {
       "get": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Get current user profile",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "User profile retrieved successfully"
@@ -146,16 +186,25 @@
         }
       },
       "put": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Update user profile",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "multipart/form-data": {
               "schema": {
                 "type": "object",
-                "required": ["name", "phone_number"],
+                "required": [
+                  "name",
+                  "phone_number"
+                ],
                 "properties": {
                   "name": {
                     "type": "string",
@@ -195,7 +244,9 @@
     },
     "/api/v1/auth/reset-password-request": {
       "post": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Request password reset",
         "requestBody": {
           "required": true,
@@ -203,7 +254,9 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["email"],
+                "required": [
+                  "email"
+                ],
                 "properties": {
                   "email": {
                     "type": "string",
@@ -228,7 +281,9 @@
     },
     "/api/v1/auth/reset-password": {
       "put": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Reset password",
         "requestBody": {
           "required": true,
@@ -236,7 +291,10 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["token", "newPassword"],
+                "required": [
+                  "token",
+                  "newPassword"
+                ],
                 "properties": {
                   "token": {
                     "type": "string",
@@ -266,7 +324,9 @@
     },
     "/api/v1/auth/google": {
       "get": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Google OAuth login",
         "responses": {
           "302": {
@@ -277,7 +337,9 @@
     },
     "/api/v1/auth/google/callback": {
       "get": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Google OAuth callback",
         "responses": {
           "302": {
@@ -288,7 +350,9 @@
     },
     "/api/v1/auth/save-token": {
       "post": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Save authentication token",
         "responses": {
           "200": {
@@ -299,7 +363,9 @@
     },
     "/api/v1/news": {
       "get": {
-        "tags": ["News"],
+        "tags": [
+          "News"
+        ],
         "summary": "Get all news",
         "responses": {
           "200": {
@@ -308,16 +374,25 @@
         }
       },
       "post": {
-        "tags": ["News"],
+        "tags": [
+          "News"
+        ],
         "summary": "Create new news",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "multipart/form-data": {
               "schema": {
                 "type": "object",
-                "required": ["title", "content"],
+                "required": [
+                  "title",
+                  "content"
+                ],
                 "properties": {
                   "title": {
                     "type": "string",
@@ -333,7 +408,10 @@
                   },
                   "media": {
                     "type": "array",
-                    "items": { "type": "string", "format": "binary" },
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    },
                     "description": "Media files (maksimal 4 files)"
                   },
                   "thumbnail": {
@@ -355,14 +433,18 @@
     },
     "/api/v1/news/{id}": {
       "get": {
-        "tags": ["News"],
+        "tags": [
+          "News"
+        ],
         "summary": "Get news by ID",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -372,15 +454,23 @@
         }
       },
       "put": {
-        "tags": ["News"],
+        "tags": [
+          "News"
+        ],
         "summary": "Update news",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -390,13 +480,23 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "title": { "type": "string" },
-                  "content": { "type": "string" },
+                  "title": {
+                    "type": "string"
+                  },
+                  "content": {
+                    "type": "string"
+                  },
                   "media": {
                     "type": "array",
-                    "items": { "type": "string", "format": "binary" }
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
                   },
-                  "thumbnail": { "type": "string", "format": "binary" }
+                  "thumbnail": {
+                    "type": "string",
+                    "format": "binary"
+                  }
                 }
               }
             }
@@ -409,15 +509,23 @@
         }
       },
       "delete": {
-        "tags": ["News"],
+        "tags": [
+          "News"
+        ],
         "summary": "Delete news",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -429,7 +537,9 @@
     },
     "/api/v1/product": {
       "get": {
-        "tags": ["Products"],
+        "tags": [
+          "Products"
+        ],
         "summary": "Get all products",
         "responses": {
           "200": {
@@ -438,9 +548,15 @@
         }
       },
       "post": {
-        "tags": ["Products"],
+        "tags": [
+          "Products"
+        ],
         "summary": "Create new product",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -448,13 +564,28 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "name": { "type": "string" },
-                  "description": { "type": "string" },
-                  "price": { "type": "number" },
-                  "stock": { "type": "integer" },
-                  "productFile": { "type": "string", "format": "binary" },
-                  "partner_id": { "type": "integer" },
-                  "weight": { "type": "number" }
+                  "name": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "price": {
+                    "type": "number"
+                  },
+                  "stock": {
+                    "type": "integer"
+                  },
+                  "productFile": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "partner_id": {
+                    "type": "integer"
+                  },
+                  "weight": {
+                    "type": "number"
+                  }
                 }
               }
             }
@@ -469,14 +600,18 @@
     },
     "/api/v1/product/{id}": {
       "get": {
-        "tags": ["Products"],
+        "tags": [
+          "Products"
+        ],
         "summary": "Get product by ID",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -486,15 +621,23 @@
         }
       },
       "put": {
-        "tags": ["Products"],
+        "tags": [
+          "Products"
+        ],
         "summary": "Update product",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -504,13 +647,28 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "name": { "type": "string" },
-                  "description": { "type": "string" },
-                  "price": { "type": "number" },
-                  "stock": { "type": "integer" },
-                  "productFile": { "type": "string", "format": "binary" },
-                  "partner_id": { "type": "number" },
-                  "weight": { "type": "number" }
+                  "name": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "price": {
+                    "type": "number"
+                  },
+                  "stock": {
+                    "type": "integer"
+                  },
+                  "productFile": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "partner_id": {
+                    "type": "number"
+                  },
+                  "weight": {
+                    "type": "number"
+                  }
                 }
               }
             }
@@ -525,15 +683,23 @@
     },
     "/api/v1/product/{idProduct}": {
       "delete": {
-        "tags": ["Products"],
+        "tags": [
+          "Products"
+        ],
         "summary": "Delete product",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "idProduct",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -545,9 +711,15 @@
     },
     "/api/v1/partner": {
       "get": {
-        "tags": ["Partners"],
+        "tags": [
+          "Partners"
+        ],
         "summary": "Get all partners",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Partners retrieved successfully"
@@ -555,16 +727,26 @@
         }
       },
       "post": {
-        "tags": ["Partners"],
+        "tags": [
+          "Partners"
+        ],
         "summary": "Create new partner",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["name", "owner_name", "phone_number"],
+                "required": [
+                  "name",
+                  "owner_name",
+                  "phone_number"
+                ],
                 "properties": {
                   "name": {
                     "type": "string",
@@ -600,15 +782,23 @@
     },
     "/api/v1/partner/{id}": {
       "get": {
-        "tags": ["Partners"],
+        "tags": [
+          "Partners"
+        ],
         "summary": "Get partner by ID",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -618,15 +808,23 @@
         }
       },
       "put": {
-        "tags": ["Partners"],
+        "tags": [
+          "Partners"
+        ],
         "summary": "Update partner",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -636,9 +834,15 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "name": { "type": "string" },
-                  "owner_name": { "type": "string" },
-                  "phone_number": { "type": "string" }
+                  "name": {
+                    "type": "string"
+                  },
+                  "owner_name": {
+                    "type": "string"
+                  },
+                  "phone_number": {
+                    "type": "string"
+                  }
                 }
               }
             }
@@ -651,15 +855,23 @@
         }
       },
       "delete": {
-        "tags": ["Partners"],
+        "tags": [
+          "Partners"
+        ],
         "summary": "Delete partner",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -671,9 +883,15 @@
     },
     "/api/v1/cart": {
       "get": {
-        "tags": ["Cart"],
+        "tags": [
+          "Cart"
+        ],
         "summary": "Get user cart",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Cart retrieved successfully"
@@ -681,9 +899,15 @@
         }
       },
       "post": {
-        "tags": ["Cart"],
+        "tags": [
+          "Cart"
+        ],
         "summary": "Add item to cart",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -691,8 +915,12 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "productId": { "type": "string" },
-                  "quantity": { "type": "integer" }
+                  "productId": {
+                    "type": "string"
+                  },
+                  "quantity": {
+                    "type": "integer"
+                  }
                 }
               }
             }
@@ -707,15 +935,23 @@
     },
     "/api/v1/cart/{id}": {
       "put": {
-        "tags": ["Cart"],
+        "tags": [
+          "Cart"
+        ],
         "summary": "Update cart item",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -725,7 +961,9 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "quantity": { "type": "integer" }
+                  "quantity": {
+                    "type": "integer"
+                  }
                 }
               }
             }
@@ -738,15 +976,23 @@
         }
       },
       "delete": {
-        "tags": ["Cart"],
+        "tags": [
+          "Cart"
+        ],
         "summary": "Remove item from cart",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -758,9 +1004,15 @@
     },
     "/api/v1/order": {
       "get": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Get all orders (admin)",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Orders retrieved successfully"
@@ -768,9 +1020,15 @@
         }
       },
       "post": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Create new order",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -778,29 +1036,15 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "items": { "type": "array", "MinItems": 1,
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "products_id": { "type": "integer", "example": "17" },
-                        "quantity": { "type": "integer", "example": 1 },
-                        "price": { "type": "number", "example": 29000 }
-                      }
-                    }
+                  "items": {
+                    "type": "array"
                   },
-                  "shippingAddress": { "type": "string", "example": 139 },
-                  "paymentMethod": { "type": "string", "example": "BANK_TRANSFER" },
-                  "address": { "type": "string", "example": "Jl. Kopi No. 12, Jember" },
-                  "cost": { "type": "number", "example": 30000 },
-                  "shipping_name": { "type": "string", "example": "J&T Express" },
-                  "shipping_code": { "type": "string", "example": "jnt" },
-                  "shipping_service": { "type": "string", "example": "darat" },
-                  "destination_id": { "type": "integer", "example": 31300 },
-                  "destination_province": { "type": "string", "example": "Jawa Timur" },
-                  "destination_city": { "type": "string", "example": "Jember" },
-                  "destination_district": { "type": "string", "example": "Wirolegi" },
-                  "destination_subdistrict": { "type": "string", "example": "Sumbersari" },
-                  "destination_pos_code": { "type": "string", "example": "68124" }
+                  "shippingAddress": {
+                    "type": "string"
+                  },
+                  "paymentMethod": {
+                    "type": "string"
+                  }
                 }
               }
             }
@@ -815,15 +1059,23 @@
     },
     "/api/v1/order/{id}/detail": {
       "get": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Get order detail",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -835,9 +1087,15 @@
     },
     "/api/v1/order/my-order": {
       "get": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Get user's orders",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "User orders retrieved successfully"
@@ -847,9 +1105,15 @@
     },
     "/api/v1/order/history": {
       "get": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Get order history",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Order history retrieved successfully"
@@ -859,9 +1123,15 @@
     },
     "/api/v1/order/completed": {
       "get": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Get completed orders",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Completed orders retrieved successfully"
@@ -871,9 +1141,15 @@
     },
     "/api/v1/order/Order-statuses": {
       "get": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Get order statuses",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Order statuses retrieved successfully"
@@ -883,9 +1159,15 @@
     },
     "/api/v1/order/payment-method": {
       "get": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Get payment methods",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Payment methods retrieved successfully"
@@ -895,7 +1177,9 @@
     },
     "/api/v1/order/midtrans/notification": {
       "post": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Midtrans payment notification webhook",
         "responses": {
           "200": {
@@ -906,15 +1190,23 @@
     },
     "/api/v1/order/contact-partner/{partnerId}": {
       "post": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Contact partner for order",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "partnerId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -926,101 +1218,61 @@
     },
     "/api/v1/order/search-address": {
       "get": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Search shipping address",
-        "security": [{ "cookieAuth": [] }],
-        "parameters": [
+        "security": [
           {
-            "name": "search",
-            "in": "query",
-            "description": "Masukkan kata kunci alamat yang ingin dicari (contoh: Malang)",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
+            "cookieAuth": []
           }
         ],
         "responses": {
           "200": {
             "description": "Address search completed successfully"
-          },
-          "400": {
-            "description": "Validasi gagal! Parameter 'search' tidak ditemukan"
           }
         }
       }
     },
     "/api/v1/order/search-cost": {
       "post": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Calculate shipping cost",
-        "security": [{ "cookieAuth": [] }],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "destination": {
-                    "type": "string",
-                    "description": "Alamat tujuan pengiriman (contoh: 68121)"
-                  },
-                  "weight": {
-                    "type": "integer",
-                    "description": "Berat barang dalam gram (contoh: 1500)"
-                  }
-                },
-                "required": ["destination", "weight"]
-              },
-              "example": {
-                "destination": "68121",
-                "weight": 1500
-              }
-            }
+        "security": [
+          {
+            "cookieAuth": []
           }
-        },
+        ],
         "responses": {
           "200": {
             "description": "Shipping cost calculated successfully"
-          },
-          "400": {
-            "description": "Validasi gagal! Pastikan 'destination' dan 'weight' diisi"
           }
         }
       }
     },
     "/api/v1/order/{id}/cancel": {
       "put": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Cancel order",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "reason": {
-                    "type": "string",
-                    "description": "Alasan pembatalan order",
-                    "example": "Barang tidak sesuai pesanan"
-                  }
-                },
-                "required": ["reason"]
-              }
+            "schema": {
+              "type": "string"
             }
           }
-        },
+        ],
         "responses": {
           "200": {
             "description": "Order cancelled successfully"
@@ -1030,35 +1282,25 @@
     },
     "/api/v1/order/{id}/update-status": {
       "put": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Update order status",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "status": {
-                    "type": "string",
-                    "description": "Status pengiriman baru untuk order",
-                    "example": "PROCESSING, SHIPPED, DELIVERED, CANCELLED"
-                  }
-                },
-                "required": ["status"]
-              }
+            "schema": {
+              "type": "string"
             }
           }
-        },
+        ],
         "responses": {
           "200": {
             "description": "Order status updated successfully"
@@ -1068,15 +1310,23 @@
     },
     "/api/v1/order/{id}": {
       "put": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Update order",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -1086,15 +1336,23 @@
         }
       },
       "delete": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Delete order",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -1106,9 +1364,15 @@
     },
     "/api/v1/order/notifications": {
       "get": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Get order notifications",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Notifications retrieved successfully"
@@ -1118,9 +1382,15 @@
     },
     "/api/v1/company": {
       "get": {
-        "tags": ["Company"],
+        "tags": [
+          "Company"
+        ],
         "summary": "Get company information",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Company information retrieved successfully"
@@ -1128,9 +1398,15 @@
         }
       },
       "post": {
-        "tags": ["Company"],
+        "tags": [
+          "Company"
+        ],
         "summary": "Create company profile",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1138,11 +1414,21 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "name": { "type": "string" },
-                  "description": { "type": "string" },
-                  "address": { "type": "string" },
-                  "phone": { "type": "string" },
-                  "email": { "type": "string" }
+                  "name": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "address": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  }
                 }
               }
             }
@@ -1157,15 +1443,23 @@
     },
     "/api/v1/company/{id}": {
       "get": {
-        "tags": ["Company"],
+        "tags": [
+          "Company"
+        ],
         "summary": "Get company by ID",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -1175,15 +1469,23 @@
         }
       },
       "put": {
-        "tags": ["Company"],
+        "tags": [
+          "Company"
+        ],
         "summary": "Update company profile",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -1193,11 +1495,21 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "name": { "type": "string" },
-                  "description": { "type": "string" },
-                  "address": { "type": "string" },
-                  "phone": { "type": "string" },
-                  "email": { "type": "string" }
+                  "name": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "address": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  }
                 }
               }
             }
@@ -1206,6 +1518,247 @@
         "responses": {
           "200": {
             "description": "Company profile updated successfully"
+          }
+        }
+      }
+    },
+    "/api/v1/jenis-layanan": {
+      "get": {
+        "tags": [
+          "Jenis Layanan"
+        ],
+        "summary": "Get all jenis layanan",
+        "responses": {
+          "200": {
+            "description": "Berhasil mendapatkan semua Jenis Layanan !",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil mendapatkan semua Jenis Layanan !",
+                  "data": [
+                    {
+                      "id": 1,
+                      "nama_jenis_layanan": "Pelatihan Kopi",
+                      "deskripsi_singkat": "Pelatihan sehari tentang kopi",
+                      "deskripsi_lengkap": "Program pelatihan singkat yang memperkenalkan berbagai teknik dasar penyeduhan kopi, pengenalan biji kopi, dan praktik cupping di Sekolah Kopi RAISA.",
+                      "image": "https://example.com/images/pelatihan-kopi.jpg",
+                      "estimasi_waktu": "1 Hari",
+                      "targetPeserta": {
+                        "id": 1,
+                        "nama_target": "Umum"
+                      }
+                    },
+                    {
+                      "id": 2,
+                      "nama_jenis_layanan": "Praktek Kerja Lapangan (PKL)",
+                      "deskripsi_singkat": "Program PKL untuk siswa dan mahasiswa",
+                      "deskripsi_lengkap": "Kegiatan praktik kerja lapangan yang memungkinkan peserta memahami langsung proses produksi dan manajemen bisnis kopi di Sekolah Kopi RAISA.",
+                      "image": "https://example.com/images/pkl.jpg",
+                      "estimasi_waktu": "2 - 4 Bulan",
+                      "targetPeserta": {
+                        "id": 2,
+                        "nama_target": "Mahasiswa"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jenis-layanan/{id}": {
+      "get": {
+        "tags": [
+          "Jenis Layanan"
+        ],
+        "summary": "Get jenis layanan by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID dari jenis layanan yang ingin diambil",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil mengambil jenis layanan ID '{id}' !",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil Mendapatkan Jenis Layanan ID '1' !",
+                  "data": {
+                    "id": 1,
+                    "nama_jenis_layanan": "Pelatihan Kopi",
+                    "deskripsi_singkat": "Pelatihan sehari tentang kopi",
+                    "deskripsi_lengkap": "Program pelatihan singkat yang memperkenalkan berbagai teknik dasar penyeduhan kopi, pengenalan biji kopi, dan praktik cupping di Sekolah Kopi RAISA.",
+                    "image": "https://example.com/images/pelatihan-kopi.jpg",
+                    "estimasi_waktu": "1 Hari",
+                    "targetPeserta": {
+                      "id": 1,
+                      "nama_target": "Umum"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modul": {
+      "get": {
+        "tags": [
+          "Modul"
+        ],
+        "summary": "Get all modul",
+        "responses": {
+          "200": {
+            "description": "Berhasil mendapatkan semua Modul !",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil mendapatkan semua Modul!",
+                  "data": [
+                    {
+                      "id": 1,
+                      "id_dibuat_oleh": 42,
+                      "judul_modul": "sadasd",
+                      "deskripsi": "asdasdasd",
+                      "file_modul": "https://res.cloudinary.com/darsrhtsb/raw/upload/v1761395292/konten-kopiraisa/modul/1761395289037_FORMAT%20-%20SURAT%20PENGANTAR.docx.pdf",
+                      "created_at": "2025-10-25T12:28:12.954Z",
+                      "updated_at": "2025-10-25T12:28:12.954Z"
+                    },
+                    {
+                      "id": 2,
+                      "id_dibuat_oleh": 42,
+                      "judul_modul": "sadafdgdfgsd",
+                      "deskripsi": "asdasdasddfv",
+                      "file_modul": "https://res.cloudinary.com/darsrhtsb/raw/upload/v1761395292/konten-kopiraisa/modul/1761395289037_FORMAT%20-%20SURAT%20PENGANTAR.docx.pdf",
+                      "created_at": "2025-10-25T12:28:12.954Z",
+                      "updated_at": "2025-10-25T12:28:12.954Z"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Modul"
+        ],
+        "summary": "Create new modul [admin only]",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "judul_modul": {
+                    "type": "string"
+                  },
+                  "deskripsi": {
+                    "type": "string"
+                  },
+                  "file_modul": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Berhasil mengunggah Modul '{nama_modul}' !",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil mengunggah Modul 'dsfbbsyby rtby' !",
+                  "data": {
+                    "id": 3,
+                    "id_dibuat_oleh": 42,
+                    "judul_modul": "dsfbbsyby rtby",
+                    "deskripsi": "trghun jn uiu ",
+                    "file_modul": "https://res.cloudinary.com/darsrhtsb/raw/upload/v1761398548/konten-kopiraisa/modul/1761398547378_FORMAT%20-%20SURAT%20PENGANTAR.docx.pdf",
+                    "created_at": "2025-10-25T13:22:29.457Z",
+                    "updated_at": "2025-10-25T13:22:29.457Z"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Akses ditolak! Hanya admin yang dapat mengunggah modul !",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Akses ditolak! Hanya admin yang dapat mengunggah modul !"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modul/{id}": {
+      "get": {
+        "tags": [
+          "Modul"
+        ],
+        "summary": "Get modul by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID dari modul yang ingin diambil",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil mendapatkan Modul ID '{id}' !",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil Mendapatkan Modul ID '1'!",
+                  "data": {
+                    "id": 1,
+                    "id_dibuat_oleh": 42,
+                    "judul_modul": "sadasd",
+                    "deskripsi": "asdasdasd",
+                    "file_modul": "https://res.cloudinary.com/darsrhtsb/raw/upload/v1761395292/konten-kopiraisa/modul/1761395289037_FORMAT%20-%20SURAT%20PENGANTAR.docx.pdf",
+                    "created_at": "2025-10-25T12:28:12.954Z",
+                    "updated_at": "2025-10-25T12:28:12.954Z"
+                  }
+                }
+              }
+            }
           }
         }
       }

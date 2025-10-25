@@ -5,7 +5,7 @@ const findPartner = async () => {
         include: {
             products:{
                 include:{
-                    inventory:true,
+                    inventories:true,
                 }
             },
         }
@@ -26,7 +26,7 @@ const findPartnerById = async (partnerId) => {
                     price: true,
                     description: true,
                     image: true,
-                    inventory: {
+                    inventories: {
                         select: {
                             stock: true,
                         }

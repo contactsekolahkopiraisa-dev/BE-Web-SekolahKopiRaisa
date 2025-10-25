@@ -1,5 +1,6 @@
 const cloudinary = require('cloudinary').v2;
 const dotenv = require('dotenv');
+const path = require('path');
 
 dotenv.config();
 
@@ -42,7 +43,7 @@ const extractPublicId = getPublicIdFromUrl; // alias agar bisa digunakan dengan 
 const guessResourceType = (url) => {
     if (url.match(/\.(jpg|jpeg|png|gif|webp)$/i)) return 'image';
     if (url.match(/\.(mp4|mov|avi|mkv)$/i)) return 'video';
-    return 'raw'; // fallback
+    return 'raw'; // fallback untuk pdf, zip, docx, dll
     
 };
 
@@ -63,6 +64,9 @@ const deleteFromCloudinaryByUrl = async (fileUrl) => {
     }
 };
 
+/**
+ * Upload image (resource_type: "image")
+ */
 const uploadImage = async (filePath) => {
     try {
         const result = await cloudinary.uploader.upload(filePath, {

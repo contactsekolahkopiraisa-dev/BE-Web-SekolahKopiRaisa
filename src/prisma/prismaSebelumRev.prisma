@@ -19,10 +19,10 @@ model User {
   createdAt          DateTime            @default(now())
   updated_at         DateTime            @updatedAt
   google_id          String?             @unique
-  role               Role?               // gunakan enum Role untuk menandai UMKM
+  role               role?             
 
   carts              Cart?
-  facebookAccounts   FacebookAccount?
+  facebookAccount    FacebookAccount?
   formEntries        FormEntry[]
   news               News[]
   notifications      Notification[]
@@ -30,11 +30,11 @@ model User {
   orderCancellations OrderCancellation[]
   reviews            Review[]
   transactions       Transaction[]
-  financialReports   FinancialReport[]
-  profiles           Profile[]
-  verifikasiUMKMs    VerifikasiUMKM[]
-  layanans           Layanan[]
-  moduls             Modul[]
+  financialReport    FinancialReport[]
+  profile            Profile[]
+  verifikasiUMKM     VerifikasiUMKM[]
+  layanan            Layanan[]
+  modul              Modul[]
 }
 
 model FacebookAccount {
@@ -55,6 +55,7 @@ model FacebookAccount {
   instagramAccount_id String?
   instagram_username  String?
 
+  // BAWAH INI user DI DB : User                User     @relation(fields: [userId], references: [id])
   user                User     @relation(fields: [userId], references: [id])
 }
 
@@ -68,8 +69,11 @@ model Notification {
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 
-  order       Order?   @relation(fields: [order_id], references: [id])
+  // BAWAH INI user order DI DB :
+  // Order       Order?   @relation(fields: [order_id], references: [id])
+  // User        User     @relation(fields: [user_id], references: [id])
   user        User     @relation(fields: [user_id], references: [id])
+  order       Order?   @relation(fields: [order_id], references: [id])
 }
 
 model Partner {
@@ -80,6 +84,9 @@ model Partner {
   created_at         DateTime    @default(now())
   updated_at         DateTime    @updatedAt
 
+  // BAWAH INI ordersItems products DI DB :
+  // OrderItem    OrderItem[]
+  // Product      Product[]
   ordersItems        OrderItem[]
   products           Product[]
 }
@@ -95,16 +102,34 @@ model Product {
   created_at  DateTime    @default(now())
   updated_at  DateTime    @updatedAt
 
-  partner             Partner     @relation(fields: [partner_id], references: [id])
-
-  cartItems           CartItem[]
-  inventories         Inventory?
-  orderItems          OrderItem[]
-  reviews             Review[]
-  detailTransactions  DetailTransaction[]
-  salesReports        SalesReport[]
-  hargas              Harga[]
+  cartItems   CartItem[]
+  inventory   Inventory?
+  orderItems  OrderItem[]
+  partner     Partner     @relation(fields: [partner_id], references: [id])
+  reviews     Review[]
+  detailTransaction DetailTransaction[]
+  salesReport   SalesReport[]
 }
+// MODEL Product DI DB :
+//model Product {
+//  id                 Int                  @id @default(autoincrement())
+//  name               String
+//  price              Int
+//  description        String?
+//  image              String?
+//  partner_id         Int
+//  created_at         DateTime             @default(now())
+//  updated_at         DateTime
+//  weight             Int
+//
+//  CartItem           CartItem[]
+//  Inventory          Inventory?
+//  OrderItem          OrderItem[]
+//  Partner            Partner              @relation(fields: [partner_id], references: [id])
+//  Review             Review[]
+//  detail_transaction detail_transaction[]
+//  sales_report       sales_report[]
+//}
 
 model Inventory {
   id          Int      @id @default(autoincrement())
@@ -113,24 +138,38 @@ model Inventory {
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 
-  products     Product  @relation(fields: [products_id], references: [id], onDelete: Cascade)
+  // BAWAH INI product DI DB : Product     Product  @relation(fields: [products_id], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [products_id], references: [id], onDelete: Cascade)
 }
 
 model Transaction {
   id           Int               @id @default(autoincrement())
   user_id      Int
-  payment_id   Int
   status       TransactionStatus
   total_amount Int
   created_at   DateTime          @default(now())
   updated_at   DateTime          @updatedAt
 
-  payment             Payment    @relation(fields: [payment_id], references: [id])
-  user                User       @relation(fields: [user_id], references: [id])
-
-  detailTransactions  DetailTransaction[]
-  salesReports        SalesReport[]
+  user         User              @relation(fields: [user_id], references: [id])
+  detailTransaction DetailTransaction[]
+  salesReport       SalesReport[]
 }
+// MODEL Transaction DI DB :
+// model Transaction {
+//   id                 Int                  @id @default(autoincrement())
+//   user_id            Int
+//   status             TransactionStatus
+//   total_amount       Int
+//   created_at         DateTime             @default(now())
+//   updated_at         DateTime
+//   payment_id         Int
+//
+//   User               User                 @relation(fields: [user_id], references: [id])
+//   Payment            Payment              @relation(fields: [payment_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payment_id")
+//   detail_transaction detail_transaction[]
+//   sales_report       sales_report[]
+//}
+
 
 model Cart {
   id         Int        @id @default(autoincrement())
@@ -138,8 +177,11 @@ model Cart {
   created_at DateTime   @default(now())
   updated_at DateTime   @updatedAt
 
-  user          User       @relation(fields: [user_id], references: [id])
-  cartItems     CartItem[]
+  // BAWAH INI user cartItems DI DB :
+  // User       User       @relation(fields: [user_id], references: [id])
+  // CartItem   CartItem[]
+  user       User       @relation(fields: [user_id], references: [id])
+  cartItems  CartItem[]
 }
 
 model CartItem {
@@ -150,6 +192,9 @@ model CartItem {
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 
+  // BAWAH INI cart product DI DB:
+  // Cart        Cart     @relation(fields: [cart_id], references: [id])
+  // Product     Product  @relation(fields: [products_id], references: [id], onDelete: Cascade)
   cart        Cart     @relation(fields: [cart_id], references: [id])
   product     Product  @relation(fields: [products_id], references: [id], onDelete: Cascade)
 }
@@ -161,8 +206,16 @@ model Order {
   created_at        DateTime           @default(now())
   updated_at        DateTime           @updatedAt
 
+  // BAWAH INI user OrderCancellation orderItems payment review shippingAddress shippingDetail notification DI DB :
+  // Notification      Notification[]
+  // User              User               @relation(fields: [user_id], references: [id])
+  // OrderCancellation OrderCancellation?
+  // OrderItem         OrderItem[]
+  // Payment           Payment?
+  // Review            Review[]
+  // ShippingAddress   ShippingAddress?
+  // ShippingDetail    ShippingDetail?
   user              User               @relation(fields: [user_id], references: [id])
-
   OrderCancellation OrderCancellation?
   orderItems        OrderItem[]
   payment           Payment?
@@ -184,6 +237,10 @@ model OrderItem {
   partner_id             Int?
   notified_to_partner_at DateTime?
 
+  // BAWAH INI order partner product DI DB :
+  // Order                  Order     @relation(fields: [order_id], references: [id])
+  // Partner                Partner?  @relation(fields: [partner_id], references: [id])
+  // Product                Product   @relation(fields: [products_id], references: [id], onDelete: Cascade)
   order                  Order     @relation(fields: [order_id], references: [id])
   partner                Partner?  @relation(fields: [partner_id], references: [id])
   product                Product   @relation(fields: [products_id], references: [id], onDelete: Cascade)
@@ -201,9 +258,25 @@ model ShippingAddress {
   destination_zip_code    Int?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-
   order      Order    @relation(fields: [order_id], references: [id])
 }
+// MODEL ShippingAddress DI DB :
+// model ShippingAddress {
+//   id                      Int      @id @default(autoincrement())
+//   order_id                Int      @unique
+//   address                 String
+//   created_at              DateTime @default(now())
+//   updated_at              DateTime
+//   destination_city        String?
+//   destination_district    String?
+//   destination_id          Int?
+//   destination_province    String?
+//   destination_subdistrict String?
+//   destination_zip_code    Int?
+// 
+//   Order                   Order    @relation(fields: [order_id], references: [id])
+//}
+
 
 model ShippingDetail {
   id                 Int      @id @default(autoincrement())
@@ -220,6 +293,7 @@ model ShippingDetail {
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt
 
+  // BAWAH INI order DI DB : Order             Order    @relation(fields: [order_id], references: [id])
   order             Order    @relation(fields: [order_id], references: [id])
 }
 
@@ -236,8 +310,10 @@ model Payment {
   created_at        DateTime       @default(now())
   updated_at        DateTime       @updatedAt
 
-  order              Order          @relation(fields: [order_id], references: [id])
-  Transactions       Transaction[]
+  // BAWAH INI order DI DB :
+  // Order             Order          @relation(fields: [order_id], references: [id])
+  // Transaction       Transaction[]
+  order             Order          @relation(fields: [order_id], references: [id])
 }
 
 model OrderCancellation {
@@ -247,6 +323,9 @@ model OrderCancellation {
   reason     String
   created_at DateTime @default(now())
 
+  // BAWAH INI order user DI DB :
+  // Order      Order    @relation(fields: [order_id], references: [id])
+  // User       User     @relation(fields: [user_id], references: [id])
   order      Order    @relation(fields: [order_id], references: [id])
   user       User     @relation(fields: [user_id], references: [id])
 }
@@ -258,6 +337,9 @@ model FormTemplate {
   created_at       DateTime    @default(now())
   updated_at       DateTime    @updatedAt
 
+  // BAWAH INI formEntries formFields DI DB :
+  // FormEntry        FormEntry[]
+  // FormField        FormField[]
   formEntries      FormEntry[]
   formFields       FormField[]
 }
@@ -268,9 +350,13 @@ model FormEntry {
   user_id          Int
   submitted_at     DateTime?
 
+  // BAWAH INI formTemplate user formEntryValue DI DB :
+  // FormTemplate     FormTemplate     @relation(fields: [form_template_id], references: [id])
+  // User             User             @relation(fields: [user_id], references: [id])
+  // FormEntryValue   FormEntryValue[]
   formTemplate     FormTemplate     @relation(fields: [form_template_id], references: [id])
   user             User             @relation(fields: [user_id], references: [id])
-  FormEntryValues  FormEntryValue[]
+  FormEntryValue   FormEntryValue[]
 }
 
 model FormField {
@@ -280,7 +366,8 @@ model FormField {
   field_type       String
   field_key        String
 
-  FormEntryValues  FormEntryValue[]
+  // BAWAH INI formTemplate DI DB : FormTemplate     FormTemplate     @relation(fields: [form_template_id], references: [id])
+  FormEntryValue   FormEntryValue[]
   formTemplate     FormTemplate     @relation(fields: [form_template_id], references: [id])
 }
 
@@ -292,8 +379,11 @@ model News {
   created_at DateTime    @default(now())
   updated_at DateTime    @updatedAt
 
+  // BAWAH INI user newsMedia DI DB :
+  // User       User        @relation(fields: [user_id], references: [id])
+  // NewsMedia  NewsMedia[]
   user       User        @relation(fields: [user_id], references: [id])
-  newsMedias NewsMedia[]
+  newsMedia  NewsMedia[]
 }
 
 model NewsMedia {
@@ -303,6 +393,7 @@ model NewsMedia {
   media_type  String
   isThumbnail Boolean @default(false)
 
+  // BAWAH INI news DI DB : News        News    @relation(fields: [news_id], references: [id])
   news        News    @relation(fields: [news_id], references: [id])
 }
 
@@ -316,6 +407,10 @@ model Review {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
+  // BAWAH INI order product user DI DB :
+  // Order      Order    @relation(fields: [order_id], references: [id])
+  // Product    Product  @relation(fields: [product_id], references: [id])
+  // User       User     @relation(fields: [user_id], references: [id])
   order      Order    @relation(fields: [order_id], references: [id])
   product    Product  @relation(fields: [product_id], references: [id])
   user       User     @relation(fields: [user_id], references: [id])
@@ -339,10 +434,15 @@ model AboutCompany {
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 
-  aboutCompanyMedias    AboutCompanyMedia[]
-  aboutVisionMissions   AboutVisionMission[]
-  aboutOrganizations    AboutOrganization[]
-  aboutTeams            AboutTeam[]
+  // BAWAH INI G URUT
+  // AboutCompanyMedia  AboutCompanyMedia[]
+  // AboutOrganization  AboutOrganization[]
+  // AboutTeam          AboutTeam[]
+  // AboutVisionMission AboutVisionMission[]
+  media       AboutCompanyMedia[]
+  visionMission AboutVisionMission[]
+  organization AboutOrganization[]
+  team        AboutTeam[]
 }
 
 model AboutCompanyMedia {
@@ -354,7 +454,8 @@ model AboutCompanyMedia {
   created_at  DateTime @default(now())
   isThumbnail Boolean @default(false)
 
-  aboutCompany       AboutCompany @relation(fields: [about_id], references: [id])
+  // BAWAH INI about DI DB : AboutCompany @relation(fields: [about_id], references: [id])AboutCompany
+  about       AboutCompany @relation(fields: [about_id], references: [id])
 }
 
 model AboutVisionMission {
@@ -365,7 +466,8 @@ model AboutVisionMission {
   updated_at  DateTime @updatedAt
   about_id    Int
 
-  aboutCompany       AboutCompany @relation(fields: [about_id], references: [id])
+  // BAWAH INI about DI DB : AboutCompany AboutCompany @relation(fields: [about_id], references: [id])
+  about       AboutCompany @relation(fields: [about_id], references: [id])
 }
 
 model AboutOrganization {
@@ -377,7 +479,8 @@ model AboutOrganization {
   updated_at  DateTime @updatedAt
   about_id    Int
 
-  aboutCompany       AboutCompany @relation(fields: [about_id], references: [id])
+  //  BAWAH INI about DI DB : AboutCompany AboutCompany @relation(fields: [about_id], references: [id])
+  about       AboutCompany @relation(fields: [about_id], references: [id])
 }
 
 model AboutTeam {
@@ -390,7 +493,8 @@ model AboutTeam {
   updated_at  DateTime @updatedAt
   about_id    Int
 
-  aboutCompany       AboutCompany @relation(fields: [about_id], references: [id])
+  // BAWAH INI about DI DB : AboutCompany AboutCompany @relation(fields: [about_id], references: [id])
+  about       AboutCompany @relation(fields: [about_id], references: [id])
 }
 
 enum VisionMission {
@@ -435,32 +539,8 @@ enum OrderStatus {
   CANCELED
 }
 
-
-
-
-//// =========================
-//// MASUK KE TIM LAPORAN | 2025-GANJIL
-//// =========================
-
-enum Role {
-  UMKM
-}
-
-model VerifikasiUMKM {
-  id_umkm          Int       @id @default(autoincrement())
-  id_user          Int
-  nama_umkm        String    @db.VarChar(100)
-  ktp              String?   @db.VarChar(16)
-  sertifikat_halal String?   @db.VarChar(50)
-
-  User             User      @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  
-  addresses        Address[]
-
-  @@map("verifikasi_umkm")
-}
-
-model Address {
+// DI DB ADA TABEL address
+model address {
   id_address      Int             @id @default(autoincrement())
   id_umkm         Int
   alamat          String?         @db.VarChar(255)
@@ -470,20 +550,24 @@ model Address {
   provinsi        String?         @db.VarChar(100)
   kode_pos        String?         @db.VarChar(10)
 
-  verifikasiUMKM VerifikasiUMKM @relation(fields: [id_umkm], references: [id_umkm])
-
-  @@map("address")
+  verifikasi_umkm VerifikasiUMKM @relation(fields: [id_umkm], references: [id_umkm], onDelete: NoAction, onUpdate: NoAction)
 }
 
-model Profile {
-  id_profile Int  @id @default(autoincrement())
-  id_user    Int
+// DI DB ADA TABEL detail_transaction
+model DetailTransaction {
+  id_detail      Int         @id @default(autoincrement())
+  id_transaction Int
+  id_product     Int
+  jumlah_produk  Int
+ subtotal       Int
+  
+  Product        Product     @relation(fields: [id_product], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Transaction    Transaction @relation(fields: [id_transaction], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  user       User @relation(fields: [id_user], references: [id])
-
-  @@map("profile")
+  @@map("detail_transaction")
 }
 
+// DI DB ADA TABEL financial_report
 model FinancialReport {
   id_financialreport Int      @id @default(autoincrement())
   id_user            Int
@@ -493,56 +577,56 @@ model FinancialReport {
   income             Int
   expenses           Int
 
-  User               User     @relation(fields: [id_user], references: [id])
+  User               User     @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("financial_report")
 }
 
+// DI DB ADA TABEL profile
+model Profile {
+  id_profile Int  @id @default(autoincrement())
+  id_user    Int
+
+  User       User @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("profile")
+}
+
+// DI DB ADA TABEL sales_report
 model SalesReport {
   id_salesreport Int         @id @default(autoincrement())
   id_product     Int
   id_transaction Int
   tanggal        DateTime    @db.Date
 
-  product        Product     @relation(fields: [id_product], references: [id])
-  transaction    Transaction @relation(fields: [id_transaction], references: [id])
+  Product        Product     @relation(fields: [id_product], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Transaction    Transaction @relation(fields: [id_transaction], references: [id], onDelete: NoAction, onUpdate: NoAction)
   
   @@map("sales_report")
 }
 
+// DI DB ADA TABEL verifikasi_umkm
+model VerifikasiUMKM {
+  id_umkm          Int       @id @default(autoincrement())
+  id_user          Int
+  nama_umkm        String    @db.VarChar(100)
+  ktp              String?   @db.VarChar(16)
+  sertifikat_halal String?   @db.VarChar(50)
 
-// DI DB ADA TABEL detail_transaction
-model DetailTransaction {
-  id_detail      Int         @id @default(autoincrement())
-  id_transaction Int
-  id_product     Int
-  jumlah_produk  Int
-  subtotal       Int
-  
-  Transaction    Transaction @relation(fields: [id_transaction], references: [id])
-  Product        Product     @relation(fields: [id_product], references: [id])
+  address          address[]
+  User             User      @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@map("detail_transaction")
+  @@map("verifikasi_umkm")
 }
 
-model Harga {
-  id_harga        Int         @id @default(autoincrement())
-  id_product      Int         
-  harga           Int
-  status          StatusHarga
-  waktu_mulai     DateTime?   
-  waktu_berakhir  DateTime?   
-
-  product        Product     @relation(fields: [id_product], references: [id])
-
-  @@map("harga")
+// DI DB ADA ENUM ROLE 
+enum role {
+  UMKM
 }
 
-enum StatusHarga {
-  Aktif
-  Nonaktif
-  Promo
-}
+
+
+
 
 
 
@@ -554,11 +638,10 @@ enum StatusHarga {
 // lalu buat model manual juga di schema.prisma
 // JANGAN LUPA TIPE DATA SESUAIKAN
 
+
 // edited :
 // 2025-09-18 Mohammad Al Hikam
 // 2025-10-16 Mohammad Al Hikam
-// 2025-10-22 Mohammad Al Hikam
-
 
 
 //// =========================
@@ -578,9 +661,9 @@ model JenisLayanan {
   estimasi_waktu      String      @db.VarChar(32) // ex: string("4 - 6 Hari")
   id_target_peserta   Int
 
-  targetPeserta       TargetPeserta    @relation(fields: [id_target_peserta], references: [id])
-  layanans            Layanan[]
-  konfigurasiLayanans KonfigurasiLayanan[]
+  target_peserta      TargetPeserta    @relation(fields: [id_target_peserta], references: [id])
+  layanan             Layanan[]
+  konfigurasi_layanan KonfigurasiLayanan[]
 
   @@map("jenis_layanan")
   // buat ikonnya statis, validasi di FE
@@ -593,25 +676,34 @@ model TargetPeserta{
   id            Int     @id @default(autoincrement())
   nama_target   String  @unique @db.VarChar(16)
 
-  jenisLayanans  JenisLayanan[]
+  jenis_layanan  JenisLayanan[]
 
   @@map("target_peserta")
 }
 
-model StatusKode {
-  // menyimpan status semuanya
+model StatusPelaksanaan {
+  // menyimpan status pelaksanaan
   // misalnya pengajuan, pelaksanaan, selesai
-  // ii dipakai di semua fitur layanan
+ 
+  id                        Int        @id @default(autoincrement())
+  nama_status_pelaksanaan   String     @unique @db.VarChar(16)
+
+  layanan                   Layanan[]
+
+  @@map("status_pelaksanaan")
+}
+
+model StatusPengajuan {
+  // menyimpan status pengajuan
+  // misalnya diproses, disetujui, ditolak
  
   id                      Int        @id @default(autoincrement())
-  nama_status_kode        String     @unique @db.VarChar(32)
+  nama_status_pengajuan   String     @unique @db.VarChar(16)
 
-  mous                    Mou[]
-  laporans                Laporan[]
-  layananPengajuans       Layanan[]  @relation("StatusPengajuan")
-  layananPelaksanaans     Layanan[]  @relation("StatusPelaksanaan")
+  layanan                 Layanan[]
+  mou                     Mou[]
 
-  @@map("status_kode")
+  @@map("status_pengajuan")
 }
 
 
@@ -646,32 +738,18 @@ model Layanan {
   surat_pengantar_atau_undangan  String? @db.Text
   created_at              DateTime  @default(now())
 
-  user                      User                 @relation(fields: [id_user], references: [id])
-  jenisLayanan              JenisLayanan         @relation(fields: [id_jenis_layanan], references: [id])
-  statusKodePengajuan       StatusKode           @relation("StatusPengajuan", fields: [id_status_pengajuan], references: [id])
-  statusKodePelaksanaan     StatusKode           @relation("StatusPelaksanaan", fields: [id_status_pelaksanaan], references: [id])
-  konfigurasiLayanan        KonfigurasiLayanan   @relation(fields: [id_konfigurasi_layanan], references: [id])
+  user                  User @relation(fields: [id_user], references: [id])
+  jenis_layanan         JenisLayanan         @relation(fields: [id_jenis_layanan], references: [id])
+  status_pengajuan      StatusPengajuan      @relation(fields: [id_status_pengajuan], references: [id])
+  status_pelaksanaan    StatusPelaksanaan    @relation(fields: [id_status_pelaksanaan], references: [id])
+  konfigurasi_layanan   KonfigurasiLayanan   @relation(fields: [id_konfigurasi_layanan], references: [id])
 
-  pesertas              Peserta[]
+  peserta               Peserta[]
   mou                   Mou?
-  laporans              Laporan[]
-  sertifikats           Sertifikat[]
-  layananRejection      LayananRejection[]
+  laporan               Laporan[]
+  sertifikat            Sertifikat[]
 
   @@map("layanan")
-}
-
-model LayananRejection {
-  // nyimpan informasi penolakan layanan
-
-  id          Int       @id @default(autoincrement())
-  id_layanan  Int       @unique
-  alasan      String    @db.Text
-  created_at  DateTime  @default(now())
-
-  layanan     Layanan   @relation(fields: [id_layanan], references: [id])
-
-  @@map("layanan_rejection")
 }
 
 
@@ -691,26 +769,10 @@ model Mou {
   // ketika admin klik acc maka otomatis add tanggal_disetujui
   tanggal_disetujui     DateTime?
 
-  layanan           Layanan       @relation(fields: [id_layanan], references: [id])
-  statusKode        StatusKode    @relation(fields: [id_status_pengajuan], references: [id])
-
-  mouRejection      MouRejection?
+  layanan           Layanan           @relation(fields: [id_layanan], references: [id])
+  statusPengajuan   StatusPengajuan   @relation(fields: [id_status_pengajuan], references: [id])
 
   @@map("mou")
-}
-
-model MouRejection {
-  // nyimpan informasi penolakan mou
-  // misal dia habis ditolak lalu direvisi dan acc maka data rejection nya dihapus
-
-  id          Int       @id @default(autoincrement())
-  id_mou      Int       @unique
-  alasan      String    @db.Text
-  created_at  DateTime  @default(now())
-
-  mou         Mou   @relation(fields: [id_mou], references: [id])
-
-  @@map("mou_rejection")
 }
 
 model Peserta {
@@ -753,10 +815,8 @@ model Laporan {
   // tanggal_pelaksanaan di fe ambil dari layanan.tanggal_mulai
   // lama pelaksanaan di fe ambil dari tanggal_selesai - tanggal_mulai
   foto_kegiatan     String 
-  id_status_pelaporan Int
 
-  layanan             Layanan @relation(fields: [id_layanan], references: [id])
-  statusPelaporan     StatusKode @relation(fields: [id_status_pelaporan], references: [id])
+  layanan     Layanan @relation(fields: [id_layanan], references: [id])
   
   @@map("laporan")
 }
@@ -797,10 +857,11 @@ model Kegiatan {
 
   id              Int       @id @default(autoincrement())
   nama_kegiatan   String    @db.VarChar(32)
+  image           String    @db.Text
   deskripsi       String?   @db.Text
 
-  subKegiatans          SubKegiatan[]
-  detailKonfigurasis    DetailKonfigurasi[]
+  sub_kegiatan          SubKegiatan[]
+  detail_konfigurasi    DetailKonfigurasi[]
 
   @@map("kegiatan")
 }
@@ -816,7 +877,7 @@ model SubKegiatan{
 
   kegiatan Kegiatan   @relation(fields: [id_kegiatan], references: [id])
 
-  detailKonfigurasis  DetailKonfigurasi[]
+  detail_konfigurasi  DetailKonfigurasi[]
 
   @@map("sub_kegiatan")
 }
@@ -859,10 +920,10 @@ model KonfigurasiLayanan {
   catatan             String?   @db.Text
   created_at          DateTime  @default(now())
 
-  jenisLayanan       JenisLayanan  @relation(fields: [id_jenis_layanan], references: [id])
+  jenis_layanan       JenisLayanan  @relation(fields: [id_jenis_layanan], references: [id])
 
-  layanans            Layanan[]
-  detailKonfigurasis  DetailKonfigurasi[]
+  layanan             Layanan[]
+  detail_konfigurasi  DetailKonfigurasi[]
 
   @@map("konfigurasi_layanan")
 }

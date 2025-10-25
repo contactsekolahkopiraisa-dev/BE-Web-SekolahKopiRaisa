@@ -27,7 +27,7 @@ router.get('/', authMiddleware, async (req, res) => {
                 nameProduct: product.name,
                 priceProduct: product.price,
                 descriptionProduct: product.description,
-                stockProduct: product.inventory.stock,
+                stockProduct: product.inventories?.stock ?? 0,
                 soldProduct: product.sold,
                 imageProduct: product.image,
             }))
@@ -71,7 +71,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
                 nameProduct: product.name,
                 priceProduct: product.price,
                 descriptionProduct: product.description,
-                stockProduct: product.inventory.stock,
+                stockProduct: product.inventories?.stock ?? 0,
                 soldProduct: product.sold,
                 imageProduct: product.image,
             }))

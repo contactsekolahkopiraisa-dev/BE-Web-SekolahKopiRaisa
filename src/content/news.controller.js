@@ -1,6 +1,6 @@
 const express = require('express');
 const prisma = require('../db');
-const upload = require('../middleware/multer');
+const { upload } = require('../middleware/multer');
 const createDOMPurify = require('isomorphic-dompurify');
 const { JSDOM } = require('jsdom');
 const window = new JSDOM('').window;

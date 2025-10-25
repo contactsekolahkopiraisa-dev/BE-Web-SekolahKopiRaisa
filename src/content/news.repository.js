@@ -2,7 +2,7 @@ const prisma = require('../db');
 
 const getAllNews = async () => {
     return await prisma.news.findMany({
-        include: { newsMedia: true, user: true },
+        include: { newsMedias: true, user: true },
         orderBy: { created_at: 'desc' }// field di schema
     });
 };
@@ -10,7 +10,7 @@ const getAllNews = async () => {
 const getNewsByIdData = async (id) => {
     return await prisma.news.findUnique({
         where: { id: parseInt(id) },
-        include: { newsMedia: true, user: true }
+        include: { newsMedias: true, user: true }
     });
 };
 
@@ -50,7 +50,7 @@ const deleteNewsMediaByUrls = async (urls) => {
 };
 
 const deleteNewsMediaByIds = async (ids) => {
-    return prisma.newsMedia.deleteMany({
+    return prisma.newsMedias.deleteMany({
         where: { id: { in: ids } }
     });
 };

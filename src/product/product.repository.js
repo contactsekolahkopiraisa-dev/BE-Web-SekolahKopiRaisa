@@ -6,7 +6,7 @@ const findAllProducts = async () => {
     // Ambil semua produk
     const products = await prisma.product.findMany({
         include: {
-            inventory: {
+            inventories: {
                 select: {
                     stock: true,
                 }
@@ -33,6 +33,7 @@ const findAllProducts = async () => {
         const soldData = soldQuantities.find(sq => sq.products_id === product.id);
         return {
             ...product,
+            stock: product.inventories?.stock || 0,
             sold: soldData?._sum?.quantity || 0,
         };
     });
@@ -81,7 +82,7 @@ const createInventory = async (inventoryProduct) => {
     const inventoryData = await prisma.inventory.create({
         data: {
             stock: inventoryProduct.stock,
-            product: {
+            products: {
                 connect: {
                     id: inventoryProduct.products_id,
                 },
@@ -98,7 +99,7 @@ const findProductById = async (idProduct) => {
         },
         include: {
             partner: true,
-            inventory: {
+            inventories: {
                 select: {
                     stock: true
                 }
@@ -165,7 +166,7 @@ const getProductsByIds = async (productIds) => {
         where: { id: { in: productIds } },
         include: {
             partner: true,
-            inventory: {
+            inventories: {
                 select: {
                     stock: true,
                 }

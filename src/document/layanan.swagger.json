@@ -1,0 +1,255 @@
+{
+  "tags": [
+    {
+      "name": "Jenis Layanan",
+      "description": "Mengelola jenis layanan seperti PKL, Magang, Pelatihan, dan lainnya"
+    },
+    {
+      "name": "Modul",
+      "description": "Mengelola modul"
+    }
+  ],
+  "paths": {
+    "/api/v1/jenis-layanan": {
+      "get": {
+        "tags": [
+          "Jenis Layanan"
+        ],
+        "summary": "Get all jenis layanan",
+        "responses": {
+          "200": {
+            "description": "Berhasil mendapatkan semua Jenis Layanan !",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil mendapatkan semua Jenis Layanan !",
+                  "data": [
+                    {
+                      "id": 1,
+                      "nama_jenis_layanan": "Pelatihan Kopi",
+                      "deskripsi_singkat": "Pelatihan sehari tentang kopi",
+                      "deskripsi_lengkap": "Program pelatihan singkat yang memperkenalkan berbagai teknik dasar penyeduhan kopi, pengenalan biji kopi, dan praktik cupping di Sekolah Kopi RAISA.",
+                      "image": "https://example.com/images/pelatihan-kopi.jpg",
+                      "estimasi_waktu": "1 Hari",
+                      "targetPeserta": {
+                        "id": 1,
+                        "nama_target": "Umum"
+                      }
+                    },
+                    {
+                      "id": 2,
+                      "nama_jenis_layanan": "Praktek Kerja Lapangan (PKL)",
+                      "deskripsi_singkat": "Program PKL untuk siswa dan mahasiswa",
+                      "deskripsi_lengkap": "Kegiatan praktik kerja lapangan yang memungkinkan peserta memahami langsung proses produksi dan manajemen bisnis kopi di Sekolah Kopi RAISA.",
+                      "image": "https://example.com/images/pkl.jpg",
+                      "estimasi_waktu": "2 - 4 Bulan",
+                      "targetPeserta": {
+                        "id": 2,
+                        "nama_target": "Mahasiswa"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jenis-layanan/{id}": {
+      "get": {
+        "tags": [
+          "Jenis Layanan"
+        ],
+        "summary": "Get jenis layanan by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID dari jenis layanan yang ingin diambil",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil mengambil jenis layanan ID '{id}' !",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil Mendapatkan Jenis Layanan ID '1' !",
+                  "data": {
+                    "id": 1,
+                    "nama_jenis_layanan": "Pelatihan Kopi",
+                    "deskripsi_singkat": "Pelatihan sehari tentang kopi",
+                    "deskripsi_lengkap": "Program pelatihan singkat yang memperkenalkan berbagai teknik dasar penyeduhan kopi, pengenalan biji kopi, dan praktik cupping di Sekolah Kopi RAISA.",
+                    "image": "https://example.com/images/pelatihan-kopi.jpg",
+                    "estimasi_waktu": "1 Hari",
+                    "targetPeserta": {
+                      "id": 1,
+                      "nama_target": "Umum"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modul": {
+      "get": {
+        "tags": [
+          "Modul"
+        ],
+        "summary": "Get all modul",
+        "responses": {
+          "200": {
+            "description": "Berhasil mendapatkan semua Modul !",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil mendapatkan semua Modul!",
+                  "data": [
+                    {
+                      "id": 1,
+                      "id_dibuat_oleh": 42,
+                      "judul_modul": "sadasd",
+                      "deskripsi": "asdasdasd",
+                      "file_modul": "https://res.cloudinary.com/darsrhtsb/raw/upload/v1761395292/konten-kopiraisa/modul/1761395289037_FORMAT%20-%20SURAT%20PENGANTAR.docx.pdf",
+                      "created_at": "2025-10-25T12:28:12.954Z",
+                      "updated_at": "2025-10-25T12:28:12.954Z"
+                    },
+                    {
+                      "id": 2,
+                      "id_dibuat_oleh": 42,
+                      "judul_modul": "sadafdgdfgsd",
+                      "deskripsi": "asdasdasddfv",
+                      "file_modul": "https://res.cloudinary.com/darsrhtsb/raw/upload/v1761395292/konten-kopiraisa/modul/1761395289037_FORMAT%20-%20SURAT%20PENGANTAR.docx.pdf",
+                      "created_at": "2025-10-25T12:28:12.954Z",
+                      "updated_at": "2025-10-25T12:28:12.954Z"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Modul"
+        ],
+        "summary": "Create new modul [admin only]",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "judul_modul": {
+                    "type": "string"
+                  },
+                  "deskripsi": {
+                    "type": "string"
+                  },
+                  "file_modul": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Berhasil mengunggah Modul '{nama_modul}' !",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil mengunggah Modul 'dsfbbsyby rtby' !",
+                  "data": {
+                    "id": 3,
+                    "id_dibuat_oleh": 42,
+                    "judul_modul": "dsfbbsyby rtby",
+                    "deskripsi": "trghun jn uiu ",
+                    "file_modul": "https://res.cloudinary.com/darsrhtsb/raw/upload/v1761398548/konten-kopiraisa/modul/1761398547378_FORMAT%20-%20SURAT%20PENGANTAR.docx.pdf",
+                    "created_at": "2025-10-25T13:22:29.457Z",
+                    "updated_at": "2025-10-25T13:22:29.457Z"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Akses ditolak! Hanya admin yang dapat mengunggah modul !",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Akses ditolak! Hanya admin yang dapat mengunggah modul !"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modul/{id}": {
+      "get": {
+        "tags": [
+          "Modul"
+        ],
+        "summary": "Get modul by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID dari modul yang ingin diambil",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil mendapatkan Modul ID '{id}' !",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil Mendapatkan Modul ID '1'!",
+                  "data": {
+                    "id": 1,
+                    "id_dibuat_oleh": 42,
+                    "judul_modul": "sadasd",
+                    "deskripsi": "asdasdasd",
+                    "file_modul": "https://res.cloudinary.com/darsrhtsb/raw/upload/v1761395292/konten-kopiraisa/modul/1761395289037_FORMAT%20-%20SURAT%20PENGANTAR.docx.pdf",
+                    "created_at": "2025-10-25T12:28:12.954Z",
+                    "updated_at": "2025-10-25T12:28:12.954Z"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

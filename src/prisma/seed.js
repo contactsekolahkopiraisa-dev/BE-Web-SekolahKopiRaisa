@@ -1,28 +1,32 @@
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
-const bcrypt = require('bcryptjs')
+import { PrismaClient } from '@prisma/client'
+import seedTargetPeserta from './seeds/targetPeserta.seed.js'
+import seedStatusKode from './seeds/statusKode.seed.js'
+import seedJenisLayanan from './seeds/jenisLayanan.seed.js'
+import seedKegiatan from './seeds/detailKonfigurasi.seed.js'
+import seedSubKegiatan from './seeds/subKegiatan.seed.js'
+import seedKonfigurasiLayanan from './seeds/konfigurasiLayanan.seed.js'
+import seedDetailKonfigurasi from './seeds/detailKonfigurasi.seed.js'
+import seedUserDummy from './seeds/userDummy.seed.js'
 
-async function hashPassword(password) {
-    return await bcrypt.hash(password, 10);
-}
+const prisma = new PrismaClient()
 
 async function main() {
-  // Seed data User
-  await prisma.user.createMany({
-    data: [
-      { name: "DummyPengunjung", email: "pengunjung@example.com", password: await hashPassword("pengunjung"), admin: false, },
-      { name: "DummyAdmin", email: "admin@example.com", password: await hashPassword("admin"), admin: true,  }
-    ],
-    skipDuplicates: true,
-  })
+  console.log('starting modular seeding...')
 
+  await seedTargetPeserta(prisma)
+  await seedStatusKode(prisma)
+  await seedJenisLayanan(prisma)
+  await seedKegiatan(prisma)
+  // await seedSubKegiatan(prisma)
+  // await seedKonfigurasiLayanan(prisma)
+  // await seedDetailKonfigurasi(prisma)
+  await seedUserDummy(prisma)
 
+  console.log('seeding completed!')
 }
 
 main()
-  .then(async () => {
-    await prisma.$disconnect()
-  })
+  .then(() => prisma.$disconnect())
   .catch(async (e) => {
     console.error(e)
     await prisma.$disconnect()

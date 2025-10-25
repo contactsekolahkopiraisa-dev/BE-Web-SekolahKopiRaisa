@@ -9,7 +9,7 @@ const { orderValidator, validateQueryDomestic, validateCost } = require("../vali
 const handleValidationResult = require('../middleware/handleValidationResult');
 const handleValidationResultFinal = require('../middleware/handleValidationResultFinal');
 const verifyMidtransSignature = require("../middleware/midtransSignatureValidator");
-const upload = require("../middleware/multer");
+const { upload } = require("../middleware/multer");
 
 
 const {

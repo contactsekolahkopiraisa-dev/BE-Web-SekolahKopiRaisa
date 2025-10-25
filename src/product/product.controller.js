@@ -1,7 +1,7 @@
 const express = require('express');
 const prisma = require('../db');
 const ApiError = require('../utils/apiError');
-const upload = require('../middleware/multer');
+const { upload } = require('../middleware/multer');
 
 const { getAllProducts, getProductById, createProduct, updateProduct, removeProductById } = require('./product.service');
 const { authMiddleware, multerErrorHandler, validateProductMedia, validateProductUpdate } = require('../middleware/middleware');
@@ -24,7 +24,7 @@ router.get('/', async (req, res) => {
             nameProduct: product.name,
             priceProduct: product.price,
             descriptionProduct: product.description,
-            stockProduct: product.inventory.stock,
+            stockProduct: product.inventories?.stock || 0,
             soldProduct: product.sold,
             imageProduct: product.image,
 
@@ -67,7 +67,7 @@ router.get('/:id', async (req, res) => {
             nameProduct: product.name,
             priceProduct: product.price,
             descriptionProduct: product.description,
-            stockProduct: product.inventory.stock,
+            stockProduct: product.inventories.stock,
             soldProduct: product.sold,
             imageProduct: product.image,
 

@@ -6,7 +6,7 @@ const cors = require("cors");
 const session = require("express-session");
 const swaggerUi = require("swagger-ui-express");
 const swaggerJsdoc = require("swagger-jsdoc");
-const swaggerDocument = require("./src/document/swagger.json");
+const swaggerDocument = require("./src/document/swagger-final.json");
 // const passportLink = require('./src/auth/facebook-config');
 
 dotenv.config();
@@ -103,6 +103,11 @@ const cartRoutes = require("./src/cart/cart.controller");
 const orderRoutes = require("./src/order/order.controller");
 const companyRoutes = require("./src/company/company.controller");
 
+const { jenisLayananRoutes, layananRoutes, targetPesertaRoutes } = require("./src/layanan/C_Layanan.routes");
+const { modulRoutes } = require("./src/modul/C_Modul.routes");
+
+app.use(express.json());
+
 // Default Endpoint
 app.get("/", (req, res) => {
   res.send("Halo kopi raisa!");
@@ -116,6 +121,11 @@ app.use("/api/v1/product", productRoutes);
 app.use("/api/v1/cart", cartRoutes);
 app.use("/api/v1/order", orderRoutes);
 app.use("/api/v1/company", companyRoutes);
+
+app.use("/api/v1/layanan", layananRoutes);
+app.use("/api/v1/jenis-layanan", jenisLayananRoutes);
+app.use("/api/v1/target-peserta", targetPesertaRoutes);
+app.use("/api/v1/modul", modulRoutes);
 
 // === Swagger Documentation ===
 // Serve raw swagger.json for external tools
@@ -177,10 +187,27 @@ app.get("/api-docs/", (req, res) => {
   res.redirect("/api-docs");
 });
 
-// === Error Handler ===
+// === Middleware untuk menangani endpoint tidak ditemukan (404) ===
+app.use((req, res, next) => {
+  res.status(404).json({
+    success: false,
+    message: "Endpoint tidak ditemukan",
+  });
+});
+
+// === Global Error Handler ===
 app.use((err, req, res, next) => {
-  console.error("Unhandled error:", err.stack);
-  res.status(500).json({ message: "Terjadi kesalahan di server." });
+  
+  const statusCode = err.statusCode || 500;
+  const message =
+  err.message || "Terjadi kesalahan pada server.";
+  
+  res.status(statusCode).json({
+    success: false,
+    message,
+  });
+
+  console.error("❌ Error: [", statusCode, "] ", message);
 });
 
 // === Start Server (Lokal Only) ===
@@ -191,3 +218,27 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 module.exports = app; // Penting untuk deployment ke Vercel
+
+
+
+
+
+
+
+// import express from 'express';
+// import userRoutes from './user/user.routes.js';
+
+// const app = express();
+
+// app.use(express.json());
+
+// // ROOT ROUTE
+// app.get("/", (req, res) => {
+//     res.send("Hello Express + Prisma");
+// });
+// // USER ROUTES
+// app.use("/user", userRoutes);
+
+
+
+// app.listen(3000, () => {console.log("Server berjalan di http://localhost:3000")});
