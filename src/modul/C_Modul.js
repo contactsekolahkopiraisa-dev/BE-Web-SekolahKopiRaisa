@@ -1,4 +1,4 @@
-const ApiError = require ("../utils/ApiError.js");
+const ApiError = require ("../utils/apiError.js");
 
 const { modulService } = require("./C_Modul.service.js");
 
