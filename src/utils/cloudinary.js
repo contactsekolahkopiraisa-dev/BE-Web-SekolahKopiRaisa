@@ -56,6 +56,7 @@ const deleteFromCloudinaryByUrl = async (fileUrl) => {
     if (publicId) {
         try {
             await cloudinary.uploader.destroy(publicId, { resource_type:  resourceType });
+            console.log(`berhasil hapus ${fileUrl}`)
         } catch (error) {
             console.error('Gagal hapus dari Cloudinary:', error.message);
         }
