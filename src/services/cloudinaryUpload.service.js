@@ -1,37 +1,84 @@
-const {cloudinary} = require('../utils/cloudinary');
+const { cloudinary } = require("../utils/cloudinary");
+const path = require("path");
+const crypto = require("crypto");
+const streamifier = require("streamifier");
 
 /**
- * Upload file/image ke Cloudinary
- * @param {Buffer} fileBuffer - buffer dari multer
- * @param {string} filename - nama file asli
- * @param {Object} options
- *        options.folder - nama folder di Cloudinary (misal 'modul', 'mou', 'image')
- *        options.type - 'image' atau 'raw' (default akan otomatis dari mimetype)
- * @returns {Promise<string>} - URL file di Cloudinary
+ * Upload file ke Cloudinary (image, video, raw)
+ * File dokumen (PDF/DOCX/XLSX/ZIP) akan bisa dibuka langsung di browser.
+ *
+ * @param {Buffer} fileBuffer
+ * @param {string} filename
+ * @param {Object} options { folder, mimetype }
  */
+const uploadToCloudinary = async (fileBuffer, filename, options = {}) => {
+  const { folder = "uploads", mimetype = "application/octet-stream" } = options;
 
-const uploadToCloudinary = (filebuffer, filename, options = {}) => {
-    return new Promise((resolve, reject) => {
-        const { folder = 'image', type } = options;
-        // Tentukan resource_type otomatis berdasarkan folder/mimetype
-        let resource_type = type || (folder === 'image' ? 'image' : 'raw');
+  // Deteksi tipe file
+  const ext = path.extname(filename).toLowerCase();
+  const isImage =
+    mimetype.startsWith("image/") ||
+    [".jpg", ".jpeg", ".png", ".webp", ".gif"].includes(ext);
+  const isVideo =
+    mimetype.startsWith("video/") ||
+    [".mp4", ".mov", ".avi", ".mkv"].includes(ext);
+  const resourceType = isImage ? "image" : isVideo ? "video" : "raw";
 
-        const stream = cloudinary.uploader.upload_stream(
-            { 
-                folder: `konten-kopiraisa/${folder}`, 
-                resource_type, 
-                public_id: `${Date.now()}_${filename}`,
-                use_filename: true,
-                unique_filename: false,
-                overwrite: true
-            },
-            (error, result) => {
-                if (error) return reject(error);
-                resolve(result.secure_url);
-            }
+  // Buat nama unik
+  const randomPart = crypto.randomBytes(10).toString("hex");
+  const uniqueName = `${Date.now()}_${randomPart}`;
+  const folderPath = `konten-kopiraisa/${folder}`;
+
+  try {
+    let result;
+    // UPLOAD KHUSUS IMG VID
+    if (isImage || isVideo) {
+      result = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: folderPath,
+            resource_type: resourceType,
+            public_id: uniqueName,
+            use_filename: true,
+            unique_filename: false,
+            overwrite: true,
+          },
+          (error, result) => (error ? reject(error) : resolve(result))
         );
-        stream.end(filebuffer);
-    });
+        streamifier.createReadStream(fileBuffer).pipe(uploadStream);
+      });
+    }
+    // UPLOAD SELAIN IMG VID
+    else {
+      result = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: folderPath,
+            resource_type: "raw",
+            type: "upload",
+            access_mode: "public",
+            public_id: `${uniqueName}${ext}`,
+            use_filename: true,
+            unique_filename: false,
+            overwrite: true,
+          },
+          (error, result) => (error ? reject(error) : resolve(result))
+        );
+        streamifier.createReadStream(fileBuffer).pipe(uploadStream);
+      });
+    }
+    // debug di konsol
+    console.log(result);
+
+    return {
+      url: result.secure_url,
+      public_id: result.public_id,
+      resource_type: result.resource_type,
+    };
+  } catch (error) {
+    console.error("❌ Gagal upload ke Cloudinary:", error);
+    throw error;
+  }
 };
 
-module.exports = {uploadToCloudinary};
+module.exports = { uploadToCloudinary };

@@ -75,7 +75,8 @@ const createProduct = async (newProductData) => {
         let imageUrl = null;
         if (image) {
             try {
-                imageUrl = await uploadToCloudinary(image.buffer, image.originalname);
+                imageUpload = await uploadToCloudinary(image.buffer, image.originalname, { folder: 'product' });
+                imageUrl = imageUpload.url;
                 console.log('Image URL:', imageUrl);
             } catch (error) {
                 console.error('Error uploading image to Cloudinary:', error);
@@ -142,8 +143,8 @@ const updateProduct = async (id, updatedProductData) => {
                 }
             }
             try {
-                const imageUrl = await uploadToCloudinary(productFile.buffer, productFile.originalname);
-                cleanProductData.image = imageUrl;
+                const imageUpload = await uploadToCloudinary(productFile.buffer, productFile.originalname);
+                cleanProductData.image = imageUpload.url;
             } catch (error) {
                 console.error('Error uploading image to Cloudinary:', error);
                 throw new ApiError(500, 'Gagal mengunggah gambar produk!', " " + (error.message || error));

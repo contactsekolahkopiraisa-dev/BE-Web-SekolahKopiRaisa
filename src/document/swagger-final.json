@@ -46,11 +46,11 @@
     },
     {
       "name": "Jenis Layanan",
-      "description": "Mengelola jenis layanan seperti PKL, Magang, Pelatihan, dan lainnya"
+      "description": "Managing jenis layanan : PKL, Magang, Pelatihan, etc."
     },
     {
       "name": "Modul",
-      "description": "Mengelola modul"
+      "description": ""
     }
   ],
   "components": {
@@ -1679,7 +1679,7 @@
         "summary": "Get all jenis layanan",
         "responses": {
           "200": {
-            "description": "Berhasil mendapatkan semua Jenis Layanan !",
+            "description": "Jenis Layanan retrieved successfully",
             "content": {
               "application/json": {
                 "example": {
@@ -1738,7 +1738,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Berhasil mengambil jenis layanan ID '{id}' !",
+            "description": "Jenis Layanan retrieved successfully",
             "content": {
               "application/json": {
                 "example": {
@@ -1761,6 +1761,80 @@
             }
           }
         }
+      },
+      "put": {
+        "tags": [
+          "Jenis Layanan"
+        ],
+        "summary": "Update existing Jenis Layanan by ID",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nama_jenis_layanan": {
+                    "type": "string"
+                  },
+                  "deskripsi_singkat": {
+                    "type": "string"
+                  },
+                  "deskripsi_lengkap": {
+                    "type": "string"
+                  },
+                  "image": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "estimasi_waktu": {
+                    "type": "string"
+                  },
+                  "id_target_peserta": {
+                    "type": "Integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Jenis Layanan updated successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil mengubah Jenis Layanan 'Praktek Kerja Lapangan (PKL)' !",
+                  "data": {
+                    "id": 1,
+                    "nama_jenis_layanan": "Praktek Kerja Lapangan (PKL)",
+                    "deskripsi_singkat": "Pelatihan sehari tentang kopi",
+                    "deskripsi_lengkap": "Kegiatan praktik kerja lapangan yang memungkinkan peserta memahami langsung proses produksi dan manajemen bisnis kopi di Sekolah Kopi RAISA.",
+                    "image": null,
+                    "estimasi_waktu": "2 - 4 Bulan",
+                    "id_target_peserta": 2
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/modul": {
@@ -1771,7 +1845,7 @@
         "summary": "Get all modul",
         "responses": {
           "200": {
-            "description": "Berhasil mendapatkan semua Modul !",
+            "description": "Modul retrieved successfully",
             "content": {
               "application/json": {
                 "example": {
@@ -1807,7 +1881,7 @@
         "tags": [
           "Modul"
         ],
-        "summary": "Create new modul [admin only]",
+        "summary": "Create new modul",
         "security": [
           {
             "cookieAuth": []
@@ -1837,7 +1911,7 @@
         },
         "responses": {
           "201": {
-            "description": "Berhasil mengunggah Modul '{nama_modul}' !",
+            "description": "Modul created successfully",
             "content": {
               "application/json": {
                 "example": {
@@ -1852,17 +1926,6 @@
                     "created_at": "2025-10-25T13:22:29.457Z",
                     "updated_at": "2025-10-25T13:22:29.457Z"
                   }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Akses ditolak! Hanya admin yang dapat mengunggah modul !",
-            "content": {
-              "application/json": {
-                "example": {
-                  "success": false,
-                  "message": "Akses ditolak! Hanya admin yang dapat mengunggah modul !"
                 }
               }
             }
@@ -1890,7 +1953,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Berhasil mendapatkan Modul ID '{id}' !",
+            "description": "Modul retrieved successfully",
             "content": {
               "application/json": {
                 "example": {
@@ -1904,6 +1967,118 @@
                     "file_modul": "https://res.cloudinary.com/darsrhtsb/raw/upload/v1761395292/konten-kopiraisa/modul/1761395289037_FORMAT%20-%20SURAT%20PENGANTAR.docx.pdf",
                     "created_at": "2025-10-25T12:28:12.954Z",
                     "updated_at": "2025-10-25T12:28:12.954Z"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Modul"
+        ],
+        "summary": "Update existing modul by ID",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID dari modul yang ingin diubah",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 16
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "judul_modul": {
+                    "type": "string"
+                  },
+                  "deskripsi": {
+                    "type": "string"
+                  },
+                  "file_modul": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Modul updated successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil mengubah Modul 'Lorem Ipsum' !",
+                  "data": {
+                    "id": 3,
+                    "id_dibuat_oleh": 42,
+                    "judul_modul": "Lorem Ipsum Sir",
+                    "deskripsi": "Ini adalah modul pemakaian lorem ipsum",
+                    "file_modul": "https://res.cloudinary.com/darsrhtsb/raw/upload/v1761398548/konten-kopiraisa/modul/1761398547378_FORMAT%20-%20SURAT%20PENGANTAR.docx.pdf",
+                    "created_at": "2025-10-25T13:22:29.457Z",
+                    "updated_at": "2025-10-25T13:22:29.457Z"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Modul"
+        ],
+        "summary": "Delete existing modul by ID",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID dari modul yang ingin dihapus",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Modul deleted successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil menghapus Modul ID '3' !",
+                  "data": {
+                    "id": 3,
+                    "id_dibuat_oleh": 42,
+                    "judul_modul": "Lorem Ipsum Sir",
+                    "deskripsi": "Ini adalah modul pemakaian lorem ipsum",
+                    "file_modul": "https://res.cloudinary.com/darsrhtsb/raw/upload/v1761398548/konten-kopiraisa/modul/1761398547378_FORMAT%20-%20SURAT%20PENGANTAR.docx.pdf",
+                    "created_at": "2025-10-25T13:22:29.457Z",
+                    "updated_at": "2025-10-25T13:22:29.457Z"
                   }
                 }
               }

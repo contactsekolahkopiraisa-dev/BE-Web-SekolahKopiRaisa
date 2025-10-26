@@ -33,4 +33,4 @@ if (!base.servers || base.servers.length === 0) {
 const output = path.join(__dirname, 'swagger-final.json');
 fs.writeFileSync(output, JSON.stringify(base, null, 2));
 
-console.log('✅ Swagger documentation merged successfully → document/swagger-final.json');
+console.log('✅ Swagger documentation merged successfully → document/swagger-final.json\n');
