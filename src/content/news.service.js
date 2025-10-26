@@ -215,8 +215,9 @@ const updateNews = async (id, editedNewsData) => {
                 await deleteFromCloudinaryByUrl(existingNewsThumbnail.media_url);  // Hapus thumbnail lama
                 await deleteThumbnailNewsMedia(id) // Hapus thumbnail dari DB
             }
-            const thumbnailUrl = await uploadToCloudinary(thumbnailFile.buffer, thumbnailFile.originalname);
-            await addNewsMedia(id, thumbnailUrl, 'image', true);
+            const thumbnailUpload = await uploadToCloudinary(thumbnailFile.buffer, thumbnailFile.originalname);
+
+            await addNewsMedia(id, thumbnailUpload.url, 'image', true);
 
         } catch (error) {
             console.error("Gagal mengupdate thumbnail:", error.message);
