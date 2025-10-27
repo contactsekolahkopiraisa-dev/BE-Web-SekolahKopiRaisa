@@ -113,7 +113,7 @@ model Inventory {
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 
-  products     Product  @relation(fields: [products_id], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [products_id], references: [id], onDelete: Cascade)
 }
 
 model Transaction {
