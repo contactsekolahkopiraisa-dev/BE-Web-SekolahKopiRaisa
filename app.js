@@ -18,7 +18,7 @@ require("./src/auth/facebook-config");
 const { createMidtransSnapToken } = require("./src/utils/midtrans");
 
 const app = express();
-const port = process.env.PORT || 2000;
+const port = process.env.PORT || 3000;
 
 // === CORS Config ===
 const allowedOrigins = [
@@ -107,7 +107,11 @@ const companyRoutes = require("./src/company/company.controller");
 const umkmRoutes = require("./src/auth/umkm.controller");
 
 // === MITRA
-const { jenisLayananRoutes, layananRoutes, targetPesertaRoutes } = require("./src/layanan/C_Layanan.routes");
+const {
+  jenisLayananRoutes,
+  layananRoutes,
+  targetPesertaRoutes,
+} = require("./src/layanan/C_Layanan.routes");
 const { modulRoutes } = require("./src/modul/C_Modul.routes");
 
 app.use(express.json());
@@ -205,11 +209,9 @@ app.use((req, res, next) => {
 
 // === Global Error Handler ===
 app.use((err, req, res, next) => {
-  
   const statusCode = err.statusCode || 500;
-  const message =
-  err.message || "Terjadi kesalahan pada server.";
-  
+  const message = err.message || "Terjadi kesalahan pada server.";
+
   res.status(statusCode).json({
     success: false,
     message,
@@ -227,12 +229,6 @@ if (process.env.NODE_ENV !== "production") {
 
 module.exports = app; // Penting untuk deployment ke Vercel
 
-
-
-
-
-
-
 // import express from 'express';
 // import userRoutes from './user/user.routes.js';
 
@@ -246,7 +242,5 @@ module.exports = app; // Penting untuk deployment ke Vercel
 // });
 // // USER ROUTES
 // app.use("/user", userRoutes);
-
-
 
 // app.listen(3000, () => {console.log("Server berjalan di http://localhost:3000")});
