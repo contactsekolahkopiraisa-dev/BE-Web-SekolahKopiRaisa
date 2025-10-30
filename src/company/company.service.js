@@ -12,13 +12,12 @@ const createCompany = async (newCompanyData) => {
 
     const { image, ...rest } = newCompanyData;
 
-    let imageUrl = null;
     // Jika ada file gambar yang di-upload
     if (image) {
         try {
             // Upload ke Cloudinary dan dapatkan URL-nya
-            imageUrl = await uploadToCloudinary(image.buffer, image.originalname);
-            console.log('Image URL from Cloudinary:', imageUrl);
+            const imageUpload = await uploadToCloudinary(image.buffer, image.originalname);
+            console.log('Image URL from Cloudinary:', imageUpload.url);
         } catch (error) {
             console.error('Error uploading image to Cloudinary:', error);
             throw new ApiError(500, 'Gagal mengunggah gambar!');
@@ -28,7 +27,7 @@ const createCompany = async (newCompanyData) => {
     // Gabungkan data teks dengan URL gambar
     const companyDataToCreate = {
         ...rest,
-        image: imageUrl,
+        image: imageUpload.url,
     };
     console.log('Company data to create:', companyDataToCreate);
 
@@ -75,7 +74,8 @@ const updateCompany = async (companyId, newData) => {
     if (newImageFile) {
         try {
             // Upload gambar baru ke Cloudinary
-            newImageUrl = await uploadToCloudinary(newImageFile.buffer, newImageFile.originalname);
+            const imageUpload = await uploadToCloudinary(newImageFile.buffer, newImageFile.originalname);
+            newUmageUrl = imageUpload.url;
             console.log('New Image URL from Cloudinary:', newImageUrl);
 
             // Hapus gambar lama dari Cloudinary jika ada

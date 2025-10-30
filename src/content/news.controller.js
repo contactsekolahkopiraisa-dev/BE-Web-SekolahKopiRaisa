@@ -128,7 +128,8 @@ router.post('/', authMiddleware, upload.fields([{ name: 'media', maxCount: 4 }, 
             if (thumbnailFile) {
                 try {
                     // Upload thumbnail ke Cloudinary
-                    thumbnailUrl = await uploadToCloudinary(thumbnailFile.buffer, thumbnailFile.originalname);
+                    const thumbnailUpload = await uploadToCloudinary(thumbnailFile.buffer, thumbnailFile.originalname);
+                    thumbnailUrl = thumbnailUpload.url
                     console.log("✅ Thumbnail berhasil diupload:", thumbnailUrl);
                 } catch (uploadError) {
                     console.error('Gagal mengupload thumbnail ke Cloudinary:', uploadError.message);

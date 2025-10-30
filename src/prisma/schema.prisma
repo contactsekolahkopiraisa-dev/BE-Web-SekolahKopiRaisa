@@ -98,7 +98,7 @@ model Product {
   partner             Partner     @relation(fields: [partner_id], references: [id])
 
   cartItems           CartItem[]
-  inventories         Inventory?
+  inventory           Inventory?
   orderItems          OrderItem[]
   reviews             Review[]
   detailTransactions  DetailTransaction[]
@@ -113,7 +113,7 @@ model Inventory {
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 
-  products     Product  @relation(fields: [products_id], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [products_id], references: [id], onDelete: Cascade)
 }
 
 model Transaction {
@@ -293,7 +293,7 @@ model News {
   updated_at DateTime    @updatedAt
 
   user       User        @relation(fields: [user_id], references: [id])
-  newsMedias NewsMedia[]
+  newsMedia  NewsMedia[]
 }
 
 model NewsMedia {
