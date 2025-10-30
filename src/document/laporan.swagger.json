@@ -1,0 +1,184 @@
+{
+  "tags": [
+    {
+      "name": "UMKM",
+      "description": "Endpoint untuk pendaftaran, pengelolaan dan verifikasi UMKM"
+    }
+  ],
+  "paths": {
+    "/api/v1/auth/umkm": {
+      "post": {
+        "tags": ["UMKM"],
+        "summary": "Registrasi UMKM (jika belum login buat user baru)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password",
+                  "phone_number",
+                  "name",
+                  "namaUmkm",
+                  "ktp",
+                  "sertifikatHalal",
+                  "addresses"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Email user",
+                    "example": "umkmraisa@gmail.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "Password untuk user",
+                    "example": "raisa123"
+                  },
+                  "phone_number": {
+                    "type": "string",
+                    "description": "Nomor telepon (format: 08...)",
+                    "example": "081234567890"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Nama pemilik / user",
+                    "example": "Raisa"
+                  },
+                  "namaUmkm": {
+                    "type": "string",
+                    "description": "Nama UMKM",
+                    "example": "Sekolah Kopi Raisa"
+                  },
+                  "ktp": {
+                    "type": "string",
+                    "description": "Nomor KTP (opsional)",
+                    "example": "3501234567890001"
+                  },
+                  "sertifikatHalal": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Upload gambar sertifikat halal (file)"
+                  },
+                  "addresses": {
+                    "type": "string",
+                    "description": "PASTE JSON ARRAY DI SINI (karena multipart/form-data tidak mendukung array native). Contoh di bawah akan muncul sebagai textarea besar di Swagger UI.",
+                    "example": "[\n  {\n    \"alamat\": \"Jl. PB Sudirman No.10\",\n    \"kelurahan_desa\": \"Tegal Besar\",\n    \"kecamatan\": \"Patrang\",\n    \"kabupaten\": \"Jember\",\n    \"provinsi\": \"Jawa Timur\",\n    \"kode_pos\": \"68115\"\n  }\n]"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "UMKM registered successfully"
+          },
+          "400": {
+            "description": "Invalid request or duplicate email/phone"
+          }
+        }
+      },
+      "get": {
+        "tags": ["UMKM"],
+        "summary": "Daftar semua UMKM (admin)",
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": { "description": "Daftar UMKM dikembalikan" },
+          "403": { "description": "Akses ditolak" }
+        }
+      }
+    },
+    "/api/v1/auth/umkm/{idUmkm}": {
+      "get": {
+        "tags": ["UMKM"],
+        "summary": "Ambil UMKM berdasarkan idUmkm (owner atau admin)",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          { "name": "idUmkm", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Data UMKM dikembalikan" },
+          "403": { "description": "Akses ditolak" },
+          "404": { "description": "Data UMKM tidak ditemukan" }
+        }
+      },
+      "put": {
+        "tags": ["UMKM"],
+        "summary": "Update UMKM (owner atau admin)",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          { "name": "idUmkm", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "namaUmkm": { "type": "string" },
+                  "ktp": { "type": "string" },
+                  "addresses": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "provinsi": { "type": "string" },
+                        "kabupaten": { "type": "string" },
+                        "kecamatan": { "type": "string" },
+                        "kelurahan_desa": { "type": "string" },
+                        "kode_pos": { "type": "string" },
+                        "alamat": { "type": "string" }
+                      }
+                    },
+                    "description": "Jika multipart, kirim sebagai JSON string"
+                  },
+                  "sertifikatHalal": { "type": "string", "format": "binary" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Update UMKM berhasil" },
+          "400": { "description": "Validasi gagal" },
+          "403": { "description": "Akses ditolak" }
+        }
+      }
+    },
+    "/api/v1/auth/umkm/{idUmkm}/verify": {
+      "post": {
+        "tags": ["UMKM"],
+        "summary": "Verifikasi UMKM oleh admin (approve/reject)",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          { "name": "idUmkm", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "approved": { "type": "boolean" },
+                  "reason": { "type": "string" }
+                },
+                "required": ["approved"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Verifikasi berhasil dan email notifikasi dikirim jika perlu" },
+          "403": { "description": "Akses ditolak" },
+          "404": { "description": "Data UMKM tidak ditemukan" }
+        }
+      }
+    }
+  }
+}

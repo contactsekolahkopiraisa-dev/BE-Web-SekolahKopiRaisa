@@ -442,16 +442,15 @@ enum OrderStatus {
 //// MASUK KE TIM LAPORAN | 2025-GANJIL
 //// =========================
 
-enum Role {
-  UMKM
-}
 
 model VerifikasiUMKM {
   id_umkm          Int       @id @default(autoincrement())
   id_user          Int
-  nama_umkm        String    @db.VarChar(100)
+  nama_umkm        String    @db.VarChar(150)
   ktp              String?   @db.VarChar(16)
-  sertifikat_halal String?   @db.VarChar(50)
+  sertifikat_halal String?   @db.Text
+  status_verifikasi VerificationStatus @default(Pending)
+  alasan_penolakan String?   @db.Text
 
   User             User      @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction)
   
@@ -544,6 +543,15 @@ enum StatusHarga {
   Promo
 }
 
+enum VerificationStatus {
+  Pending
+  Verified
+  Rejected
+}
+
+enum Role {
+  UMKM
+}
 
 
 //// =========================

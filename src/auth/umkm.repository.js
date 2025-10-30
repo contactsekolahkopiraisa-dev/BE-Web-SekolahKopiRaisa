@@ -90,14 +90,14 @@ const findUMKMById = async (idUmkm) => {
 };
 
 // Cari UMKM berdasarkan user ID
-const findUMKMByUserId = async (idUser) => {
-  const model = verifikasiModel();
-  const umkm = await model.findFirst({
-    where: { id_user: Number(idUser) },
-    include: { addresses: true, User: true }
-  });
-  return umkm;
-};
+// const findUMKMByUserId = async (idUser) => {
+//   const model = verifikasiModel();
+//   const umkm = await model.findFirst({
+//     where: { id_user: Number(idUser) },
+//     include: { addresses: true, User: true }
+//   });
+//   return umkm;
+// };
 
 // Update data UMKM (partial update)
 const updateUMKMById = async (idUmkm, updateData) => {
@@ -118,11 +118,11 @@ const updateUMKMById = async (idUmkm, updateData) => {
 };
 
 // Hapus data UMKM (beserta alamatnya)
-const deleteUMKMById = async (idUmkm) => {
-  await prisma.address.deleteMany({ where: { id_umkm: Number(idUmkm) } });
-  const model = verifikasiModel();
-  return await model.delete({ where: { id_umkm: Number(idUmkm) } });
-};
+// const deleteUMKMById = async (idUmkm) => {
+//   await prisma.address.deleteMany({ where: { id_umkm: Number(idUmkm) } });
+//   const model = verifikasiModel();
+//   return await model.delete({ where: { id_umkm: Number(idUmkm) } });
+// };
 
 // helper: update status verifikasi
 const updateVerificationStatus = async (idUmkm, { status, reason }) => {
@@ -184,9 +184,9 @@ module.exports = {
   insertUMKM,
   isUMKMRegistered,
   findUMKMById,
-  findUMKMByUserId,
+  // findUMKMByUserId,
   updateUMKMById,
-  deleteUMKMById,
+  // deleteUMKMById,
   updateVerificationStatus,
   verifyUMKM
 };

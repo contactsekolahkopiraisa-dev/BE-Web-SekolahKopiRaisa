@@ -27,6 +27,15 @@ function normalize(s) {
 
 // Enrich & validate alamat memakai Wilayah ID + RajaOngkir (kode pos)
 async function enrichAndValidateAddresses(addresses = []) {
+  // Accept string JSON (multipart/form-data)
+  if (typeof addresses === 'string') {
+    try {
+      addresses = JSON.parse(addresses);
+    } catch (err) {
+      throw new ApiError(400, 'Addresses harus berupa array JSON yang valid');
+    }
+  }
+
   if (!Array.isArray(addresses)) return addresses;
   const enriched = [];
 
@@ -180,9 +189,17 @@ const createUMKM = async (newUmkmData) => {
   }
 
   let sertifikatUrl = null;
-  if (newUmkmData.file) {
-    sertifikatUrl = await uploadToCloudinary(newUmkmData.file.buffer, newUmkmData.file.originalname);
-  }
+
+if (newUmkmData.file) {
+  const sertifikatUpload = await uploadToCloudinary(
+    newUmkmData.file.buffer,
+    newUmkmData.file.originalname
+  );
+
+  // Ambil hanya bagian url dari hasil upload
+  sertifikatUrl = sertifikatUpload.url;  
+}
+
 
   const umkmData = await insertUMKM({
     ...newUmkmData,
@@ -233,8 +250,8 @@ const updateUMKM = async (idUmkm, updateData) => {
 
   if (updateData.file) {
     if (existing.sertifikat_halal) await deleteFromCloudinaryByUrl(existing.sertifikat_halal);
-    const url = await uploadToCloudinary(updateData.file.buffer, updateData.file.originalname);
-    payload.sertifikat_halal = url;
+    const uploadUpdate = await uploadToCloudinary(updateData.file.buffer, updateData.file.originalname);
+    payload.sertifikat_halal = uploadUpdate.url;
   }
 
   const updated = await updateUMKMById(idUmkm, payload);

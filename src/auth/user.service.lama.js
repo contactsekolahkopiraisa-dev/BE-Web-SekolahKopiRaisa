@@ -95,7 +95,12 @@ const updateUser = async ({ updateData, userId }) => {
         if (existingUser.image) {
             await deleteFromCloudinaryByUrl(existingUser.image);
         }
-        const imageUrl = await uploadToCloudinary(file.buffer, file.originalname);
+        // simpan object hasil upload ke imageUpload, lalu pakai .url
+        const imageUpload = await uploadToCloudinary(file.buffer, file.originalname);
+
+        // ambil url secara langsung (dengan fallback kecil)
+        const imageUrl = imageUpload && (imageUpload.url || imageUpload.secure_url) ? (imageUpload.url || imageUpload.secure_url) : null;
+
         updatePayload.image = imageUrl;
     }
     const update = await updateByID({ userId, updateData: updatePayload });
