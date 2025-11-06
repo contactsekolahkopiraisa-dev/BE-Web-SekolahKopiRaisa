@@ -49,6 +49,14 @@
       "description": "Endpoint untuk pendaftaran, pengelolaan dan verifikasi UMKM"
     },
     {
+      "name": "Laporan Keuangan",
+      "description": "Endpoint untuk pengelolaan laporan keuangan UMKM dan admin"
+    },
+    {
+      "name": "Wilayah",
+      "description": "Endpoint untuk mendapatkan data wilayah (provinsi, kabupaten, kecamatan, desa)"
+    },
+    {
       "name": "Jenis Layanan",
       "description": "Managing jenis layanan : PKL, Magang, Pelatihan, etc."
     },
@@ -1736,8 +1744,8 @@
                   },
                   "addresses": {
                     "type": "string",
-                    "description": "PASTE JSON ARRAY DI SINI (karena multipart/form-data tidak mendukung array native). Contoh di bawah akan muncul sebagai textarea besar di Swagger UI.",
-                    "example": "[\n  {\n    \"alamat\": \"Jl. PB Sudirman No.10\",\n    \"kelurahan_desa\": \"Tegal Besar\",\n    \"kecamatan\": \"Patrang\",\n    \"kabupaten\": \"Jember\",\n    \"provinsi\": \"Jawa Timur\",\n    \"kode_pos\": \"68115\"\n  }\n]"
+                    "description": "JSON Array berisi alamat. FORMAT BARU: gunakan id_desa ",
+                    "example": "[\n  {\n    \"id_desa\": 9211002,\n    \"alamat\": \"Jl. PB Sudirman No.10\",\n    \"kode_pos\": \"68124\"\n  }\n]"
                   }
                 }
               }
@@ -1840,31 +1848,9 @@
                     "type": "string"
                   },
                   "addresses": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "provinsi": {
-                          "type": "string"
-                        },
-                        "kabupaten": {
-                          "type": "string"
-                        },
-                        "kecamatan": {
-                          "type": "string"
-                        },
-                        "kelurahan_desa": {
-                          "type": "string"
-                        },
-                        "kode_pos": {
-                          "type": "string"
-                        },
-                        "alamat": {
-                          "type": "string"
-                        }
-                      }
-                    },
-                    "description": "Jika multipart, kirim sebagai JSON string"
+                    "type": "string",
+                    "description": "UPDATE dengan JSON Array format baru menggunakan id_desa (integer) + kode_pos.",
+                    "example": "[\n  {\n    \"id_desa\": 9211002,\n    \"alamat\": \"Jl. PB Sudirman No.10\",\n    \"kode_pos\": \"68124\"\n  }\n]"
                   },
                   "sertifikatHalal": {
                     "type": "string",
@@ -1939,6 +1925,849 @@
           },
           "404": {
             "description": "Data UMKM tidak ditemukan"
+          }
+        }
+      }
+    },
+    "/api/v1/laporan-keuangan": {
+      "post": {
+        "tags": [
+          "Laporan Keuangan"
+        ],
+        "summary": "Create laporan keuangan baru (Admin only)",
+        "description": "Hanya admin yang boleh membuat laporan keuangan.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "periode",
+                  "report_date"
+                ],
+                "properties": {
+                  "periode": {
+                    "type": "string",
+                    "example": "Januari 2025"
+                  },
+                  "report_date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "income": {
+                    "type": "number"
+                  },
+                  "pengeluarans": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "tanggal": {
+                          "type": "string",
+                          "format": "date"
+                        },
+                        "jumlah_pengeluaran": {
+                          "type": "number"
+                        },
+                        "keterangan": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Laporan berhasil dibuat"
+          },
+          "400": {
+            "description": "Validasi gagal"
+          },
+          "403": {
+            "description": "Akses ditolak — hanya admin yang diperbolehkan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Akses ditolak — hanya admin yang diperbolehkan"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Laporan Keuangan"
+        ],
+        "summary": "Get all laporan keuangan (Admin only)",
+        "description": "Hanya admin yang boleh melihat semua laporan keuangan.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "periode",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "bulan",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tahun",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List laporan dengan summary"
+          },
+          "403": {
+            "description": "Akses ditolak — hanya admin yang diperbolehkan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Akses ditolak — hanya admin yang diperbolehkan"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/laporan-keuangan/{id}": {
+      "get": {
+        "tags": [
+          "Laporan Keuangan"
+        ],
+        "summary": "Get laporan keuangan by ID (Admin only)",
+        "description": "Hanya admin yang boleh mengakses detail laporan keuangan.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detail laporan keuangan"
+          },
+          "403": {
+            "description": "Akses ditolak — hanya admin yang diperbolehkan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Akses ditolak — hanya admin yang diperbolehkan"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Laporan tidak ditemukan"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Laporan Keuangan"
+        ],
+        "summary": "Update laporan keuangan (Admin only)",
+        "description": "Hanya admin yang boleh mengupdate laporan keuangan.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "periode": {
+                    "type": "string"
+                  },
+                  "report_date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "income": {
+                    "type": "number"
+                  },
+                  "pengeluarans": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "tanggal": {
+                          "type": "string",
+                          "format": "date"
+                        },
+                        "jumlah_pengeluaran": {
+                          "type": "number"
+                        },
+                        "keterangan": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Laporan berhasil diupdate"
+          },
+          "403": {
+            "description": "Akses ditolak — hanya admin yang diperbolehkan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Akses ditolak — hanya admin yang diperbolehkan"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Laporan Keuangan"
+        ],
+        "summary": "Delete laporan keuangan (Admin only)",
+        "description": "Hanya admin yang boleh menghapus laporan keuangan.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Laporan berhasil dihapus"
+          },
+          "403": {
+            "description": "Akses ditolak — hanya admin yang diperbolehkan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Akses ditolak — hanya admin yang diperbolehkan"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/laporan-keuangan/summary/{userId}": {
+      "get": {
+        "tags": [
+          "Laporan Keuangan"
+        ],
+        "summary": "Get ringkasan keuangan user (Admin only)",
+        "description": "Hanya admin yang boleh mengakses ringkasan keuangan user.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "bulan",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tahun",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ringkasan keuangan berhasil didapat"
+          },
+          "403": {
+            "description": "Akses ditolak — hanya admin yang diperbolehkan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Akses ditolak — hanya admin yang diperbolehkan"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/wilayah/provinces": {
+      "get": {
+        "tags": [
+          "Wilayah"
+        ],
+        "summary": "Get all provinces (Jawa Timur only)",
+        "description": "Mengambil daftar provinsi. Untuk sistem ini hanya menampilkan Jawa Timur dari API eksternal.",
+        "responses": {
+          "200": {
+            "description": "List provinsi berhasil diambil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "example": "35",
+                            "description": "Kode provinsi"
+                          },
+                          "name": {
+                            "type": "string",
+                            "example": "JAWA TIMUR",
+                            "description": "Nama provinsi"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Provinsi tidak ditemukan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Provinsi Jawa Timur tidak ditemukan"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Gagal mengambil data dari upstream API",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Failed to fetch provinces: upstream error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/wilayah/regencies/{provinceCode}": {
+      "get": {
+        "tags": [
+          "Wilayah"
+        ],
+        "summary": "Get regencies by province code (Tapal Kuda only)",
+        "description": "Mengambil daftar kabupaten berdasarkan kode provinsi. Hanya menampilkan 7 kabupaten Tapal Kuda dari API eksternal.",
+        "parameters": [
+          {
+            "name": "provinceCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "35"
+            },
+            "description": "Kode provinsi (gunakan '35' untuk Jawa Timur)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List kabupaten Tapal Kuda berhasil diambil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "example": "35.09",
+                            "description": "Kode kabupaten dengan format titik"
+                          },
+                          "name": {
+                            "type": "string",
+                            "example": "KABUPATEN JEMBER",
+                            "description": "Nama kabupaten"
+                          },
+                          "province_code": {
+                            "type": "string",
+                            "example": "35",
+                            "description": "Kode provinsi induk"
+                          }
+                        }
+                      },
+                      "example": [
+                        {
+                          "code": "35.08",
+                          "name": "KABUPATEN LUMAJANG",
+                          "province_code": "35"
+                        },
+                        {
+                          "code": "35.09",
+                          "name": "KABUPATEN JEMBER",
+                          "province_code": "35"
+                        },
+                        {
+                          "code": "35.10",
+                          "name": "KABUPATEN BANYUWANGI",
+                          "province_code": "35"
+                        },
+                        {
+                          "code": "35.11",
+                          "name": "KABUPATEN BONDOWOSO",
+                          "province_code": "35"
+                        },
+                        {
+                          "code": "35.12",
+                          "name": "KABUPATEN SITUBONDO",
+                          "province_code": "35"
+                        },
+                        {
+                          "code": "35.13",
+                          "name": "KABUPATEN PROBOLINGGO",
+                          "province_code": "35"
+                        },
+                        {
+                          "code": "35.14",
+                          "name": "KABUPATEN PASURUAN",
+                          "province_code": "35"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Parameter provinceCode tidak diberikan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "provinceCode param is required"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Gagal mengambil data dari upstream API"
+          }
+        }
+      }
+    },
+    "/api/v1/wilayah/districts/{regencyCode}": {
+      "get": {
+        "tags": [
+          "Wilayah"
+        ],
+        "summary": "Get districts by regency code",
+        "description": "Mengambil daftar kecamatan berdasarkan kode kabupaten dari API eksternal.",
+        "parameters": [
+          {
+            "name": "regencyCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "35.09"
+            },
+            "description": "Kode kabupaten dengan format titik (contoh: '35.09' untuk Jember)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List kecamatan berhasil diambil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "example": "35.09.21",
+                            "description": "Kode kecamatan"
+                          },
+                          "name": {
+                            "type": "string",
+                            "example": "Sumbersari",
+                            "description": "Nama kecamatan"
+                          },
+                          "regency_code": {
+                            "type": "string",
+                            "example": "35.09",
+                            "description": "Kode kabupaten induk"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Parameter regencyCode tidak diberikan"
+          },
+          "502": {
+            "description": "Gagal mengambil data dari upstream API"
+          }
+        }
+      }
+    },
+    "/api/v1/wilayah/villages/{districtCode}": {
+      "get": {
+        "tags": [
+          "Wilayah"
+        ],
+        "summary": "Get villages by district code",
+        "description": "Mengambil daftar desa/kelurahan berdasarkan kode kecamatan dari API eksternal.",
+        "parameters": [
+          {
+            "name": "districtCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "35.09.21"
+            },
+            "description": "Kode kecamatan dengan format titik (contoh: '35.09.21' untuk Sumbersari)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List desa berhasil diambil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "example": "35.09.21.1001",
+                            "description": "Kode desa/kelurahan"
+                          },
+                          "name": {
+                            "type": "string",
+                            "example": "Kebonsari",
+                            "description": "Nama desa/kelurahan"
+                          },
+                          "district_code": {
+                            "type": "string",
+                            "example": "35.09.21",
+                            "description": "Kode kecamatan induk"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Parameter districtCode tidak diberikan"
+          },
+          "502": {
+            "description": "Gagal mengambil data dari upstream API"
+          }
+        }
+      }
+    },
+    "/api/v1/wilayah/validate/{villageCode}": {
+      "get": {
+        "tags": [
+          "Wilayah"
+        ],
+        "summary": "Validate village code exists in Tapal Kuda database",
+        "description": "Memvalidasi apakah ID desa ada di database wilayah Tapal Kuda. Endpoint ini digunakan backend untuk memastikan desa yang dipilih user valid sebelum disimpan.",
+        "parameters": [
+          {
+            "name": "villageCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 350921001
+            },
+            "description": "ID Desa yang akan divalidasi (integer, bukan string dengan titik). Contoh: 350921001 untuk Kebonsari"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Desa ditemukan dan valid di wilayah Tapal Kuda",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "valid": {
+                      "type": "boolean",
+                      "example": true,
+                      "description": "Status validasi desa"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id_desa": {
+                          "type": "integer",
+                          "example": 350921001,
+                          "description": "ID desa di database"
+                        },
+                        "nama_desa": {
+                          "type": "string",
+                          "example": "Kebonsari",
+                          "description": "Nama desa"
+                        },
+                        "kecamatan": {
+                          "type": "object",
+                          "properties": {
+                            "id_kecamatan": {
+                              "type": "integer",
+                              "example": 350921
+                            },
+                            "nama_kecamatan": {
+                              "type": "string",
+                              "example": "Sumbersari"
+                            },
+                            "kabupaten": {
+                              "type": "object",
+                              "properties": {
+                                "id_kabupaten": {
+                                  "type": "integer",
+                                  "example": 3509
+                                },
+                                "nama_kabupaten": {
+                                  "type": "string",
+                                  "example": "Kabupaten Jember"
+                                },
+                                "provinsi": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id_provinsi": {
+                                      "type": "integer",
+                                      "example": 35
+                                    },
+                                    "nama_provinsi": {
+                                      "type": "string",
+                                      "example": "Jawa Timur"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Desa tidak ditemukan di wilayah Tapal Kuda",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "valid": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Desa tidak ditemukan di wilayah Tapal Kuda"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Database connection error"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
