@@ -400,6 +400,117 @@ const validateVerifyUMKM = [
         })
 ];
 
+const validateCreateLaporanKeuangan = [
+  body('periode')
+    .notEmpty().withMessage('Periode wajib diisi')
+    .isString().withMessage('Periode harus berupa string')
+    .isLength({ max: 50 }).withMessage('Periode maksimal 50 karakter'),
+  
+  body('report_date')
+    .notEmpty().withMessage('Tanggal laporan wajib diisi')
+    .isISO8601().withMessage('Format tanggal tidak valid (gunakan YYYY-MM-DD)'),
+  
+  body('description')
+    .optional()
+    .isString().withMessage('Deskripsi harus berupa string'),
+  
+  body('income')
+    .optional()
+    .isInt({ min: 0 }).withMessage('Pemasukan harus berupa angka positif'),
+  
+  body('pengeluarans')
+    .optional()
+    .isArray().withMessage('Pengeluaran harus berupa array'),
+  
+  body('pengeluarans.*.tanggal')
+    .if(body('pengeluarans').exists())
+    .notEmpty().withMessage('Tanggal pengeluaran wajib diisi')
+    .isISO8601().withMessage('Format tanggal pengeluaran tidak valid'),
+  
+  body('pengeluarans.*.jumlah_pengeluaran')
+    .if(body('pengeluarans').exists())
+    .notEmpty().withMessage('Jumlah pengeluaran wajib diisi')
+    .isInt({ min: 1 }).withMessage('Jumlah pengeluaran harus berupa angka positif'),
+  
+  body('pengeluarans.*.keterangan')
+    .optional()
+    .isString().withMessage('Keterangan harus berupa string')
+];
+
+/**
+ * Validate update laporan keuangan
+ */
+const validateUpdateLaporanKeuangan = [
+  body('periode')
+    .optional()
+    .isString().withMessage('Periode harus berupa string')
+    .isLength({ max: 50 }).withMessage('Periode maksimal 50 karakter'),
+  
+  body('report_date')
+    .optional()
+    .isISO8601().withMessage('Format tanggal tidak valid (gunakan YYYY-MM-DD)'),
+  
+  body('description')
+    .optional()
+    .isString().withMessage('Deskripsi harus berupa string'),
+  
+  body('income')
+    .optional()
+    .isInt({ min: 0 }).withMessage('Pemasukan harus berupa angka positif'),
+  
+  body('pengeluarans')
+    .optional()
+    .isArray().withMessage('Pengeluaran harus berupa array'),
+  
+  body('pengeluarans.*.tanggal')
+    .if(body('pengeluarans').exists())
+    .notEmpty().withMessage('Tanggal pengeluaran wajib diisi')
+    .isISO8601().withMessage('Format tanggal pengeluaran tidak valid'),
+  
+  body('pengeluarans.*.jumlah_pengeluaran')
+    .if(body('pengeluarans').exists())
+    .notEmpty().withMessage('Jumlah pengeluaran wajib diisi')
+    .isInt({ min: 1 }).withMessage('Jumlah pengeluaran harus berupa angka positif'),
+  
+  body('pengeluarans.*.keterangan')
+    .optional()
+    .isString().withMessage('Keterangan harus berupa string')
+];
+
+/**
+ * Validate create pengeluaran (single)
+ */
+const validateCreatePengeluaran = [
+  body('tanggal')
+    .notEmpty().withMessage('Tanggal wajib diisi')
+    .isISO8601().withMessage('Format tanggal tidak valid (gunakan YYYY-MM-DD)'),
+  
+  body('jumlah_pengeluaran')
+    .notEmpty().withMessage('Jumlah pengeluaran wajib diisi')
+    .isInt({ min: 1 }).withMessage('Jumlah pengeluaran harus berupa angka positif'),
+  
+  body('keterangan')
+    .optional()
+    .isString().withMessage('Keterangan harus berupa string')
+];
+
+/**
+ * Validate update pengeluaran (single)
+ */
+const validateUpdatePengeluaran = [
+  body('tanggal')
+    .optional()
+    .isISO8601().withMessage('Format tanggal tidak valid (gunakan YYYY-MM-DD)'),
+  
+  body('jumlah_pengeluaran')
+    .optional()
+    .isInt({ min: 1 }).withMessage('Jumlah pengeluaran harus berupa angka positif'),
+  
+  body('keterangan')
+    .optional()
+    .isString().withMessage('Keterangan harus berupa string')
+];
+
 module.exports = {
     validateRegister,
     validateLogin,
@@ -415,5 +526,9 @@ module.exports = {
     validateCreateUMKM,
     validateUpdateUMKM,
     validateVerifyUMKM,
+    validateCreateLaporanKeuangan,
+    validateUpdateLaporanKeuangan,
+    validateCreatePengeluaran,
+    validateUpdatePengeluaran
     // ...other exports...
 };

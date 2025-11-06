@@ -17,7 +17,7 @@ const findAllCart = async (userId) => {
                             image: true,
                             weight: true,
                             partner: true,
-                            inventory: {
+                            inventories: {
                                 select: {
                                     stock: true,
                                 }

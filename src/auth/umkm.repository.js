@@ -32,6 +32,7 @@ const _truncate = (v, max) => {
  *   addresses: [{ alamat, desa, kecamatan, ... }, ...]   // optional
  * }
  */
+// Update fungsi insertUMKM untuk handle id_desa
 const insertUMKM = async (newUmkmData) => {
   const model = verifikasiModel();
 
@@ -40,18 +41,14 @@ const insertUMKM = async (newUmkmData) => {
     nama_umkm: _truncate(newUmkmData.nama_umkm || newUmkmData.namaUmkm || '', 150),
     ktp: _truncate(newUmkmData.ktp || null, 16),
     sertifikat_halal: newUmkmData.sertifikat_halal || newUmkmData.sertifikatHalal || null,
-    // status_verifikasi default = Pending di schema
   };
 
-  // build addresses with correct column names expected by schema
+  // Build addresses dengan id_desa
   if (Array.isArray(newUmkmData.addresses) && newUmkmData.addresses.length > 0) {
     const addressesCreate = newUmkmData.addresses.map(addr => ({
-      alamat: _truncate(addr.alamat || addr.jalan || addr.address || '', 255),
-      desa: _truncate(addr.desa || addr.village || '', 100),
-      kecamatan: _truncate(addr.kecamatan || addr.district || '', 100),
-      kabupaten: _truncate(addr.kabupaten || addr.regency || addr.city || '', 100),
-      provinsi: _truncate(addr.provinsi || addr.province || '', 100),
-      kode_pos: _truncate(addr.kode_pos || addr.kodePos || addr.postcode || '', 10)
+      id_desa: parseInt(addr.id_desa),
+      alamat: _truncate(addr.alamat || '', 255),
+      kode_pos: addr.kode_pos ? _truncate(addr.kode_pos, 10) : null
     }));
     data.addresses = { create: addressesCreate };
   }
@@ -59,16 +56,39 @@ const insertUMKM = async (newUmkmData) => {
   try {
     const umkmData = await model.create({
       data,
-      include: { addresses: true, User: true }
+      include: { 
+        addresses: {
+          include: {
+            desa: {
+              include: {
+                kecamatan: {
+                  include: {
+                    kabupaten: {
+                      include: {
+                        provinsi: true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }, 
+        User: true 
+      }
     });
     return umkmData;
   } catch (err) {
     if (err && err.code === 'P2000') {
       throw new Error('Salah satu nilai input terlalu panjang untuk kolom DB. Periksa panjang namaUmkm/ktp/alamat.');
     }
+    if (err && err.code === 'P2003') {
+      throw new Error('ID Desa tidak valid atau tidak ditemukan di database Tapal Kuda.');
+    }
     throw err;
   }
 };
+
 
 // Cek apakah user sudah punya data UMKM
 const isUMKMRegistered = async (idUser) => {
@@ -80,49 +100,130 @@ const isUMKMRegistered = async (idUser) => {
 };
 
 // Cari UMKM berdasarkan ID UMKM
+// Update fungsi findUMKMById
 const findUMKMById = async (idUmkm) => {
   const model = verifikasiModel();
   const umkm = await model.findUnique({
     where: { id_umkm: Number(idUmkm) },
-    include: { addresses: true, User: true }
+    include: { 
+      addresses: {
+        include: {
+          desa: {
+            include: {
+              kecamatan: {
+                include: {
+                  kabupaten: {
+                    include: {
+                      provinsi: true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }, 
+      User: true 
+    }
   });
   return umkm;
 };
 
 // Cari UMKM berdasarkan user ID
-const findUMKMByUserId = async (idUser) => {
-  const model = verifikasiModel();
-  const umkm = await model.findFirst({
-    where: { id_user: Number(idUser) },
-    include: { addresses: true, User: true }
-  });
-  return umkm;
-};
+// const findUMKMByUserId = async (idUser) => {
+//   const model = verifikasiModel();
+//   const umkm = await model.findFirst({
+//     where: { id_user: Number(idUser) },
+//     include: { addresses: true, User: true }
+//   });
+//   return umkm;
+// };
 
 // Update data UMKM (partial update)
+// Update fungsi updateUMKMById
 const updateUMKMById = async (idUmkm, updateData) => {
   const model = verifikasiModel();
 
-  // normalize allowed fields to schema names if user passed camelCase
   const data = { ...updateData };
   if (data.idUser) { data.id_user = data.idUser; delete data.idUser; }
   if (data.namaUmkm) { data.nama_umkm = data.namaUmkm; delete data.namaUmkm; }
   if (data.sertifikatHalal) { data.sertifikat_halal = data.sertifikatHalal; delete data.sertifikatHalal; }
+  
   if (data.addresses) {
-    // replace addresses: delete old and create new set
+    // Delete old addresses
     await prisma.address.deleteMany({ where: { id_umkm: Number(idUmkm) } });
-    return await model.update({ where: { id_umkm: Number(idUmkm) }, data: { ...data, addresses: { create: data.addresses } }, include: { addresses: true, User: true } });
+    
+    // Create new addresses dengan id_desa
+    const addressesCreate = data.addresses.map(addr => ({
+      id_desa: parseInt(addr.id_desa),
+      alamat: _truncate(addr.alamat || '', 255),
+      kode_pos: addr.kode_pos ? _truncate(addr.kode_pos, 10) : null
+    }));
+    
+    delete data.addresses;
+    
+    return await model.update({ 
+      where: { id_umkm: Number(idUmkm) }, 
+      data: { 
+        ...data, 
+        addresses: { create: addressesCreate } 
+      }, 
+      include: { 
+        addresses: {
+          include: {
+            desa: {
+              include: {
+                kecamatan: {
+                  include: {
+                    kabupaten: {
+                      include: {
+                        provinsi: true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }, 
+        User: true 
+      } 
+    });
   }
-  const umkm = await model.update({ where: { id_umkm: Number(idUmkm) }, data, include: { addresses: true, User: true } });
+  
+  const umkm = await model.update({ 
+    where: { id_umkm: Number(idUmkm) }, 
+    data, 
+    include: { 
+      addresses: {
+        include: {
+          desa: {
+            include: {
+              kecamatan: {
+                include: {
+                  kabupaten: {
+                    include: {
+                      provinsi: true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }, 
+      User: true 
+    } 
+  });
   return umkm;
 };
 
 // Hapus data UMKM (beserta alamatnya)
-const deleteUMKMById = async (idUmkm) => {
-  await prisma.address.deleteMany({ where: { id_umkm: Number(idUmkm) } });
-  const model = verifikasiModel();
-  return await model.delete({ where: { id_umkm: Number(idUmkm) } });
-};
+// const deleteUMKMById = async (idUmkm) => {
+//   await prisma.address.deleteMany({ where: { id_umkm: Number(idUmkm) } });
+//   const model = verifikasiModel();
+//   return await model.delete({ where: { id_umkm: Number(idUmkm) } });
+// };
 
 // helper: update status verifikasi
 const updateVerificationStatus = async (idUmkm, { status, reason }) => {
@@ -184,9 +285,9 @@ module.exports = {
   insertUMKM,
   isUMKMRegistered,
   findUMKMById,
-  findUMKMByUserId,
+  // findUMKMByUserId,
   updateUMKMById,
-  deleteUMKMById,
+  // deleteUMKMById,
   updateVerificationStatus,
   verifyUMKM
 };

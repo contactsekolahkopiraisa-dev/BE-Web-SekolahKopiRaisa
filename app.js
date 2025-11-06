@@ -18,7 +18,7 @@ require("./src/auth/facebook-config");
 const { createMidtransSnapToken } = require("./src/utils/midtrans");
 
 const app = express();
-const port = process.env.PORT || 2000;
+const port = process.env.PORT || 3000;
 
 // === CORS Config ===
 const allowedOrigins = [
@@ -102,12 +102,18 @@ const productRoutes = require("./src/product/product.controller");
 const cartRoutes = require("./src/cart/cart.controller");
 const orderRoutes = require("./src/order/order.controller");
 const companyRoutes = require("./src/company/company.controller");
+const wilayahRoutes = require('./src/utils/wilayah.controller');
 
 // === LAPORAN
 const umkmRoutes = require("./src/auth/umkm.controller");
+const keuanganRoutes = require('./src/laporan_keuangan/keuangan.controller');
 
 // === MITRA
-const { jenisLayananRoutes, layananRoutes, targetPesertaRoutes } = require("./src/layanan/C_Layanan.routes");
+const {
+  jenisLayananRoutes,
+  layananRoutes,
+  targetPesertaRoutes,
+} = require("./src/layanan/C_Layanan.routes");
 const { modulRoutes } = require("./src/modul/C_Modul.routes");
 
 app.use(express.json());
@@ -128,6 +134,8 @@ app.use("/api/v1/company", companyRoutes);
 
 // === LAPORAN
 app.use("/api/v1/auth/umkm", umkmRoutes);
+app.use('/api/v1/laporan-keuangan', keuanganRoutes);
+app.use('/api/v1/wilayah', wilayahRoutes);
 
 // === MITRA
 app.use("/api/v1/layanan", layananRoutes);
@@ -205,11 +213,9 @@ app.use((req, res, next) => {
 
 // === Global Error Handler ===
 app.use((err, req, res, next) => {
-  
   const statusCode = err.statusCode || 500;
-  const message =
-  err.message || "Terjadi kesalahan pada server.";
-  
+  const message = err.message || "Terjadi kesalahan pada server.";
+
   res.status(statusCode).json({
     success: false,
     message,
@@ -227,12 +233,6 @@ if (process.env.NODE_ENV !== "production") {
 
 module.exports = app; // Penting untuk deployment ke Vercel
 
-
-
-
-
-
-
 // import express from 'express';
 // import userRoutes from './user/user.routes.js';
 
@@ -246,7 +246,5 @@ module.exports = app; // Penting untuk deployment ke Vercel
 // });
 // // USER ROUTES
 // app.use("/user", userRoutes);
-
-
 
 // app.listen(3000, () => {console.log("Server berjalan di http://localhost:3000")});
