@@ -31,6 +31,7 @@ model User {
   reviews            Review[]
   transactions       Transaction[]
   financialReports   FinancialReport[]
+  pengeluaran        Pengeluaran[]
   profiles           Profile[]
   verifikasiUMKMs    VerifikasiUMKM[]
   layanans           Layanan[]
@@ -442,16 +443,15 @@ enum OrderStatus {
 //// MASUK KE TIM LAPORAN | 2025-GANJIL
 //// =========================
 
-enum Role {
-  UMKM
-}
 
 model VerifikasiUMKM {
   id_umkm          Int       @id @default(autoincrement())
   id_user          Int
-  nama_umkm        String    @db.VarChar(100)
+  nama_umkm        String    @db.VarChar(150)
   ktp              String?   @db.VarChar(16)
-  sertifikat_halal String?   @db.VarChar(50)
+  sertifikat_halal String?   @db.Text
+  status_verifikasi VerificationStatus @default(Pending)
+  alasan_penolakan String?   @db.Text
 
   User             User      @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction)
   
@@ -461,17 +461,15 @@ model VerifikasiUMKM {
 }
 
 model Address {
-  id_address      Int             @id @default(autoincrement())
-  id_umkm         Int
-  alamat          String?         @db.VarChar(255)
-  desa            String?         @db.VarChar(100)
-  kecamatan       String?         @db.VarChar(100)
-  kabupaten       String?         @db.VarChar(100)
-  provinsi        String?         @db.VarChar(100)
-  kode_pos        String?         @db.VarChar(10)
-
+  id_address   Int             @id @default(autoincrement())
+  id_umkm      Int
+  id_desa      Int             // FK ke tabel Desa
+  alamat       String          @db.VarChar(255)  // Detail alamat (jalan, nomor rumah)
+  kode_pos    String?         @db.VarChar(10)   // Kode pos
+  
   verifikasiUMKM VerifikasiUMKM @relation(fields: [id_umkm], references: [id_umkm])
-
+  desa           Desa           @relation(fields: [id_desa], references: [id_desa])
+  
   @@map("address")
 }
 
@@ -490,12 +488,26 @@ model FinancialReport {
   periode            String   @db.VarChar(50)
   report_date        DateTime @db.Date
   description        String?
-  income             Int
-  expenses           Int
+  income             Int      // Total pemasukan
 
   User               User     @relation(fields: [id_user], references: [id])
+  pengeluaran       Pengeluaran[]  // ← TAMBAHAN: One-to-many ke Pengeluaran
 
   @@map("financial_report")
+}
+
+model Pengeluaran {
+  id_pengeluaran      Int              @id @default(autoincrement())
+  id_financialreport  Int
+  id_user             Int
+  tanggal             DateTime         @db.Date
+  jumlah_pengeluaran  Int
+  keterangan          String?          @db.Text
+
+  financialReport     FinancialReport  @relation(fields: [id_financialreport], references: [id_financialreport], onDelete: Cascade)
+  user              User               @relation(fields: [id_user], references: [id])
+
+  @@map("pengeluaran")
 }
 
 model SalesReport {
@@ -538,12 +550,63 @@ model Harga {
   @@map("harga")
 }
 
+model Provinsi {
+  id_provinsi   Int          @id  // 35 untuk Jawa Timur
+  nama_provinsi String       @db.VarChar(50)
+  
+  kabupatens    Kabupaten[]
+  
+  @@map("provinsi")
+}
+
+model Kabupaten {
+  id_kabupaten   Int          @id  // 3509 untuk Jember, dst
+  id_provinsi    Int
+  nama_kabupaten String       @db.VarChar(50)
+  
+  provinsi       Provinsi     @relation(fields: [id_provinsi], references: [id_provinsi])
+  kecamatans     Kecamatan[]
+  
+  @@map("kabupaten")
+}
+
+model Kecamatan {
+  id_kecamatan   Int          @id  // 350901 untuk Jombang, dst
+  id_kabupaten   Int
+  nama_kecamatan String       @db.VarChar(50)
+  
+  kabupaten      Kabupaten    @relation(fields: [id_kabupaten], references: [id_kabupaten])
+  desas          Desa[]
+  
+  @@map("kecamatan")
+}
+
+model Desa {
+  id_desa      Int          @id  // unique code
+  id_kecamatan Int
+  nama_desa    String       @db.VarChar(50)
+  
+  kecamatan    Kecamatan    @relation(fields: [id_kecamatan], references: [id_kecamatan])
+  addresses    Address[]
+  
+  @@map("desa")
+}
+
 enum StatusHarga {
   Aktif
   Nonaktif
   Promo
 }
 
+enum VerificationStatus {
+  Pending
+  Verified
+  Rejected
+}
+
+enum Role {
+  UMKM
+}
 
 
 //// =========================

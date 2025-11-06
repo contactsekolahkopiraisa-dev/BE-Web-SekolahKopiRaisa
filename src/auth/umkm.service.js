@@ -12,176 +12,53 @@ const dotenv = require('dotenv');
 const { deleteFromCloudinaryByUrl } = require('../utils/cloudinary');
 const { uploadToCloudinary } = require('../services/cloudinaryUpload.service');
 const ApiError = require('../utils/apiError');
-
-const wilayahService = require('../utils/wilayah.service');
-const rajaOngkirApi = require('../utils/rajaOngkir');
 const { sendEmail } = require('../utils/email');
 
 dotenv.config();
 
-// Normalisasi helper
-function normalize(s) {
-  if (s === null || s === undefined) return '';
-  return String(s).toLowerCase().normalize('NFKD').replace(/\p{Diacritic}/gu, '').trim();
-}
-
-// Enrich & validate alamat memakai Wilayah ID + RajaOngkir (kode pos)
-async function enrichAndValidateAddresses(addresses = []) {
-  if (!Array.isArray(addresses)) return addresses;
-  const enriched = [];
-
-  for (const addr of addresses) {
-    const a = { ...addr };
-    try {
-      const provinceInput = a.provinceId || a.provinceCode || a.provinsi || a.province;
-      const regencyInput = a.regencyId || a.regencyCode || a.kabupaten || a.regency;
-      const districtInput = a.districtId || a.districtCode || a.kecamatan || a.district;
-      const villageInput = a.villageId || a.villageCode || a.desa || a.village;
-
-      const qProvince = normalize(provinceInput);
-      const qRegency = normalize(regencyInput);
-      const qDistrict = normalize(districtInput);
-      const qVillage = normalize(villageInput);
-
-      // Provinsi
-      if (qProvince) {
-        try {
-          const provinces = await wilayahService.getProvinces({ useCache: true });
-          const p = provinces.find(pv => {
-            const id = normalize(pv.id || pv.code);
-            const name = normalize(pv.name || pv.nama || pv.province);
-            return id === qProvince || name === qProvince || name.includes(qProvince) || qProvince.includes(name);
-          });
-          if (p) {
-            a.provinceId = p.id || p.code;
-            a.provinsi = p.name || p.nama || a.provinsi;
-          }
-        } catch (e) {
-          console.warn('Wilayah: gagal ambil provinsi', e.message);
+// Validasi apakah desa ada di database Tapal Kuda
+async function validateTapalKudaAddress(id_desa) {
+  const desa = await prisma.desa.findUnique({
+    where: { id_desa: parseInt(id_desa) },
+    include: {
+      kecamatan: {
+        include: {
+          kabupaten: true
         }
       }
-
-      // Kabupaten / regency
-      if (qRegency && a.provinceId) {
-        try {
-          const regencies = await wilayahService.getRegencies(a.provinceId, { useCache: true });
-          const r = regencies.find(rv => {
-            const id = normalize(rv.id || rv.code);
-            const name = normalize(rv.name || rv.nama || rv.regency);
-            return id === qRegency || name === qRegency || name.includes(qRegency) || qRegency.includes(name);
-          });
-          if (r) {
-            a.regencyId = r.id || r.code;
-            a.kabupaten = r.name || r.nama || a.kabupaten;
-          }
-        } catch (e) {
-          console.warn('Wilayah: gagal ambil kabupaten', e.message);
-        }
-      } else if (qRegency && !a.provinceId) {
-        // fallback search tanpa provinsi
-        try {
-          const regencies = await wilayahService.searchRegencies(qRegency, { useCache: true }).catch(() => []);
-          const r = regencies.find(rv => {
-            const id = normalize(rv.id || rv.code);
-            const name = normalize(rv.name || rv.nama || rv.regency);
-            return id === qRegency || name === qRegency || name.includes(qRegency) || qRegency.includes(name);
-          });
-          if (r) {
-            a.regencyId = r.id || r.code;
-            a.kabupaten = r.name || r.nama || a.kabupaten;
-            a.provinceId = r.province_id || r.provinceId || a.provinceId;
-          }
-        } catch (e) {
-          console.warn('Wilayah: fallback kabupaten search gagal', e.message);
-        }
-      }
-
-      // Kecamatan / district
-      if (qDistrict && a.regencyId) {
-        try {
-          const districts = await wilayahService.getDistricts(a.regencyId, { useCache: true });
-          const d = districts.find(dv => {
-            const id = normalize(dv.id || dv.code);
-            const name = normalize(dv.name || dv.nama || dv.district);
-            return id === qDistrict || name === qDistrict || name.includes(qDistrict) || qDistrict.includes(name);
-          });
-          if (d) {
-            a.districtId = d.id || d.code;
-            a.kecamatan = d.name || d.nama || a.kecamatan;
-          }
-        } catch (e) {
-          console.warn('Wilayah: gagal ambil kecamatan', e.message);
-        }
-      }
-
-      // Desa / village
-      if (qVillage && a.districtId) {
-        try {
-          const villages = await wilayahService.getVillages(a.districtId, { useCache: true });
-          const v = villages.find(vv => {
-            const id = normalize(vv.id || vv.code);
-            const name = normalize(vv.name || vv.nama || vv.village);
-            return id === qVillage || name === qVillage || name.includes(qVillage) || qVillage.includes(name);
-          });
-          if (v) {
-            a.villageId = v.id || v.code;
-            a.desa = v.name || v.nama || a.desa;
-          }
-        } catch (e) {
-          console.warn('Wilayah: gagal ambil desa', e.message);
-        }
-      }
-
-      // Validasi kode pos via RajaOngkir (jika ada)
-      const kode = a.kodePos || a.kode_pos || a.postcode || a.zip;
-      if (kode) {
-        try {
-          const resp = await rajaOngkirApi.get('/destination/domestic-destination', {
-            params: { search: kode, limit: 1, offset: 0 }
-          });
-          const found = resp?.data?.data;
-          if (!found || found.length === 0) {
-            throw new ApiError(400, `Kode pos tidak valid: ${kode}`);
-          }
-          a.kodePos = kode;
-        } catch (err) {
-          if (err instanceof ApiError) throw err;
-          console.warn('RajaOngkir: gagal validasi kodepos', err.message || err);
-        }
-      }
-    } catch (err) {
-      console.warn('Enrich address error:', err.message || err);
     }
+  });
 
-    // map ke shape yang sesuai schema Address (Prisma)
-    const clean = {
-      alamat: a.alamat || a.address || a.addressLine || a.street || null,
-      desa: a.desa || a.village || a.villageName || null,
-      kecamatan: a.kecamatan || a.district || a.districtName || null,
-      kabupaten: a.kabupaten || a.regency || a.regencyName || null,
-      provinsi: a.provinsi || a.province || a.provinceName || null,
-      kode_pos: a.kode_pos || a.kodePos || a.postcode || a.zip || null
-    };
-
-    enriched.push(clean);
+  if (!desa) {
+    throw new ApiError(400, `Desa dengan ID ${id_desa} tidak ditemukan di wilayah Tapal Kuda`);
   }
 
-  return enriched;
+  return desa;
 }
-
 
 // Create UMKM
 const createUMKM = async (newUmkmData) => {
   const existingUMKM = await isUMKMRegistered(newUmkmData.idUser);
   if (existingUMKM) throw new ApiError(400, 'User sudah memiliki data UMKM!');
 
-  if (newUmkmData.addresses) {
-    newUmkmData.addresses = await enrichAndValidateAddresses(newUmkmData.addresses);
+  // Validasi alamat - pastikan desa ada di database Tapal Kuda
+  if (newUmkmData.addresses && Array.isArray(newUmkmData.addresses)) {
+    for (const addr of newUmkmData.addresses) {
+      if (!addr.id_desa) {
+        throw new ApiError(400, 'ID Desa harus diisi untuk setiap alamat');
+      }
+      await validateTapalKudaAddress(addr.id_desa);
+    }
   }
 
   let sertifikatUrl = null;
+
   if (newUmkmData.file) {
-    sertifikatUrl = await uploadToCloudinary(newUmkmData.file.buffer, newUmkmData.file.originalname);
+    const sertifikatUpload = await uploadToCloudinary(
+      newUmkmData.file.buffer,
+      newUmkmData.file.originalname
+    );
+    sertifikatUrl = sertifikatUpload.url;  
   }
 
   const umkmData = await insertUMKM({
@@ -190,14 +67,32 @@ const createUMKM = async (newUmkmData) => {
     sertifikatHalal: sertifikatUrl
   });
 
-  // role assigned only after admin verification in verifyUMKM
   return umkmData;
 };
 
 // Get all UMKM (admin)
 const getAllUMKM = async () => {
   const all = await prisma.verifikasiUMKM.findMany({
-    include: { addresses: true, User: true }
+    include: { 
+      addresses: {
+        include: {
+          desa: {
+            include: {
+              kecamatan: {
+                include: {
+                  kabupaten: {
+                    include: {
+                      provinsi: true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }, 
+      User: true 
+    }
   });
   if (!all || all.length === 0) throw new ApiError(404, 'Tidak ada data UMKM ditemukan!');
   return all;
@@ -210,20 +105,26 @@ const getUMKMById = async (idUmkm) => {
   return umkm;
 };
 
-// Get UMKM by user id
-const getUMKMByUserId = async (userId) => {
-  const umkm = await findUMKMByUserId(userId);
-  if (!umkm) throw new ApiError(404, 'Data UMKM untuk user ini tidak ditemukan!');
-  return umkm;
-};
+// // Get UMKM by user id
+// const getUMKMByUserId = async (userId) => {
+//   const umkm = await findUMKMByUserId(userId);
+//   if (!umkm) throw new ApiError(404, 'Data UMKM untuk user ini tidak ditemukan!');
+//   return umkm;
+// };
 
 // Update UMKM
 const updateUMKM = async (idUmkm, updateData) => {
   const existing = await findUMKMById(idUmkm);
   if (!existing) throw new ApiError(404, 'Data UMKM tidak ditemukan!');
 
-  if (updateData.addresses) {
-    updateData.addresses = await enrichAndValidateAddresses(updateData.addresses);
+  // Validasi alamat jika ada update
+  if (updateData.addresses && Array.isArray(updateData.addresses)) {
+    for (const addr of updateData.addresses) {
+      if (!addr.id_desa) {
+        throw new ApiError(400, 'ID Desa harus diisi untuk setiap alamat');
+      }
+      await validateTapalKudaAddress(addr.id_desa);
+    }
   }
 
   const payload = {
@@ -231,10 +132,21 @@ const updateUMKM = async (idUmkm, updateData) => {
     ktp: updateData.ktp || existing.ktp
   };
 
+  // Handle file sertifikat halal
   if (updateData.file) {
-    if (existing.sertifikat_halal) await deleteFromCloudinaryByUrl(existing.sertifikat_halal);
-    const url = await uploadToCloudinary(updateData.file.buffer, updateData.file.originalname);
-    payload.sertifikat_halal = url;
+    if (existing.sertifikat_halal) {
+      await deleteFromCloudinaryByUrl(existing.sertifikat_halal);
+    }
+    const uploadUpdate = await uploadToCloudinary(
+      updateData.file.buffer, 
+      updateData.file.originalname
+    );
+    payload.sertifikat_halal = uploadUpdate.url;
+  }
+
+  // Include addresses dalam payload jika ada
+  if (updateData.addresses) {
+    payload.addresses = updateData.addresses;
   }
 
   const updated = await updateUMKMById(idUmkm, payload);
@@ -246,12 +158,10 @@ const verifyUMKM = async (idUmkm, { approved, reason, adminId }) => {
   const existing = await findUMKMById(idUmkm);
   if (!existing) throw new ApiError(404, 'Data UMKM tidak ditemukan!');
 
-  // normalize approved in case it's string
   const isApproved = (approved === true) || (approved === 'true') || (String(approved).toLowerCase() === '1');
-
   const status = isApproved ? 'Verified' : 'Rejected';
 
-  // transaction: update verifikasi_umkm, and if approved set user.role = 'UMKM'
+  // Transaction: update verifikasi_umkm, and if approved set user.role = 'UMKM'
   const updated = await prisma.$transaction(async (tx) => {
     const u = await tx.verifikasiUMKM.update({
       where: { id_umkm: Number(idUmkm) },
@@ -259,7 +169,26 @@ const verifyUMKM = async (idUmkm, { approved, reason, adminId }) => {
         status_verifikasi: status,
         alasan_penolakan: reason || null
       },
-      include: { User: true, addresses: true }
+      include: { 
+        addresses: {
+          include: {
+            desa: {
+              include: {
+                kecamatan: {
+                  include: {
+                    kabupaten: {
+                      include: {
+                        provinsi: true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }, 
+        User: true 
+      }
     });
 
     if (isApproved && u?.id_user) {
@@ -276,7 +205,7 @@ const verifyUMKM = async (idUmkm, { approved, reason, adminId }) => {
     return u;
   });
 
-  // send notification email (outside transaction)
+  // Send notification email (outside transaction)
   const userEmail = updated.User?.email || null;
   if (userEmail) {
     try {
@@ -304,12 +233,11 @@ const verifyUMKM = async (idUmkm, { approved, reason, adminId }) => {
   return updated;
 };
 
-
 module.exports = {
   createUMKM,
   getAllUMKM,
   getUMKMById,
-  getUMKMByUserId,
+  // getUMKMByUserId,
   updateUMKM,
   verifyUMKM
 };
