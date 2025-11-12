@@ -53,13 +53,13 @@ const createUMKM = async (newUmkmData) => {
 
   let sertifikatUrl = [];
 
-  if (newUmkmData.file && array.isArray(newUmkmData.file) && newUmkmData.file.length > 0) {
+  if (newUmkmData.files && Array.isArray(newUmkmData.files) && newUmkmData.files.length > 0) {
     // validasi maksimal 3 file yg diupload
-    if (newUmkmData.file.length > 3) {
+    if (newUmkmData.files.length > 3) {
       throw new ApiError(400, 'Maksimal 3 file sertifikat halal yang diunggah!');
     }
 
-      // Upload semua file ke Cloudinary secara paralel
+    // Upload semua file ke Cloudinary secara paralel
     const uploadPromises = newUmkmData.files.map(file => 
       uploadToCloudinary(file.buffer, file.originalname)
     );
