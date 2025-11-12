@@ -51,14 +51,20 @@ const createUMKM = async (newUmkmData) => {
     }
   }
 
-  let sertifikatUrl = null;
+  let sertifikatUrl = [];
 
-  if (newUmkmData.file) {
-    const sertifikatUpload = await uploadToCloudinary(
-      newUmkmData.file.buffer,
-      newUmkmData.file.originalname
+  if (newUmkmData.file && array.isArray(newUmkmData.file) && newUmkmData.file.length > 0) {
+    // validasi maksimal 3 file yg diupload
+    if (newUmkmData.file.length > 3) {
+      throw new ApiError(400, 'Maksimal 3 file sertifikat halal yang diunggah!');
+    }
+
+      // Upload semua file ke Cloudinary secara paralel
+    const uploadPromises = newUmkmData.files.map(file => 
+      uploadToCloudinary(file.buffer, file.originalname)
     );
-    sertifikatUrl = sertifikatUpload.url;  
+    const uploadResults = await Promise.all(uploadPromises);
+    sertifikatUrls = uploadResults.map(result => result.url);
   }
 
   const umkmData = await insertUMKM({
@@ -133,15 +139,20 @@ const updateUMKM = async (idUmkm, updateData) => {
   };
 
   // Handle file sertifikat halal
-  if (updateData.file) {
-    if (existing.sertifikat_halal) {
-      await deleteFromCloudinaryByUrl(existing.sertifikat_halal);
+  if (updateData.files && updateData.files.length > 0) {
+    // Hapus sertifikat lama dari Cloudinary
+    if (existing.sertifikat_halal && Array.isArray(existing.sertifikat_halal)) {
+      for (const url of existing.sertifikat_halal) {
+        await deleteFromCloudinaryByUrl(url);
+      }
     }
-    const uploadUpdate = await uploadToCloudinary(
-      updateData.file.buffer, 
-      updateData.file.originalname
+    
+    // Upload yang baru
+    const uploadPromises = updateData.files.map(f => 
+      uploadToCloudinary(f.buffer, f.originalname)
     );
-    payload.sertifikat_halal = uploadUpdate.url;
+    const results = await Promise.all(uploadPromises);
+    payload.sertifikat_halal = results.map(r => r.url);
   }
 
   // Include addresses dalam payload jika ada

@@ -241,7 +241,7 @@ router.put(
   '/:idUmkm',
   authMiddleware,
   validateUpdateUMKM,
-  upload.single('sertifikatHalal'),
+  upload.array('sertifikatHalal', 3), // bisa upload sampai 3 gambar
   multerErrorHandler,
   async (req, res) => {
     try {
