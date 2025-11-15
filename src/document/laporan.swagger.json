@@ -237,9 +237,7 @@
           "description": "Hanya admin yang boleh melihat semua laporan keuangan.",
           "security": [{ "cookieAuth": [] }],
           "parameters": [
-            { "in": "query", "name": "periode", "schema": { "type": "string" } },
-            { "in": "query", "name": "bulan", "schema": { "type": "integer" } },
-            { "in": "query", "name": "tahun", "schema": { "type": "integer" } }
+            { "in": "query", "name": "periode (opsional)", "schema": { "type": "string" } }
           ],
           "responses": {
             "200": { "description": "List laporan dengan summary" },
@@ -657,9 +655,9 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "example": 350921001
+              "example": 9211001
             },
-            "description": "ID Desa yang akan divalidasi (integer, bukan string dengan titik). Contoh: 350921001 untuk Kebonsari"
+            "description": "ID Desa yang akan divalidasi (integer, bukan string dengan titik). Contoh: 9211001 untuk Kebonsari"
           }
         ],
         "responses": {
