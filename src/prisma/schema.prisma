@@ -449,7 +449,7 @@ model VerifikasiUMKM {
   id_user          Int
   nama_umkm        String    @db.VarChar(150)
   ktp              String?   @db.VarChar(16)
-  sertifikat_halal String?   @db.Text
+  sertifikat_halal String[]   @db.Text
   status_verifikasi VerificationStatus @default(Pending)
   alasan_penolakan String?   @db.Text
 

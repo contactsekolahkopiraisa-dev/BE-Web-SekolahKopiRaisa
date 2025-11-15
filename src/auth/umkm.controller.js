@@ -51,7 +51,7 @@ async function sendEmail({ to, subject, html, text }) {
 router.post(
   '/',
   // do NOT require authMiddleware here so frontend can register user+umkm in one request
-  upload.single('sertifikatHalal'),
+  upload.array('sertifikatHalal', 3), // bisa upload sampai 3 gambar
   multerErrorHandler,
   validateCreateUMKM,
   async (req, res) => {
@@ -93,7 +93,7 @@ router.post(
         namaUmkm: req.body.namaUmkm,
         ktp: req.body.ktp || null,
         addresses: req.body.addresses ? (Array.isArray(req.body.addresses) ? req.body.addresses : JSON.parse(req.body.addresses)) : undefined,
-        file: req.file || null,
+        file: req.file || [],
       };
 
       const created = await createUMKM(payload); // [`createUMKM`](src/auth/umkm.service.js)
@@ -241,7 +241,7 @@ router.put(
   '/:idUmkm',
   authMiddleware,
   validateUpdateUMKM,
-  upload.single('sertifikatHalal'),
+  upload.array('sertifikatHalal', 3), // bisa upload sampai 3 gambar
   multerErrorHandler,
   async (req, res) => {
     try {
@@ -272,7 +272,7 @@ router.put(
         namaUmkm: req.body.namaUmkm,
         ktp: req.body.ktp,
         addresses: req.body.addresses ? (Array.isArray(req.body.addresses) ? req.body.addresses : JSON.parse(req.body.addresses)) : undefined,
-        file: req.file || null,
+        file: req.file || [],
       };
 
       const updated = await updateUMKM(idUmkm, updatePayload);

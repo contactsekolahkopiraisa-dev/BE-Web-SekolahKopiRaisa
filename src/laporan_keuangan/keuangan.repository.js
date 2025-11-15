@@ -493,6 +493,9 @@ const getAllLaporanForAdmin = async (filters = {}) => {
   }
 };
 
+/**
+ * ✅ REVISI: Hanya ambil transaksi dengan produk "Tsarisma Coffee"
+ */
 const getTransactionsByFilters = async (filters = {}) => {
   try {
     const where = {
@@ -549,7 +552,7 @@ const getTransactionsByFilters = async (filters = {}) => {
           }
         },
         payment: true,
-        orderItems: {  // ✅ TAMBAHKAN INI - include orderItems
+        orderItems: {
           include: {
             product: {
               select: {
@@ -564,14 +567,20 @@ const getTransactionsByFilters = async (filters = {}) => {
       }
     });
 
-    // Filter hanya yang payment SUCCESS
-    const successOrders = orders.filter(order => 
-      order.payment && order.payment.status === 'SUCCESS'
-    );
+    // ✅ Filter: Payment SUCCESS + Produk "Tsarisma Coffee"
+    const tsarismaCoffeeOrders = orders.filter(order => {
+      const hasSuccessPayment = order.payment && order.payment.status === 'SUCCESS';
+      const hasTsarismaCoffee = order.orderItems.some(item => 
+        item.product.name.toLowerCase().includes('tsarisma coffee')
+      );
+      
+      return hasSuccessPayment && hasTsarismaCoffee;
+    });
 
-    console.log(`📊 Order DELIVERED dengan Payment SUCCESS: ${successOrders.length}`);
+    console.log(`📊 Order DELIVERED dengan Payment SUCCESS: ${orders.length}`);
+    console.log(`☕ Order dengan produk Tsarisma Coffee: ${tsarismaCoffeeOrders.length}`);
     
-    return successOrders;
+    return tsarismaCoffeeOrders;
   } catch (error) {
     console.error('❌ Error in getTransactionsByFilters:', error);
     throw error;
