@@ -51,15 +51,10 @@ const createUMKM = async (newUmkmData) => {
     }
   }
 
-  let sertifikatUrl = [];
+  let sertifikatUrls = []; // FIX: nama variable yang konsisten
 
   if (newUmkmData.files && Array.isArray(newUmkmData.files) && newUmkmData.files.length > 0) {
-    // validasi maksimal 3 file yg diupload
-    if (newUmkmData.files.length > 3) {
-      throw new ApiError(400, 'Maksimal 3 file sertifikat halal yang diunggah!');
-    }
-
-    // Upload semua file ke Cloudinary secara paralel
+    // Upload semua file ke Cloudinary secara paralel (unlimited)
     const uploadPromises = newUmkmData.files.map(file => 
       uploadToCloudinary(file.buffer, file.originalname)
     );
@@ -69,8 +64,8 @@ const createUMKM = async (newUmkmData) => {
 
   const umkmData = await insertUMKM({
     ...newUmkmData,
-    sertifikat_halal: sertifikatUrl,
-    sertifikatHalal: sertifikatUrl
+    sertifikat_halal: sertifikatUrls, 
+    sertifikatHalal: sertifikatUrls   
   });
 
   return umkmData;
@@ -111,7 +106,7 @@ const getUMKMById = async (idUmkm) => {
   return umkm;
 };
 
-// // Get UMKM by user id
+// Get UMKM by user id
 // const getUMKMByUserId = async (userId) => {
 //   const umkm = await findUMKMByUserId(userId);
 //   if (!umkm) throw new ApiError(404, 'Data UMKM untuk user ini tidak ditemukan!');
@@ -172,8 +167,9 @@ const verifyUMKM = async (idUmkm, { approved, reason, adminId }) => {
   const isApproved = (approved === true) || (approved === 'true') || (String(approved).toLowerCase() === '1');
   const status = isApproved ? 'Verified' : 'Rejected';
 
-  // Transaction: update verifikasi_umkm, and if approved set user.role = 'UMKM'
+  // Transaction: update verifikasi_umkm, set user.role = 'UMKM', and create Partner
   const updated = await prisma.$transaction(async (tx) => {
+    // 1. Update status verifikasi UMKM
     const u = await tx.verifikasiUMKM.update({
       where: { id_umkm: Number(idUmkm) },
       data: {
@@ -202,19 +198,43 @@ const verifyUMKM = async (idUmkm, { approved, reason, adminId }) => {
       }
     });
 
+    // 2. Jika approved, set role UMKM dan create Partner
     if (isApproved && u?.id_user) {
       try {
+        // Set role user jadi UMKM
         await tx.user.update({
           where: { id: Number(u.id_user) },
           data: { role: 'UMKM' }
         });
+
+        // Cek apakah Partner sudah ada untuk user ini
+        const existingPartner = await tx.partner.findUnique({
+          where: { user_id: Number(u.id_user) }
+        });
+
+        // Auto-create Partner jika belum ada
+        if (!existingPartner) {
+          await tx.partner.create({
+            data: {
+              name: u.nama_umkm,
+              owner_name: u.User.name,
+              phone_number: u.User.phone_number || '-',
+              user_id: Number(u.id_user)
+            }
+          });
+          console.log(`✅ Partner berhasil dibuat untuk UMKM: ${u.nama_umkm}`);
+        } else {
+          console.log(`ℹ️  Partner sudah ada untuk user_id: ${u.id_user}`);
+        }
       } catch (e) {
-        console.warn('verifyUMKM: gagal set role UMKM pada user dalam transaction:', e.message || e);
+        console.error('❌ verifyUMKM: gagal set role UMKM atau create Partner:', e.message || e);
+        throw e; // Rollback transaction jika gagal
       }
     }
 
     return u;
   });
+
 
   // Send notification email (outside transaction)
   const userEmail = updated.User?.email || null;
