@@ -119,6 +119,7 @@ router.get("/user", authMiddleware, async (req, res) => {
         image: user.image,
         admin: user.admin,
         verified: user.verified,
+        role: user.role,
       },
     });
   } catch (error) {

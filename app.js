@@ -217,7 +217,7 @@ app.use((err, req, res, next) => {
     message,
   });
 
-  console.error("❌ Error: [", statusCode, "] ", message);
+  console.error("❌ Error: [", statusCode, "] ", message, "\nstack: ", err.stack);
 });
 
 // === Start Server (Lokal Only) ===

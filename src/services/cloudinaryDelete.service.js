@@ -20,6 +20,11 @@ const getCloudinaryInstance = (cloudName) => {
       api_key: process.env.CLOUDINARY_API_KEY_OLD,
       api_secret: process.env.CLOUDINARY_API_SECRET_OLD,
     };
+    config = {
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME_H,
+      api_key: process.env.CLOUDINARY_API_KEY_H,
+      api_secret: process.env.CLOUDINARY_API_SECRET_H,
+    };
   } else if (cloudName === process.env.CLOUDINARY_CLOUD_NAME) {
     config = {
       cloud_name: process.env.CLOUDINARY_CLOUD_NAME,

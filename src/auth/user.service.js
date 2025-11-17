@@ -67,6 +67,18 @@ const loginUser = async ({ emailOrPhone, password }) => {
         throw new Error('Server error: JWT secret tidak ditemukan!');
     }
 
+    console.log("disini");
+    console.log(user);
+
+    if (!user.role) {
+        if (user.admin == true) {
+            user.role = 'admin';
+        }
+        else if ((user.admin == false) && !user.role) {
+            user.role = 'customer';
+        }
+    }
+
     const token = await jsonwebtoken.sign(
         { id: user.id, admin: user.admin },
         process.env.JWT_SECRET,
@@ -83,7 +95,8 @@ const loginUser = async ({ emailOrPhone, password }) => {
             phone_number: user.phone_number,
             image: user.image,
             admin: user.admin,
-            verified: user.verified
+            verified: user.verified,
+            role: user.role
         },
         token
     };
@@ -92,7 +105,7 @@ const loginUser = async ({ emailOrPhone, password }) => {
 const updateUser = async ({ updateData, userId }) => {
     const existingUser = await findUserByID(userId);
     if (!existingUser) {
-        throw new ApiError(400,'User tidak ditemukan!');
+        throw new ApiError(400, 'User tidak ditemukan!');
     }
     const { name, phone_number, file } = updateData;
     const updatePayload = { name, phone_number };
@@ -100,7 +113,7 @@ const updateUser = async ({ updateData, userId }) => {
     if (phone_number && phone_number !== existingUser.phone_number) {
         const userWithSamePhone = await findUserNumber(phone_number, userId);
         if (userWithSamePhone) {
-            throw new ApiError(400,'Nomor sudah digunakan');
+            throw new ApiError(400, 'Nomor sudah digunakan');
         }
     }
 
