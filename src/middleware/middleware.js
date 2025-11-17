@@ -25,12 +25,46 @@ const authMiddleware = async (req, res, next) => {
             return res.status(404).json({ message: '*User tidak ditemukan!' });
         }
 
+        // PENGECEKAN ROLE
+        if (!user.role) {
+            if (user.admin == true) {
+                user.role = 'admin';
+            }
+            else if ((user.admin == false) && !user.role) {
+                user.role = 'customer';
+            }
+        }
+
         req.user = user;
         next();
     } catch (error) {
         return res.status(401).json({ message: '*Token invalid atau sudah kadaluwarsa!' });
     }
 };
+
+const permissionMiddleware = (...allowedRoles) => {
+    return (req, res, next) => {
+        console.log('>>> Allowed Roles:', allowedRoles);
+        console.log('>>> User Role:', req.user.role);
+
+        if (!req.user || !req.user.role) {
+            return res.status(403).json({ message: 'User tidak memiliki role.' });
+        }
+
+        // Normalisasi: buat huruf besar semua supaya tidak case-sensitive
+        const userRole = req.user.role.toUpperCase();
+        const normalizedAllowedRoles = allowedRoles.map(r => r.toUpperCase());
+
+        if (!normalizedAllowedRoles.includes(userRole)) {
+            return res.status(403).json({
+                message: `Akses ditolak: Role '${req.user.role}' tidak diizinkan.`,
+            });
+        }
+
+        next();
+    };
+};
+
 
 const validateProfilMedia = (req, res, next) => {
     const maxSizeMB = 5;
@@ -368,6 +402,6 @@ const companyMulterErrorHandler = (err, req, res, next) => {
 
 
 module.exports = {
-    authMiddleware, validateUpdateNewsMedia, validateInsertNewsMedia, multerErrorHandler, validateProfilMedia,
+    authMiddleware, permissionMiddleware, validateUpdateNewsMedia, validateInsertNewsMedia, multerErrorHandler, validateProfilMedia,
     validateProductMedia, validateProductUpdate, validateAboutCompanyMedia, companyMulterErrorHandler, validateUpdateCompanyMedia
 };

@@ -12,6 +12,8 @@
 
 // src/utils/sanitizeData.js
 
+const stringOnlyFields = ['nim', 'no_telepon'];
+
 function sanitizeData(input) {
   if (!input || typeof input !== 'object') return {};
 
@@ -30,8 +32,12 @@ function sanitizeData(input) {
     // 3️⃣ Normalisasi tipe otomatis
     let newValue = value;
 
-    // "123" → 123
-    if (typeof value === 'string' && /^\d+$/.test(value)) {
+    // "123" → 123 Hanya convert angka JIKA field BUKAN string-only
+    if (
+      typeof value === 'string' &&
+      /^\d+$/.test(value) &&
+      !stringOnlyFields.includes(key)
+    ) {
       newValue = Number(value);
     }
 

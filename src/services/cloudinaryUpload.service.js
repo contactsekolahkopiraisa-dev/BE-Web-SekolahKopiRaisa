@@ -1,7 +1,16 @@
-const { cloudinary } = require("../utils/cloudinary");
+const cloudinary = require("cloudinary").v2;
 const path = require("path");
 const crypto = require("crypto");
 const streamifier = require("streamifier");
+const dotenv = require("dotenv");
+
+dotenv.config();
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 /**
  * Upload file ke Cloudinary (image, video, raw)
@@ -28,6 +37,11 @@ const uploadToCloudinary = async (fileBuffer, filename, options = {}) => {
   const randomPart = crypto.randomBytes(10).toString("hex");
   const uniqueName = `${Date.now()}_${randomPart}`;
   const folderPath = `konten-kopiraisa/${folder}`;
+
+  console.log(`🧭 Upload file dengan public_id dari API:
+  Public ID: ${uniqueName}
+  Resource: ${resourceType}
+  Cloud: ${cloudinary.config().cloud_name}`);
 
   try {
     let result;
@@ -67,9 +81,8 @@ const uploadToCloudinary = async (fileBuffer, filename, options = {}) => {
         streamifier.createReadStream(fileBuffer).pipe(uploadStream);
       });
     }
-    // debug di konsol
-    console.log(result);
 
+    console.log("✅ Upload berhasil:", result.secure_url);
     return {
       url: result.secure_url,
       public_id: result.public_id,

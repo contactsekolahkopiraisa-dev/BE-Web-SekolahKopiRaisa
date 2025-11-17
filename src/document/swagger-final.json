@@ -3110,6 +3110,121 @@
           }
         }
       }
+    },
+    "/api/v1/layanan": {
+      "post": {
+        "tags": [
+          "Layanan"
+        ],
+        "summary": "Issue new permintaan layanan",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id_jenis_layanan": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "nama_kegiatan": {
+                    "type": "string",
+                    "example": "Peningkatan Efektivitas Melalui Workshop XYZ"
+                  },
+                  "tempat_kegiatan": {
+                    "type": "string",
+                    "example": "Sekolah Kopi Raisa"
+                  },
+                  "jumlah_peserta": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "instansi_asal": {
+                    "type": "string",
+                    "example": "Universitas Jember"
+                  },
+                  "tanggal_mulai": {
+                    "type": "date-time",
+                    "example": "2025-11-08T08:00:00.000Z"
+                  },
+                  "tanggal_selesai": {
+                    "type": "date-time",
+                    "example": "2025-11-08T12:00:00.000Z"
+                  },
+                  "link_logbook": {
+                    "type": "string",
+                    "example": "google.com"
+                  },
+                  "file_proposal": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "file_surat_pengantar": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "file_surat_permohonan": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "file_surat_undangan": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "isi_konfigurasi_layanan": {
+                    "type": "string",
+                    "example": "[{\"id_kegiatan\":1,\"id_sub_kegiatan\":[1,2,3]},{\"id_kegiatan\":2,\"id_sub_kegiatan\":[]}]"
+                  },
+                  "nim": {
+                    "type": "string",
+                    "example": "12345"
+                  },
+                  "fakultas": {
+                    "type": "string",
+                    "example": "Pertanian"
+                  },
+                  "prodi": {
+                    "type": "string",
+                    "example": "Ilmu Tanah"
+                  },
+                  "pesertas": {
+                    "type": "string",
+                    "example": "[{\"urutan\":1,\"nama\":\"Adit\"},{\"urutan\":2,\"nama\":\"Jono\"}]"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Modul created successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil mengunggah Modul 'dsfbbsyby rtby' !",
+                  "data": {
+                    "id": 3,
+                    "id_dibuat_oleh": 42,
+                    "judul_modul": "dsfbbsyby rtby",
+                    "deskripsi": "trghun jn uiu ",
+                    "file_modul": "https://res.cloudinary.com/darsrhtsb/raw/upload/v1761398548/konten-kopiraisa/modul/1761398547378_FORMAT%20-%20SURAT%20PENGANTAR.docx.pdf",
+                    "created_at": "2025-10-25T13:22:29.457Z",
+                    "updated_at": "2025-10-25T13:22:29.457Z"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

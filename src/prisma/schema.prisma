@@ -705,8 +705,10 @@ model Layanan {
   // logobook cuma untuk magang & pkl
   link_logbook            String?   @db.Text  // link gdocs/sheet logbook mereka
   // pelatihan cuma butuh surat_permohonan
-  proposal_atau_surat_permohonan String? @db.Text
-  surat_pengantar_atau_undangan  String? @db.Text
+  file_proposal           String? @db.Text
+  file_surat_permohonan   String? @db.Text
+  file_surat_pengantar    String? @db.Text
+  file_surat_undangan     String? @db.Text
   created_at              DateTime  @default(now())
 
   user                      User                 @relation(fields: [id_user], references: [id])
@@ -874,7 +876,7 @@ model SubKegiatan{
   id                  Int     @id @default(autoincrement())
   id_kegiatan         Int
   nama_sub_kegiatan   String  @db.VarChar(64)
-  jam_durasi          Int
+  jam_durasi          Int?
   deskripsi           String? @db.Text
 
   kegiatan Kegiatan   @relation(fields: [id_kegiatan], references: [id])
@@ -915,7 +917,7 @@ model KonfigurasiLayanan {
   // jadi kalau ada yang menyimpan konfigurasi_layanan yang sama persis dengan entri yang sudah ada maka dia akan pakai yang sudah ada
 
   id                  Int       @id @default(autoincrement())
-  id_jenis_layanan    Int       @unique
+  id_jenis_layanan    Int       
   versi_konfig        DateTime  @default(now())
   hash_konfigurasi    String    @db.Text
   is_active           Boolean   @default(true)
@@ -938,10 +940,11 @@ model DetailKonfigurasi {
   id_konfigurasi_layanan  Int
   id_kegiatan             Int
   id_sub_kegiatan         Int
+  urutan_ke               Int
 
   konfigurasiLayanan  KonfigurasiLayanan @relation(fields: [id_konfigurasi_layanan], references: [id])
   kegiatan            Kegiatan  @relation(fields: [id_kegiatan], references: [id])
-  SubKegiatan         SubKegiatan @relation(fields: [id_sub_kegiatan], references: [id])
+  subKegiatan         SubKegiatan @relation(fields: [id_sub_kegiatan], references: [id])
 
   @@map("detail_konfigurasi")
 }

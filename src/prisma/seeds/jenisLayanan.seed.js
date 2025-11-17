@@ -33,7 +33,7 @@ export default async function seedJenisLayanan(prisma) {
         id_target_peserta: targetMahasiswa.id,
       },
       {
-        nama_jenis_layanan: 'Pelatihan Kopi',
+        nama_jenis_layanan: 'Pelatihan',
         deskripsi_singkat: 'Pelatihan dasar kopi untuk masyarakat umum',
         deskripsi_lengkap:
           'Program Pelatihan Kopi di Sekolah Kopi RAISA terbuka bagi siapa saja yang tertarik mempelajari dunia kopi. Materi pelatihan meliputi pengenalan kopi nusantara, teknik penyeduhan manual brew, dasar-dasar roasting, serta aspek bisnis kedai kopi. Pelatihan ini difasilitasi oleh trainer bersertifikat dan dilaksanakan secara intensif di ruang praktik RAISA Coffee Lab.',
@@ -49,7 +49,7 @@ export default async function seedJenisLayanan(prisma) {
         id_target_peserta: targetUmum.id,
       },
       {
-        nama_jenis_layanan: 'Kunjungan Edukatif',
+        nama_jenis_layanan: 'Kunjungan',
         deskripsi_singkat: 'Kunjungan pembelajaran ke Sekolah Kopi RAISA',
         deskripsi_lengkap:
           'Program Kunjungan Edukatif diperuntukkan bagi sekolah, universitas, dan masyarakat umum yang ingin mengenal lebih dekat proses dan ekosistem industri kopi. Peserta akan diajak berkeliling ke area kebun, laboratorium roasting, dan ruang barista untuk memahami rantai nilai kopi secara menyeluruh. Kegiatan disertai sesi diskusi interaktif dan demo seduh.',
