@@ -1,4 +1,5 @@
-const { jenisLayananService, targetPesertaService } = require("./C_Layanan.service.js");
+const { jenisLayananService, targetPesertaService, layananService } = require("./C_Layanan.service.js");
+const ApiError = require ("../utils/apiError.js");
 
 
 const jenisLayananController = {
@@ -63,14 +64,41 @@ const targetPesertaController = {
             if (req.user.admin !== true) { throw new ApiError(403, 'Akses ditolak! Hanya admin yang dapat mengubah jenis layanan !'); }
 
             const data = await jenisLayananService.update(req.user.id, req.body);
-            res.status(200).json({ success: true, message: `Berhasil mengubah Jenis Layanan '${data.nama_jenis_layanan}' !`, data});
+            res.status(200).json({ success: true, message: `Berhasil mengubah Jenis Layanan '${data.nama_jenis_layanan}' !`, data });
         } catch (err) {
             next(err);
         }
     }
 }
 
+const layananController = {
+    // POST AJUKAN LAYANAN BARU
+    async create(req, res, next) {
+        try {
+            // kembalikan kalau bukan cust
+            if (req.user.role !== 'customer') { throw new ApiError(403, 'Akses ditolak! Hanya customer yang dapat mengajukan layanan !'); }
+            const layanan = await layananService.create(req.body, req.files, req.user);
+            res.status(201).json({ success: true, message: "Berhasil mengajukan layanan!", data: layanan });
+        } catch (err) {
+            next(err);
+        }
+    },
+}
+
+// bawah ini cm debug
+// const konfigurasiLayananController = {
+//     async get(req, res, next) {
+//         try {
+//             const konfigurasiLayanan = await konfigurasiLayananService.getByHash(req.body.hash_konfigurasi, req.body.id_jenis_layanan);
+//             res.status(200).json({ success: true, message: "berhasil mendapatkan konfigurasi layanan!", data: konfigurasiLayanan});
+//         } catch (err) {
+//             next(err);
+//         }
+//     }
+// }
+
 module.exports = {
     jenisLayananController,
-    targetPesertaController
+    targetPesertaController,
+    layananController
 }
