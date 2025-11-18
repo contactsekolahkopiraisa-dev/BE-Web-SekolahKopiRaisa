@@ -48,13 +48,26 @@ const rawFileFilter = (req, file, cb) => {
 //     }
 // };
 
+// DEFAULT UPLOAD - 5 FILES MAX
 const upload = multer({
-    storage, limits: {
+    storage, 
+    limits: {
         fileSize: 5 * 1024 * 1024,
         files: 5,
     },
     fileFilter: imageFileFilter
 });
+
+// ✅ UPLOAD KHUSUS UNTUK UMKM - UNLIMITED FILES
+const uploadUMKM = multer({
+    storage, 
+    limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB per file untuk sertifikat
+        // TIDAK ADA files limit = unlimited
+    },
+    fileFilter: imageFileFilter
+});
+
 const uploadCompany = multer({
     storage, limits: {
         fileSize: 5 * 1024 * 1024,
