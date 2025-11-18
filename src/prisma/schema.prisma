@@ -640,6 +640,7 @@ model JenisLayanan {
   image               String?     @db.Text
   estimasi_waktu      String      @db.VarChar(32) // ex: string("4 - 6 Hari")
   id_target_peserta   Int
+  is_active           Boolean     @default(false)
 
   targetPeserta       TargetPeserta    @relation(fields: [id_target_peserta], references: [id])
   layanans            Layanan[]

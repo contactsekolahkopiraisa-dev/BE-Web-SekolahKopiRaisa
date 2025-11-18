@@ -1,7 +1,7 @@
 const ApiError = require("../utils/apiError.js");
 const { deleteFromCloudinaryByUrl } = require("../services/cloudinaryDelete.service.js");
 const { uploadToCloudinary } = require("../services/cloudinaryUpload.service.js");
-const { layananRepository, jenisLayananRepository, targetPesertaRepository, statusKodeRepository, konfigurasiLayananRepository, pesertaRepository, subKegiatanRepository } = require("./C_Layanan.repository.js");
+const { layananRepository, jenisLayananRepository, targetPesertaRepository, statusKodeRepository, konfigurasiLayananRepository, pesertaRepository, subKegiatanRepository, layananRejectionRepository } = require("./C_Layanan.repository.js");
 const { sanitizeData } = require("../utils/sanitizeData.js");
 const { JENIS_SCHEMA, validateData } = require("./C_Layanan.validate.js");
 const { uploadFilesBySchema, sendNotifikasiAdminLayanan, sendNotifikasiPengusulLayanan } = require("./C_Layanan.helper.js");
@@ -9,6 +9,24 @@ const crypto = require('crypto');
 const dotenv = require("dotenv");
 dotenv.config();
 
+const statusKodeService = {
+    // GET ALL KODE STATUS
+    async getAll() {
+        const statusKodes = await statusKodeRepository.findAll();
+        if (!statusKodes || statusKodes.length === 0) {
+            throw new ApiError(404, 'Data-data status tidak ditemukan!');
+        }
+        return statusKodes;
+    },
+    // GET KODE STATUS BY ID
+    async getById(id) {
+        const statusKode = await statusKodeRepository.findById(id);
+        if (!statusKode) {
+            throw new ApiError(404, 'Data status tidak ditemukan!');
+        }
+        return statusKode;
+    },
+}
 
 const jenisLayananService = {
     // GET ALL JENIS LAYANAN
@@ -269,14 +287,41 @@ const layananService = {
         // masukkan peserta ke var untuk direturn
         created.peserta = pesertaAdded;
 
-
-
         const adminEmail = process.env.EMAIL_USER;
         await sendNotifikasiAdminLayanan(adminEmail, created);
         // 2. Kirim ke Pengusul / User
         await sendNotifikasiPengusulLayanan(created.user.email, created);
 
         return created;
+    },
+    async updateStatusPengajuan(idLayanan, idStatus, alasan) {
+        const STATUS_DITOLAK = await statusKodeRepository.findByName('Ditolak');
+        const status = await statusKodeRepository.findById(idStatus);
+        if (!status || !STATUS_DITOLAK) { throw ApiError(500, "Kode status tidak ditemukan!");}
+
+        // kalau ditolak tapi alasannya kosong maka error
+        if ((status.id == STATUS_DITOLAK.id) && !alasan) {
+            throw ApiError(400, "Alasan Penolakan harus disertakan!")
+        }
+        // build payload update
+        const data = {
+            id_layanan: parseInt(idLayanan),
+            id_status_pengajuan: status.id
+        };
+        // update status ke db
+        const updated = await layananRepository.updateStatusPengajuan(data);
+
+        // kalau ditolak maka insert jugaalasan
+        if (status.id == STATUS_DITOLAK.id) {
+            const rejectionPayload = {
+                id_layanan: parseInt(idLayanan),
+                alasan: alasan
+            }
+            const alasanCreated = await layananRejectionRepository.create(rejectionPayload);
+            updated.alasan = alasanCreated;
+        }
+
+        return updated;
     }
 }
 
@@ -284,6 +329,7 @@ module.exports = {
     jenisLayananService,
     targetPesertaService,
     layananService,
+    statusKodeService
 };
 
 

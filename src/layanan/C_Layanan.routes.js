@@ -2,10 +2,11 @@ const express = require('express');
 const jenisLayananRoutes = express.Router();
 const layananRoutes = express.Router();
 const targetPesertaRoutes = express.Router();
+const statusKodeRoutes = express.Router();
 const { upload } = require('../middleware/multer');
 const { uploadFile } = require('../middleware/multer.js');
 const { authMiddleware, permissionMiddleware } = require('../middleware/middleware');
-const { jenisLayananController, targetPesertaController, layananController } = require('./C_Layanan.js');
+const { jenisLayananController, targetPesertaController, layananController, statusKodeController } = require('./C_Layanan.js');
 
 
 // JENIS LAYANAN ROUTES
@@ -27,9 +28,12 @@ layananRoutes.post('/', authMiddleware, permissionMiddleware('customer'),
     { name: 'file_surat_undangan', maxCount: 1 }
   ]),
   layananController.create);
+layananRoutes.put('/pengajuan/:id', authMiddleware, permissionMiddleware('admin'), layananController.updateStatusPengajuan);
+// STATUS ROUTES
+statusKodeRoutes.get('/', statusKodeController.getAll);
+statusKodeRoutes.get('/:id', statusKodeController.getById);
 
 
-  
 module.exports = {
   layananRoutes,
   jenisLayananRoutes,

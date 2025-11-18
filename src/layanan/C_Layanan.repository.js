@@ -113,7 +113,22 @@ const layananRepository = {
             },
         });
     },
+    updateStatusPengajuan: (data) => prisma.Layanan.update({
+        where: { id: parseInt(data.id_layanan) },
+        data: {
+            id_status_pengajuan: parseInt(data.id_status_pengajuan)
+        },
+        include: {
+            statusKodePengajuan: true
+        }
+    })
 };
+
+const layananRejectionRepository = {
+    create: (data) => prisma.layananRejection.create({
+        data
+    })
+}
 
 const pesertaRepository = {
     create: (data) => prisma.Peserta.create({
@@ -176,6 +191,7 @@ const targetPesertaRepository = {
 }
 
 const statusKodeRepository = {
+    getAll: async () => prisma.statusKode.findMany(),
     findById: async (id) => await prisma.StatusKode.findUnique({
         where: { id: parseInt(id) }
     }),
@@ -199,5 +215,6 @@ module.exports = {
     statusKodeRepository,
     konfigurasiLayananRepository,
     pesertaRepository,
-    subKegiatanRepository
+    subKegiatanRepository,
+    layananRejectionRepository
 };
