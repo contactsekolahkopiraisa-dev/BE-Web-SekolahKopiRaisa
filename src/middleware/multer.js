@@ -117,4 +117,4 @@ const uploadFile = multer({
 });
 
 
-module.exports = { upload, uploadFile };    //REFACTOR SEMUA YANG PAKAI upload ini
+module.exports = { upload, uploadFile, uploadUMKM };    //REFACTOR SEMUA YANG PAKAI upload ini
