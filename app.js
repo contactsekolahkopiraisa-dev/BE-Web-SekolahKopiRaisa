@@ -108,13 +108,15 @@ const wilayahRoutes = require('./src/utils/wilayah.controller');
 const umkmRoutes = require("./src/auth/umkm.controller");
 const keuanganRoutes = require('./src/laporan_keuangan/keuangan.controller');
 
-// === MITRA
+// === LAYANAN
 const {
   jenisLayananRoutes,
   layananRoutes,
   targetPesertaRoutes,
 } = require("./src/layanan/C_Layanan.routes");
 const { modulRoutes } = require("./src/modul/C_Modul.routes");
+const { mouRoutes } = require("./src/mou/C_Mou.routes");
+const { laporanLayananRoutes } = require("./src/laporan_layanan/C_LaporanLayanan.routes");
 
 app.use(express.json());
 
@@ -137,11 +139,13 @@ app.use("/api/v1/auth/umkm", umkmRoutes);
 app.use('/api/v1/laporan-keuangan', keuanganRoutes);
 app.use('/api/v1/wilayah', wilayahRoutes);
 
-// === MITRA
+// === LAYANAN
 app.use("/api/v1/layanan", layananRoutes);
 app.use("/api/v1/jenis-layanan", jenisLayananRoutes);
 app.use("/api/v1/target-peserta", targetPesertaRoutes);
 app.use("/api/v1/modul", modulRoutes);
+app.use("/api/v1/mou", mouRoutes);
+app.use("/api/v1/laporan-layanan", laporanLayananRoutes);
 
 // === Swagger Documentation ===
 // Serve raw swagger.json for external tools

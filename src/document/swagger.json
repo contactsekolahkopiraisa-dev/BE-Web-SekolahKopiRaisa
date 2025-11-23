@@ -1,9 +1,9 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "API Sekolah Kopi Raisa",
+    "title": "API Backend Sekolah Kopi Raisa",
     "version": "1.0.0",
-    "description": "API untuk aplikasi Sekolah Kopi Raisa - E-commerce dan Management System"
+    "description": "API untuk Backend Web Sekolah Kopi Raisa - E-commerce dan Management System \n\nBila pada example value terdapat schema, jangan lupa untuk baca deskripsi schema"
   },
   "servers": [
     {
@@ -115,12 +115,12 @@
                   "emailOrPhone": {
                     "type": "string",
                     "description": "Email atau nomor telepon user",
-                    "example": "user@example.com atau 081234567890"
+                    "example": "3rd.hikam074@gmail.com"
                   },
                   "password": {
                     "type": "string",
                     "description": "Password user",
-                    "example": "password123"
+                    "example": "123456"
                   }
                 }
               }
