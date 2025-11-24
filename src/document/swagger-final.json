@@ -1,9 +1,9 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "API Sekolah Kopi Raisa",
+    "title": "API Backend Sekolah Kopi Raisa",
     "version": "1.0.0",
-    "description": "API untuk aplikasi Sekolah Kopi Raisa - E-commerce dan Management System"
+    "description": "API untuk Backend Web Sekolah Kopi Raisa - E-commerce dan Management System \n\nBila pada example value terdapat schema, jangan lupa untuk baca deskripsi schema"
   },
   "servers": [
     {
@@ -61,7 +61,15 @@
       "description": "Managing jenis layanan : PKL, Magang, Pelatihan, etc."
     },
     {
+      "name": "Layanan",
+      "description": ""
+    },
+    {
       "name": "Modul",
+      "description": ""
+    },
+    {
+      "name": "MoU",
       "description": ""
     }
   ],
@@ -161,12 +169,12 @@
                   "emailOrPhone": {
                     "type": "string",
                     "description": "Email atau nomor telepon user",
-                    "example": "user@example.com atau 081234567890"
+                    "example": "3rd.hikam074@gmail.com"
                   },
                   "password": {
                     "type": "string",
                     "description": "Password user",
-                    "example": "password123"
+                    "example": "123456"
                   }
                 }
               }
@@ -3112,6 +3120,79 @@
       }
     },
     "/api/v1/layanan": {
+      "get": {
+        "tags": [
+          "Layanan"
+        ],
+        "summary": "Get all layanan by requested role logic",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "orderBy",
+            "in": "query",
+            "description": "Urutkan berdasarkan field apa",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "created_at"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Layanan retrieved successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil mendapatkan semua layanan yang pernah diajukan!",
+                  "data": [
+                    {
+                      "id": 1,
+                      "nama_kegiatan": null,
+                      "tanggal_mulai": "2025-11-08T08:00:00.000Z",
+                      "tanggal_selesai": "2025-11-08T12:00:00.000Z",
+                      "created_at": "2025-11-18T15:27:31.018Z",
+                      "jenisLayanan": {
+                        "id": 1,
+                        "nama_jenis_layanan": "Praktek Kerja Lapangan (PKL)"
+                      },
+                      "statusKodePengajuan": {
+                        "id": 6,
+                        "nama_status_kode": "Ditolak"
+                      },
+                      "statusKodePelaksanaan": {
+                        "id": 7,
+                        "nama_status_kode": "Selesai"
+                      },
+                      "pesertas": [
+                        {
+                          "id": 1,
+                          "id_layanan": 1,
+                          "nama_peserta": "Hikam testing",
+                          "instansi_asal": "Universitas Jember",
+                          "fakultas": "Pertanian",
+                          "program_studi": "Ilmu Tanah",
+                          "nim": "12345",
+                          "predikat": null
+                        }
+                      ],
+                      "pemohon": {
+                        "id": 43,
+                        "name": "Hikam testing"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "Layanan"
@@ -3179,7 +3260,7 @@
                   },
                   "isi_konfigurasi_layanan": {
                     "type": "string",
-                    "example": "[{\"id_kegiatan\":1,\"id_sub_kegiatan\":[1,2,3]},{\"id_kegiatan\":2,\"id_sub_kegiatan\":[]}]"
+                    "example": "[{ \"id_kegiatan\":[1,2,3] }]"
                   },
                   "nim": {
                     "type": "string",
@@ -3209,15 +3290,844 @@
               "application/json": {
                 "example": {
                   "success": true,
-                  "message": "Berhasil mengunggah Modul 'dsfbbsyby rtby' !",
+                  "message": "Berhasil mengajukan layanan!",
                   "data": {
-                    "id": 3,
-                    "id_dibuat_oleh": 42,
-                    "judul_modul": "dsfbbsyby rtby",
-                    "deskripsi": "trghun jn uiu ",
-                    "file_modul": "https://res.cloudinary.com/darsrhtsb/raw/upload/v1761398548/konten-kopiraisa/modul/1761398547378_FORMAT%20-%20SURAT%20PENGANTAR.docx.pdf",
-                    "created_at": "2025-10-25T13:22:29.457Z",
-                    "updated_at": "2025-10-25T13:22:29.457Z"
+                    "id": 1,
+                    "id_user": 43,
+                    "id_jenis_layanan": 1,
+                    "id_konfigurasi_layanan": 7,
+                    "id_status_pengajuan": 1,
+                    "id_status_pelaksanaan": 1,
+                    "nama_kegiatan": null,
+                    "tempat_kegiatan": null,
+                    "jumlah_peserta": 1,
+                    "instansi_asal": "Universitas Jember",
+                    "tanggal_mulai": "2025-11-08T08:00:00.000Z",
+                    "tanggal_selesai": "2025-11-08T12:00:00.000Z",
+                    "link_logbook": "google.com",
+                    "file_proposal": "https://res.cloudinary.com/db8lhx2hz/raw/upload/v1763479649/konten-kopiraisa/layanan/1763479647615_fd6b7fdabaf3ef7b9c84.pdf",
+                    "file_surat_permohonan": null,
+                    "file_surat_pengantar": "https://res.cloudinary.com/db8lhx2hz/raw/upload/v1763479650/konten-kopiraisa/layanan/1763479650010_b3e46146387f990d17c2.pdf",
+                    "file_surat_undangan": null,
+                    "created_at": "2025-11-18T15:27:31.018Z",
+                    "konfigurasiLayanan": {
+                      "id": 7,
+                      "id_jenis_layanan": 1,
+                      "versi_konfig": "2025-11-18T15:27:23.931Z",
+                      "hash_konfigurasi": "17f25dcb2b3676a410f0bac95aa5d03c68c54415f8da56aacf234a297e6d04cf",
+                      "is_active": false,
+                      "catatan": null,
+                      "created_at": "2025-11-18T15:27:23.931Z",
+                      "detailKonfigurasis": [
+                        {
+                          "id": 189,
+                          "id_konfigurasi_layanan": 7,
+                          "id_kegiatan": 1,
+                          "id_sub_kegiatan": 1,
+                          "urutan_ke": 1,
+                          "kegiatan": {
+                            "id": 1,
+                            "nama_kegiatan": "Pengenalan Tanaman Kopi",
+                            "deskripsi": "Mengenal jenis dan karakter kopi"
+                          },
+                          "subKegiatan": {
+                            "id": 1,
+                            "id_kegiatan": 1,
+                            "nama_sub_kegiatan": "Pengenalan Tanaman Kopi",
+                            "jam_durasi": null,
+                            "deskripsi": "Mengenal jenis dan morfologi kopi"
+                          }
+                        },
+                        {
+                          "id": 190,
+                          "id_konfigurasi_layanan": 7,
+                          "id_kegiatan": 2,
+                          "id_sub_kegiatan": 2,
+                          "urutan_ke": 2,
+                          "kegiatan": {
+                            "id": 2,
+                            "nama_kegiatan": "Persiapan Lahan",
+                            "deskripsi": "Menyiapkan lahan tanam kopi"
+                          },
+                          "subKegiatan": {
+                            "id": 2,
+                            "id_kegiatan": 2,
+                            "nama_sub_kegiatan": "Pembersihan Areal",
+                            "jam_durasi": null,
+                            "deskripsi": "Membersihkan gulma dan semak di lahan"
+                          }
+                        },
+                        {
+                          "id": 191,
+                          "id_konfigurasi_layanan": 7,
+                          "id_kegiatan": 2,
+                          "id_sub_kegiatan": 3,
+                          "urutan_ke": 3,
+                          "kegiatan": {
+                            "id": 2,
+                            "nama_kegiatan": "Persiapan Lahan",
+                            "deskripsi": "Menyiapkan lahan tanam kopi"
+                          },
+                          "subKegiatan": {
+                            "id": 3,
+                            "id_kegiatan": 2,
+                            "nama_sub_kegiatan": "Pengolahan Tanah",
+                            "jam_durasi": null,
+                            "deskripsi": "Mencangkul dan menggemburkan tanah tanam"
+                          }
+                        },
+                        {
+                          "id": 192,
+                          "id_konfigurasi_layanan": 7,
+                          "id_kegiatan": 2,
+                          "id_sub_kegiatan": 4,
+                          "urutan_ke": 4,
+                          "kegiatan": {
+                            "id": 2,
+                            "nama_kegiatan": "Persiapan Lahan",
+                            "deskripsi": "Menyiapkan lahan tanam kopi"
+                          },
+                          "subKegiatan": {
+                            "id": 4,
+                            "id_kegiatan": 2,
+                            "nama_sub_kegiatan": "Pohon Pelindung",
+                            "jam_durasi": null,
+                            "deskripsi": "Menanam atau merawat pohon pelindung"
+                          }
+                        },
+                        {
+                          "id": 193,
+                          "id_konfigurasi_layanan": 7,
+                          "id_kegiatan": 2,
+                          "id_sub_kegiatan": 5,
+                          "urutan_ke": 5,
+                          "kegiatan": {
+                            "id": 2,
+                            "nama_kegiatan": "Persiapan Lahan",
+                            "deskripsi": "Menyiapkan lahan tanam kopi"
+                          },
+                          "subKegiatan": {
+                            "id": 5,
+                            "id_kegiatan": 2,
+                            "nama_sub_kegiatan": "Jarak Tanam",
+                            "jam_durasi": null,
+                            "deskripsi": "Menentukan jarak antar lubang tanam"
+                          }
+                        },
+                        {
+                          "id": 194,
+                          "id_konfigurasi_layanan": 7,
+                          "id_kegiatan": 2,
+                          "id_sub_kegiatan": 6,
+                          "urutan_ke": 6,
+                          "kegiatan": {
+                            "id": 2,
+                            "nama_kegiatan": "Persiapan Lahan",
+                            "deskripsi": "Menyiapkan lahan tanam kopi"
+                          },
+                          "subKegiatan": {
+                            "id": 6,
+                            "id_kegiatan": 2,
+                            "nama_sub_kegiatan": "Lubang Tanam",
+                            "jam_durasi": null,
+                            "deskripsi": "Membuat lubang sesuai ukuran standar"
+                          }
+                        },
+                        {
+                          "id": 195,
+                          "id_konfigurasi_layanan": 7,
+                          "id_kegiatan": 2,
+                          "id_sub_kegiatan": 7,
+                          "urutan_ke": 7,
+                          "kegiatan": {
+                            "id": 2,
+                            "nama_kegiatan": "Persiapan Lahan",
+                            "deskripsi": "Menyiapkan lahan tanam kopi"
+                          },
+                          "subKegiatan": {
+                            "id": 7,
+                            "id_kegiatan": 2,
+                            "nama_sub_kegiatan": "Tanaman Belum Menghasilkan (TBM)",
+                            "jam_durasi": null,
+                            "deskripsi": "Menyiapkan area untuk TBM"
+                          }
+                        },
+                        {
+                          "id": 196,
+                          "id_konfigurasi_layanan": 7,
+                          "id_kegiatan": 2,
+                          "id_sub_kegiatan": 8,
+                          "urutan_ke": 8,
+                          "kegiatan": {
+                            "id": 2,
+                            "nama_kegiatan": "Persiapan Lahan",
+                            "deskripsi": "Menyiapkan lahan tanam kopi"
+                          },
+                          "subKegiatan": {
+                            "id": 8,
+                            "id_kegiatan": 2,
+                            "nama_sub_kegiatan": "Tanaman Menghasilkan (TM)",
+                            "jam_durasi": null,
+                            "deskripsi": "Menyiapkan area untuk TM"
+                          }
+                        },
+                        {
+                          "id": 197,
+                          "id_konfigurasi_layanan": 7,
+                          "id_kegiatan": 3,
+                          "id_sub_kegiatan": 9,
+                          "urutan_ke": 9,
+                          "kegiatan": {
+                            "id": 3,
+                            "nama_kegiatan": "Pembibitan",
+                            "deskripsi": "Membuat dan merawat bibit kopi"
+                          },
+                          "subKegiatan": {
+                            "id": 9,
+                            "id_kegiatan": 3,
+                            "nama_sub_kegiatan": "Perbanyakan Vegetatif",
+                            "jam_durasi": null,
+                            "deskripsi": "Melakukan stek atau cangkok bibit"
+                          }
+                        },
+                        {
+                          "id": 198,
+                          "id_konfigurasi_layanan": 7,
+                          "id_kegiatan": 3,
+                          "id_sub_kegiatan": 10,
+                          "urutan_ke": 10,
+                          "kegiatan": {
+                            "id": 3,
+                            "nama_kegiatan": "Pembibitan",
+                            "deskripsi": "Membuat dan merawat bibit kopi"
+                          },
+                          "subKegiatan": {
+                            "id": 10,
+                            "id_kegiatan": 3,
+                            "nama_sub_kegiatan": "Perbanyakan Generatif",
+                            "jam_durasi": null,
+                            "deskripsi": "Menyemaikan benih dari biji kopi"
+                          }
+                        }
+                      ]
+                    },
+                    "statusKodePengajuan": {
+                      "id": 1,
+                      "nama_status_kode": "Menunggu Persetujuan"
+                    },
+                    "statusKodePelaksanaan": {
+                      "id": 1,
+                      "nama_status_kode": "Menunggu Persetujuan"
+                    },
+                    "jenisLayanan": {
+                      "id": 1,
+                      "nama_jenis_layanan": "Praktek Kerja Lapangan (PKL)",
+                      "deskripsi_singkat": "PKL bagi siswa dan mahasiswa di industri kopi",
+                      "deskripsi_lengkap": "Program PKL di Sekolah Kopi RAISA memberikan kesempatan bagi siswa dan mahasiswa untuk belajar langsung di lingkungan industri kopi. Peserta akan memahami tahapan budidaya kopi, panen, pasca panen, roasting, hingga penyajian (barista). Kegiatan ini dilaksanakan secara terstruktur dengan pendampingan mentor profesional dari RAISA.",
+                      "image": "https://res.cloudinary.com/db8lhx2hz/image/upload/v1762929272/konten-kopiraisa/jenis-layanan/1762929270932_2fdcb4bd794b3e057939.webp",
+                      "estimasi_waktu": "2 - 4 Bulan",
+                      "id_target_peserta": 2
+                    },
+                    "user": {
+                      "id": 43,
+                      "name": "Hikam testing",
+                      "image": null,
+                      "email": "3rd.hikam074@gmail.com",
+                      "password": "$2b$10$jXKGeuzE1i8pmAqaSIPUZ.XACLkWzGuMx8Zgk/kqrxDtpK0HVtvUm",
+                      "phone_number": "081331178888",
+                      "admin": false,
+                      "verified": false,
+                      "createdAt": "2025-10-04T12:44:52.986Z",
+                      "updated_at": "2025-10-23T16:12:30.862Z",
+                      "google_id": null,
+                      "role": null
+                    },
+                    "peserta": [
+                      {
+                        "id": 1,
+                        "id_layanan": 1,
+                        "nama_peserta": "Hikam testing",
+                        "instansi_asal": "Universitas Jember",
+                        "fakultas": "Pertanian",
+                        "program_studi": "Ilmu Tanah",
+                        "nim": "12345",
+                        "predikat": null
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/layanan/{id}": {
+      "get": {
+        "tags": [
+          "Layanan"
+        ],
+        "summary": "Get layanan by id",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID dari layanan yang ingin didapatkan",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Layanan retrieved successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil mendapatkan layanan!",
+                  "data": {
+                    "id": 1,
+                    "nama_kegiatan": null,
+                    "tempat_kegiatan": null,
+                    "jumlah_peserta": 1,
+                    "instansi_asal": "Universitas Jember",
+                    "tanggal_mulai": "2025-11-08T08:00:00.000Z",
+                    "tanggal_selesai": "2025-11-08T12:00:00.000Z",
+                    "durasi_dalam_bulan": 1,
+                    "link_logbook": "google.com",
+                    "file_proposal": "https://res.cloudinary.com/db8lhx2hz/raw/upload/v1763479649/konten-kopiraisa/layanan/1763479647615_fd6b7fdabaf3ef7b9c84.pdf",
+                    "file_surat_permohonan": null,
+                    "file_surat_pengantar": "https://res.cloudinary.com/db8lhx2hz/raw/upload/v1763479650/konten-kopiraisa/layanan/1763479650010_b3e46146387f990d17c2.pdf",
+                    "file_surat_undangan": null,
+                    "created_at": "2025-11-18T15:27:31.018Z",
+                    "pemohon": {
+                      "id": 43,
+                      "name": "Hikam testing"
+                    },
+                    "peserta": [
+                      {
+                        "id": 1,
+                        "nama_peserta": "Hikam testing",
+                        "instansi_asal": "Universitas Jember",
+                        "fakultas": "Pertanian",
+                        "program_studi": "Ilmu Tanah",
+                        "nim": "12345"
+                      }
+                    ],
+                    "pengajuan": {
+                      "id": 6,
+                      "nama_status_kode": "Ditolak"
+                    },
+                    "pelaksanaan": {
+                      "id": 7,
+                      "nama_status_kode": "Selesai"
+                    },
+                    "mou": {
+                      "id": 1,
+                      "statusKode": {
+                        "id": 1,
+                        "nama_status_kode": "Menunggu Persetujuan"
+                      },
+                      "file_mou": "https://res.cloudinary.com/db8lhx2hz/raw/upload/v1763750120/konten-kopiraisa/mou/1763750119091_26d96f629da6490ec9fe.pdf",
+                      "tanggal_upload": "2025-11-21T18:10:57.080Z",
+                      "mouRejection": null
+                    },
+                    "sertifikat": {
+                      "nama_status_kode": "Belum Terlaksana"
+                    },
+                    "laporan": {
+                      "id": 1,
+                      "nama_p4s": "Magang Batch 2 Perkebunan 2025",
+                      "asal_kab_kota": "Kabupaten Jember",
+                      "foto_kegiatan": "https://res.cloudinary.com/db8lhx2hz/image/upload/v1763827593/konten-kopiraisa/laporan-layanan/1763827591591_f12d3eb3cf85a75722b2.png",
+                      "statusPelaporan": {
+                        "id": 5,
+                        "nama_status_kode": "Disetujui"
+                      },
+                      "layanan": {
+                        "nama_kegiatan": null,
+                        "jenisLayanan": {
+                          "nama_jenis_layanan": "Praktek Kerja Lapangan (PKL)"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/layanan/status/{id}": {
+      "put": {
+        "tags": [
+          "Layanan"
+        ],
+        "summary": "Update status pengajuan layanan, including rejection",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID dari layanan yang ingin diubah",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "tahapan": {
+                    "type": "string",
+                    "description": "options: PENGAJUAN, MOU, PELAKSANAAN, LAPORAN",
+                    "example": "PENGAJUAN"
+                  },
+                  "id_status_pengajuan": {
+                    "type": "number",
+                    "description": "options: lihat di status kode",
+                    "example": 6
+                  },
+                  "alasan": {
+                    "type": "string",
+                    "description": "Diisi bila ditolak saja",
+                    "example": "Dokumen kurang valid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Modul created successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil memperbarui status layanan!",
+                  "data": {
+                    "id": 1,
+                    "id_user": 43,
+                    "id_jenis_layanan": 1,
+                    "id_konfigurasi_layanan": 7,
+                    "id_status_pengajuan": 6,
+                    "id_status_pelaksanaan": 1,
+                    "nama_kegiatan": null,
+                    "tempat_kegiatan": null,
+                    "jumlah_peserta": 1,
+                    "instansi_asal": "Universitas Jember",
+                    "tanggal_mulai": "2025-11-08T08:00:00.000Z",
+                    "tanggal_selesai": "2025-11-08T12:00:00.000Z",
+                    "link_logbook": "google.com",
+                    "file_proposal": "https://res.cloudinary.com/db8lhx2hz/raw/upload/v1763479649/konten-kopiraisa/layanan/1763479647615_fd6b7fdabaf3ef7b9c84.pdf",
+                    "file_surat_permohonan": null,
+                    "file_surat_pengantar": "https://res.cloudinary.com/db8lhx2hz/raw/upload/v1763479650/konten-kopiraisa/layanan/1763479650010_b3e46146387f990d17c2.pdf",
+                    "file_surat_undangan": null,
+                    "created_at": "2025-11-18T15:27:31.018Z",
+                    "statusKodePengajuan": {
+                      "id": 6,
+                      "nama_status_kode": "Ditolak"
+                    },
+                    "alasan": {
+                      "id": 1,
+                      "id_layanan": 1,
+                      "alasan": "Dokumen kurang valid",
+                      "created_at": "2025-11-18T16:18:22.616Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mou": {
+      "post": {
+        "tags": [
+          "MoU"
+        ],
+        "summary": "Submit MoU file",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id_layanan": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "file_mou": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "MoU created successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil mengunggah MOU !",
+                  "data": {
+                    "id": 1,
+                    "id_layanan": 1,
+                    "id_status_pengajuan": 1,
+                    "file_mou": "https://res.cloudinary.com/db8lhx2hz/raw/upload/v1763748656/konten-kopiraisa/mou/1763748654658_c25be4632a915665f310.pdf",
+                    "tanggal_upload": "2025-11-21T18:10:57.080Z",
+                    "tanggal_disetujui": null,
+                    "statusKode": {
+                      "id": 1,
+                      "nama_status_kode": "Menunggu Persetujuan"
+                    },
+                    "mouRejection": null
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mou/accept/{id}": {
+      "put": {
+        "tags": [
+          "MoU"
+        ],
+        "summary": "Accept MoU application",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID dari mou yang ingin disetujui",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "MoU created successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil mengunggah MOU !",
+                  "data": {
+                    "id": 1,
+                    "id_layanan": 1,
+                    "id_status_pengajuan": 1,
+                    "file_mou": "https://res.cloudinary.com/db8lhx2hz/raw/upload/v1763748656/konten-kopiraisa/mou/1763748654658_c25be4632a915665f310.pdf",
+                    "tanggal_upload": "2025-11-21T18:10:57.080Z",
+                    "tanggal_disetujui": null,
+                    "statusKode": {
+                      "id": 1,
+                      "nama_status_kode": "Menunggu Persetujuan"
+                    },
+                    "mouRejection": null
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mou/reject/{id}": {
+      "put": {
+        "tags": [
+          "MoU"
+        ],
+        "summary": "Reject MoU application with alasan",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID dari mou yang ingin ditolak",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "alasan": {
+                    "type": "string",
+                    "example": "ada halaman ke 3 yang belum diisi"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "MoU created successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil mengunggah MOU !",
+                  "data": {
+                    "id": 1,
+                    "id_layanan": 1,
+                    "id_status_pengajuan": 1,
+                    "file_mou": "https://res.cloudinary.com/db8lhx2hz/raw/upload/v1763748656/konten-kopiraisa/mou/1763748654658_c25be4632a915665f310.pdf",
+                    "tanggal_upload": "2025-11-21T18:10:57.080Z",
+                    "tanggal_disetujui": null,
+                    "statusKode": {
+                      "id": 1,
+                      "nama_status_kode": "Menunggu Persetujuan"
+                    },
+                    "mouRejection": null
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mou/{id}": {
+      "put": {
+        "tags": [
+          "MoU"
+        ],
+        "summary": "Submit revised MoU file",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID dari mou yang ingin direvisi",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file_mou": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Mou updated successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil mengubah MOU !",
+                  "data": {
+                    "id": 1,
+                    "id_layanan": 1,
+                    "id_status_pengajuan": 1,
+                    "file_mou": "https://res.cloudinary.com/db8lhx2hz/raw/upload/v1763750120/konten-kopiraisa/mou/1763750119091_26d96f629da6490ec9fe.pdf",
+                    "tanggal_upload": "2025-11-21T18:10:57.080Z",
+                    "tanggal_disetujui": null,
+                    "statusKode": {
+                      "id": 1,
+                      "nama_status_kode": "Menunggu Persetujuan"
+                    },
+                    "mouRejection": null
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/laporan-layanan/": {
+      "post": {
+        "tags": [
+          "Laporan Layanan"
+        ],
+        "summary": "Submit laporan kegiatan data for P4S after layanan finished",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nama_p4s": {
+                    "type": "string",
+                    "description": "Nama kegiatan",
+                    "example": "Magang Batch 2 Perkebunan 2025"
+                  },
+                  "asal_kab_kota": {
+                    "type": "string",
+                    "description": "Harus lengkap, contoh: \"Kabupatan Jember\", \"Kota Malang\"",
+                    "example": "Kabupaten Jember"
+                  },
+                  "id_layanan": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "foto_kegiatan": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Laporan layanan created successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil mengirim laporan!",
+                  "data": {
+                    "id": 1,
+                    "nama_p4s": "Magang Batch 2 Perkebunan 2025",
+                    "asal_kab_kota": "Kabupaten Jember",
+                    "id_layanan": 1,
+                    "foto_kegiatan": "https://res.cloudinary.com/db8lhx2hz/image/upload/v1763826707/konten-kopiraisa/laporan-layanan/1763826705869_f349f0a69b9b0ff40c8b.png",
+                    "id_status_pelaporan": 5,
+                    "layanan": {
+                      "id": 1,
+                      "instansi_asal": "Universitas Jember",
+                      "jumlah_peserta": 1,
+                      "tanggal_mulai": "2025-11-08T08:00:00.000Z",
+                      "tanggal_selesai": "2025-11-08T12:00:00.000Z",
+                      "jenisLayanan": {
+                        "nama_jenis_layanan": "Praktek Kerja Lapangan (PKL)"
+                      }
+                    },
+                    "statusPelaporan": {
+                      "id": 5,
+                      "nama_status_kode": "Disetujui"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/laporan-layanan/{id}": {
+      "get": {
+        "tags": [
+          "Laporan Layanan"
+        ],
+        "summary": "Get laporan layanan by laporan layanan ID",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID dari laporan yang hendak dilihat",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Laporan layanan retrieved successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil mendapatkan laporan!",
+                  "data": {
+                    "id": 1,
+                    "nama_p4s": "Magang Batch 2 Perkebunan 2025",
+                    "asal_kab_kota": "Kabupaten Jember",
+                    "jenis_layanan": "Praktek Kerja Lapangan (PKL)",
+                    "id_layanan": 1,
+                    "jumlah_peserta": 1,
+                    "lama_pelaksanaan": 1,
+                    "foto_kegiatan": "https://res.cloudinary.com/db8lhx2hz/image/upload/v1763827593/konten-kopiraisa/laporan-layanan/1763827591591_f12d3eb3cf85a75722b2.png",
+                    "statusPelaporan": {
+                      "id": 5,
+                      "nama_status_kode": "Disetujui"
+                    }
                   }
                 }
               }

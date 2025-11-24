@@ -53,8 +53,8 @@ const uploadToCloudinary = async (fileBuffer, filename, options = {}) => {
             folder: folderPath,
             resource_type: resourceType,
             public_id: uniqueName,
-            use_filename: true,
-            unique_filename: false,
+            use_filename: false,
+            unique_filename: true,
             overwrite: true,
           },
           (error, result) => (error ? reject(error) : resolve(result))
@@ -72,8 +72,8 @@ const uploadToCloudinary = async (fileBuffer, filename, options = {}) => {
             type: "upload",
             access_mode: "public",
             public_id: `${uniqueName}${ext}`,
-            use_filename: true,
-            unique_filename: false,
+            use_filename: false,
+            unique_filename: true,
             overwrite: true,
           },
           (error, result) => (error ? reject(error) : resolve(result))

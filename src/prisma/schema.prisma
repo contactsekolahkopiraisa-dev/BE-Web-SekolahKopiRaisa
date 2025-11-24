@@ -640,6 +640,7 @@ model JenisLayanan {
   image               String?     @db.Text
   estimasi_waktu      String      @db.VarChar(32) // ex: string("4 - 6 Hari")
   id_target_peserta   Int
+  is_active           Boolean     @default(false)
 
   targetPeserta       TargetPeserta    @relation(fields: [id_target_peserta], references: [id])
   layanans            Layanan[]
@@ -719,8 +720,8 @@ model Layanan {
 
   pesertas              Peserta[]
   mou                   Mou?
-  laporans              Laporan[]
-  sertifikats           Sertifikat[]
+  laporan               Laporan?
+  sertifikat            Sertifikat?
   layananRejection      LayananRejection[]
 
   @@map("layanan")
@@ -812,7 +813,7 @@ model Laporan {
   nama_p4s          String    @db.VarChar(64)
   asal_kab_kota     String?   @db.VarChar(32) // ex: "Kabupaten Jember"
   // pas di fe tampilin jenis_layanan
-  id_layanan        Int
+  id_layanan        Int       @unique
   // asal di fe ngambil dari layanan.asal
   // jumlah_peserta di fe ambil dari layanan.jumlah_peserta
   // tanggal_pelaksanaan di fe ambil dari layanan.tanggal_mulai
@@ -832,7 +833,7 @@ model Sertifikat {
   // untuk siapa yang dapat sertifnya pakai tabel layanan-peserta
 
   id              Int @id @default(autoincrement())
-  id_layanan      Int
+  id_layanan      Int @unique
   tanggal_terbit  DateTime @default(now())
   no_sertifikat   String @db.VarChar(128)
 

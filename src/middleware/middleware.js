@@ -42,7 +42,7 @@ const authMiddleware = async (req, res, next) => {
     }
 };
 
-const permissionMiddleware = (...allowedRoles) => {
+const roleMiddleware = (...allowedRoles) => {
     return (req, res, next) => {
         console.log('>>> Allowed Roles:', allowedRoles);
         console.log('>>> User Role:', req.user.role);
@@ -402,6 +402,6 @@ const companyMulterErrorHandler = (err, req, res, next) => {
 
 
 module.exports = {
-    authMiddleware, permissionMiddleware, validateUpdateNewsMedia, validateInsertNewsMedia, multerErrorHandler, validateProfilMedia,
+    authMiddleware, roleMiddleware, validateUpdateNewsMedia, validateInsertNewsMedia, multerErrorHandler, validateProfilMedia,
     validateProductMedia, validateProductUpdate, validateAboutCompanyMedia, companyMulterErrorHandler, validateUpdateCompanyMedia
 };
