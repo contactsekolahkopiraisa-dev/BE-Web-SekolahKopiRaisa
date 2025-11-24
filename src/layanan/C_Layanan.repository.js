@@ -76,10 +76,110 @@ const konfigurasiLayananRepository = {
 }
 
 const layananRepository = {
-    findAllLayanan: async () => prisma.Layanan.findMany(),
-    findLayananById: async (id) => prisma.Layanan.findUnique({
-        where: { id: parseInt(id) },
-    }),
+    findAll: async (filterOptions = {}) => {
+        return prisma.layanan.findMany({
+            ...filterOptions,
+            select: {
+                id: true,
+                nama_kegiatan: true,
+                // tempat_kegiatan: true,
+                // jumlah_peserta: true,
+                // instansi_asal: true,
+                tanggal_mulai: true,
+                tanggal_selesai: true,
+                // link_logbook: true,
+                // file_proposal: true,
+                // file_surat_permohonan: true,
+                // file_surat_pengantar: true,
+                // file_surat_undangan: true,
+                created_at: true,
+                jenisLayanan: {
+                    select: { id: true, nama_jenis_layanan: true }
+                },
+                statusKodePengajuan: true,
+                statusKodePelaksanaan: true,
+                user: {
+                    select: { id: true, name: true }
+                },
+                pesertas: true
+            }
+        });
+    },
+    findById: async (filterOptions = {}) => {
+        return prisma.layanan.findFirst({
+            ...filterOptions,
+            select: {
+                id: true,
+                nama_kegiatan: true,
+                tempat_kegiatan: true,
+                jumlah_peserta: true,
+                instansi_asal: true,
+                tanggal_mulai: true,
+                tanggal_selesai: true,
+                link_logbook: true,
+                file_proposal: true,
+                file_surat_permohonan: true,
+                file_surat_pengantar: true,
+                file_surat_undangan: true,
+                created_at: true,
+                jenisLayanan: {
+                    select: { id: true, nama_jenis_layanan: true }
+                },
+                layananRejection: true,
+                statusKodePengajuan: true,
+                statusKodePelaksanaan: true,
+                user: {
+                    select: { id: true, name: true }
+                },
+                pesertas: {
+                    select: {
+                        id: true,
+                        nama_peserta: true,
+                        instansi_asal: true,
+                        fakultas: true,
+                        program_studi: true,
+                        nim: true,
+                    }
+                },
+                mou: {
+                    select: {
+                        id: true,
+                        statusKode: true,
+                        file_mou: true,
+                        tanggal_upload: true,
+                        mouRejection: true
+                    }
+                },
+                laporan: {
+                    select: {
+                        id: true,
+                        nama_p4s: true,
+                        asal_kab_kota: true,
+                        foto_kegiatan: true,
+                        statusPelaporan: true,
+                        layanan: {
+                            select: {
+                                nama_kegiatan: true,
+                                jenisLayanan: {
+                                    select: {
+                                        nama_jenis_layanan: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                sertifikat: {
+                    select: {
+                        id: true,
+                        tanggal_terbit: true,
+                        no_sertifikat: true
+                    }
+                }
+            }
+        });
+    },
+
     findOngoingByUserAndJenis: async (userId, jenisList) => {
         return prisma.layanan.findMany({
             where: {
@@ -113,7 +213,50 @@ const layananRepository = {
             },
         });
     },
+    updateStatusDynamic: async (rule, idLayanan, statusId) => {
+        return prisma[rule.model].update({
+            where: {
+                [rule.foreignKey]: Number(idLayanan)
+            },
+            data: {
+                [rule.column]: statusId
+            },
+            include: {
+                layananRejection: true,
+                statusKodePengajuan: true,
+                statusKodePelaksanaan: true,
+                pesertas: true
+            }
+        });
+    },
+    createAlasanDynamic: (rule, id) => {
+        prisma[rule.model].update({
+            where: {
+                [rule.foreignKey]: Number(id)
+            },
+            data: {
+                [rule.column]: statusId
+            }
+        });
+    },
+    // updateStatusPengajuan: (data) => prisma.Layanan.update({
+    //     where: { id: parseInt(data.id_layanan) },
+    //     data: {
+    //         id_status_pengajuan: parseInt(data.id_status_pengajuan)
+    //     },
+    //     include: {
+    //         statusKodePengajuan: true
+    //     }
+    // })
 };
+
+const layananRejectionRepository = {
+    create: async (data) => {
+        return prisma.layananRejection.create({
+            data
+        })
+    }
+}
 
 const pesertaRepository = {
     create: (data) => prisma.Peserta.create({
@@ -176,6 +319,7 @@ const targetPesertaRepository = {
 }
 
 const statusKodeRepository = {
+    getAll: async () => prisma.statusKode.findMany(),
     findById: async (id) => await prisma.StatusKode.findUnique({
         where: { id: parseInt(id) }
     }),
@@ -199,5 +343,6 @@ module.exports = {
     statusKodeRepository,
     konfigurasiLayananRepository,
     pesertaRepository,
-    subKegiatanRepository
+    subKegiatanRepository,
+    layananRejectionRepository,
 };

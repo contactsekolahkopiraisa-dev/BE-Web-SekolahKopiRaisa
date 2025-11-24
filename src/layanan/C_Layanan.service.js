@@ -1,14 +1,35 @@
-const ApiError = require("../utils/apiError.js");
-const { deleteFromCloudinaryByUrl } = require("../services/cloudinaryDelete.service.js");
-const { uploadToCloudinary } = require("../services/cloudinaryUpload.service.js");
-const { layananRepository, jenisLayananRepository, targetPesertaRepository, statusKodeRepository, konfigurasiLayananRepository, pesertaRepository, subKegiatanRepository } = require("./C_Layanan.repository.js");
-const { sanitizeData } = require("../utils/sanitizeData.js");
-const { JENIS_SCHEMA, validateData } = require("./C_Layanan.validate.js");
-const { uploadFilesBySchema, sendNotifikasiAdminLayanan, sendNotifikasiPengusulLayanan } = require("./C_Layanan.helper.js");
 const crypto = require('crypto');
 const dotenv = require("dotenv");
+const ApiError = require("../utils/apiError.js");
 dotenv.config();
+const { deleteFromCloudinaryByUrl } = require("../services/cloudinaryDelete.service.js");
+const { uploadToCloudinary } = require("../services/cloudinaryUpload.service.js");
+const { sanitizeData } = require("../utils/sanitizeData.js");
+const { STATUS } = require("../utils/constant/enum.js");
+const { JENIS_SCHEMA, validateData } = require("./C_Layanan.validate.js");
+const { layananRepository, jenisLayananRepository, targetPesertaRepository, statusKodeRepository, konfigurasiLayananRepository, pesertaRepository, subKegiatanRepository, layananRejectionRepository } = require("./C_Layanan.repository.js");
+const { uploadFilesBySchema, sendNotifikasiAdminLayanan, sendNotifikasiPengusulLayanan, buildFilter, injectStatus } = require("./C_Layanan.helper.js");
+const { calculateDurationMonth } = require("../utils/calculateDurationMonth.js");
+const { mouService } = require("../mou/C_Mou.service.js");
 
+const statusKodeService = {
+    // GET ALL KODE STATUS
+    async getAll() {
+        const statusKodes = await statusKodeRepository.findAll();
+        if (!statusKodes || statusKodes.length === 0) {
+            throw new ApiError(404, 'Data-data status tidak ditemukan!');
+        }
+        return statusKodes;
+    },
+    // GET KODE STATUS BY ID
+    async getById(id) {
+        const statusKode = await statusKodeRepository.findById(id);
+        if (!statusKode) {
+            throw new ApiError(404, 'Data status tidak ditemukan!');
+        }
+        return statusKode;
+    },
+}
 
 const jenisLayananService = {
     // GET ALL JENIS LAYANAN
@@ -122,19 +143,6 @@ const konfigurasiLayananService = {
 }
 
 const pesertaService = {
-    // async hitungJumlahPeserta(jenis, payloadPeserta) {
-    //     const jenisNama = jenis.nama_jenis_layanan;
-    //     // jenis_layanan tidak ada
-    //     if (!jenisNama) { throw new ApiError(500, "Jenis layanan tidak valid pada penghitung jumlah peserta."); }
-    //     // UNDANGAN NARASUMBER → 0
-    //     if (jenisNama.includes("Undangan Narasumber")) { return 0; }
-    //     // MAGANG / PKL → 1
-    //     if (jenisNama.includes("Magang") || jenisNama.includes("Praktek Kerja Lapangan (PKL)")) { return 1; }
-    //     // PELATIHAN / KUNJUNGAN → banyak peserta
-    //     if (Array.isArray(payloadPeserta.peserta)) { return payloadPeserta.peserta.length; }
-    //     // Default
-    //     return 0;
-    // },
     async create(layanan, jenis, payloadPeserta, user) {
         const jenisNama = jenis.nama_jenis_layanan;
         // Jika jenis_layanan tidak ada
@@ -177,10 +185,88 @@ const pesertaService = {
     }
 }
 
+const TAHAPAN_RULES = {
+    PENGAJUAN: {
+        model: "layanan",
+        column: "id_status_pengajuan",
+        foreignKey: "id",
+        allowedRoles: ["admin"]
+    },
+    MOU: {
+        model: "mou",
+        column: "id_status_pengajuan",
+        foreignKey: "id_layanan",
+        allowedRoles: ["admin"]
+    },
+    PELAKSANAAN: {
+        model: "layanan",
+        column: "id_status_pelaksanaan",
+        foreignKey: "id",
+        allowedRoles: ["customer"]
+    },
+    LAPORAN: {
+        model: "laporan",
+        column: "id_status_pelaporan",
+        foreignKey: "id_layanan",
+        allowedRoles: ["admin"]
+    }
+};
+
 const layananService = {
-    async getAll() { },
-    async getById() { },
-    async getByUserId() { },
+    async getAll(user, query) {
+        const filterOptions = buildFilter(query);
+
+        if (user.role === 'customer') {
+            filterOptions.where.id_user = user.id;
+        }
+
+        const layanans = await layananRepository.findAll(filterOptions);
+        if (!layanans) { throw new ApiError(404, "Data layanan tidak ada!") };
+        return layanans.map(item => ({
+            ...item,
+            pemohon: item.user,
+            user: undefined,
+        }));
+    },
+    async getById(id, user, query) {
+        const filterOptions = buildFilter(query);
+        filterOptions.where.id = parseInt(id);
+
+        if (user.role === 'customer') {
+            filterOptions.where.id_user = user.id;
+        }
+
+        const layanan = await layananRepository.findById(filterOptions);
+        if (!layanan) { throw new ApiError(404, "Data layanan tidak ada!") };
+
+        const mulai = new Date(layanan.tanggal_mulai);
+        const selesai = new Date(layanan.tanggal_selesai);
+        layanan.durasi_dalam_bulan = await calculateDurationMonth(mulai, selesai);
+
+        return {
+            id: layanan.id,
+            nama_kegiatan: layanan.nama_kegiatan,
+            tempat_kegiatan: layanan.tempat_kegiatan,
+            jumlah_peserta: layanan.jumlah_peserta,
+            instansi_asal: layanan.instansi_asal,
+            tanggal_mulai: layanan.tanggal_mulai,
+            tanggal_selesai: layanan.tanggal_selesai,
+            durasi_dalam_bulan: layanan.durasi_dalam_bulan,
+            link_logbook: layanan.link_logbook,
+            file_proposal: layanan.file_proposal,
+            file_surat_permohonan: layanan.file_surat_permohonan,
+            file_surat_pengantar: layanan.file_surat_pengantar,
+            file_surat_undangan: layanan.file_surat_undangan,
+            created_at: layanan.created_at,
+            pemohon: layanan.user,
+            peserta: layanan.pesertas,
+            pengajuan: layanan.statusKodePengajuan,
+            pelaksanaan: layanan.statusKodePelaksanaan,
+            mou: injectStatus(layanan.mou, STATUS.BELUM_TERLAKSANA.nama_status_kode),
+            sertifikat: injectStatus(layanan.sertifikat, STATUS.BELUM_TERLAKSANA.nama_status_kode),
+            laporan: injectStatus(layanan.laporan, STATUS.BELUM_TERSEDIA.nama_status_kode)
+        };
+    },
     async create(payloadRaw, files, userRaw) {
         // formatting
         const payload = sanitizeData(payloadRaw);
@@ -192,7 +278,6 @@ const layananService = {
         // LOGIC BAGIAN JENIS LAYANAN : pengecekan apakah jenis layanannya ada
         const jenisLayanan = await jenisLayananRepository.findById(payload.id_jenis_layanan);
         if (!jenisLayanan) { throw new ApiError(404, "jenis layanan aktif tidak ditemukan!"); }
-
         // LOGIC MAGANG/PKL : kalau dia masih ada magang/pkl ongoing dia tidak bisa mengajukan
         const jenisMagangPKL = ['Magang', 'Praktek Kerja Lapangan (PKL)'];
         if (jenisMagangPKL.includes(jenisLayanan.nama_jenis_layanan)) {
@@ -206,15 +291,7 @@ const layananService = {
         const hasilValidasi = await validateData(payload, jenisLayanan, files);
 
         // keluarkan hasil dari validasi
-        payload.link_logbook = hasilValidasi.link_logbook;
         payload.jumlah_peserta = hasilValidasi.jumlah_peserta;
-
-        // SETTING STATUS
-        const STATUS_PENDING_PENGAJUAN = await statusKodeRepository.findByName('Menunggu Persetujuan');
-        const STATUS_PENDING_PELAKSANAAN = await statusKodeRepository.findByName('Menunggu Persetujuan');
-        if (!STATUS_PENDING_PENGAJUAN || !STATUS_PENDING_PELAKSANAAN) {
-            throw new ApiError(500, "Status kode tidak ditemukan di database!");
-        }
 
         // LOGIC KONFIGURASI LAYANAN
         // memakai hash untuk menyimpan kombinasi konfigurasi kegiatan & sub yang dipih
@@ -246,15 +323,14 @@ const layananService = {
             id_user: user.id,
             id_jenis_layanan: payload.id_jenis_layanan,
             id_konfigurasi_layanan: konfigurasi.id,
-            id_status_pengajuan: STATUS_PENDING_PENGAJUAN.id,
-            id_status_pelaksanaan: STATUS_PENDING_PELAKSANAAN.id,
+            id_status_pengajuan: STATUS.MENUNGGU_PERSETUJUAN.id,
+            id_status_pelaksanaan: STATUS.MENUNGGU_PERSETUJUAN.id,
             nama_kegiatan: payload.nama_kegiatan,
             tempat_kegiatan: payload.tempat_kegiatan,
             jumlah_peserta: payload.jumlah_peserta,
             instansi_asal: payload.instansi_asal,
             tanggal_mulai: payload.tanggal_mulai,
             tanggal_selesai: payload.tanggal_selesai,
-            link_logbook: payload.link_logbook,
             file_proposal: uploadedFiles.proposal || null,
             file_surat_permohonan: uploadedFiles.surat_permohonan || null,
             file_surat_pengantar: uploadedFiles.surat_pengantar || null,
@@ -269,13 +345,87 @@ const layananService = {
         // masukkan peserta ke var untuk direturn
         created.peserta = pesertaAdded;
 
-
-
+        // TODO : HARUSNYA MAILER DIBUAT AUTOSERVICE TERSENDIRI
         const adminEmail = process.env.EMAIL_USER;
         await sendNotifikasiAdminLayanan(adminEmail, created);
         // 2. Kirim ke Pengusul / User
         await sendNotifikasiPengusulLayanan(created.user.email, created);
 
+        return created;
+    },
+    async updateStatus(idLayanan, dataRaw, user) {
+        const data = sanitizeData(dataRaw);
+        // cari tahu ini tahapan mana
+        const rule = TAHAPAN_RULES[data.tahapan.toUpperCase()];
+        if (!rule) throw new ApiError(400, "Tahapan progres tidak diketahui");
+        // pastikan sesuai rolenya
+        if (!rule.allowedRoles.includes(user.role)) {
+            throw new ApiError(403, "Anda tidak memiliki akses untuk update tahap ini");
+        }
+        // khusus mou lempar ke modulnya sendiri
+        if (rule.model === "mou") {
+            const mouData = {
+                id_status_pengajuan: data.id_status_pengajuan,
+                alasan: data.alasan
+            }
+            return mouService.updateStatus(idLayanan, mouData)
+        }
+        // khusus laporan lempar ke modulnya sendiri
+
+        // ambil kode status tujuan dari req
+        const status = await statusKodeRepository.findById(data.id_status_pengajuan);
+        if (!status) {
+            throw new ApiError(500, "Kode status tidak ditemukan!");
+        }
+
+        // build payload update
+        const payload = {
+            id_layanan: Number(idLayanan),
+            model: [rule.model],
+            [rule.column]: status.id
+        };
+
+        // kalau ditolak tapi alasannya kosong maka error
+        if ((status.id == STATUS.DITOLAK.id) && !alasan) {
+            throw new ApiError(400, "Alasan Penolakan harus disertakan!")
+        }
+        // kalau pengajuan ditolak maka tolak juga pelaksanaan
+        if (idStatus == STATUS.DITOLAK.id) {
+            data.id_status_pelaksanaan = STATUS.DITOLAK.id;
+        }
+
+        // update status ke db
+        const updated = await layananRepository.updateStatusDynamic(rule, idLayanan, idStatus);
+
+        // kalau ditolak maka insert juga alasan
+        if (status.id == STATUS.DITOLAK.id) {
+            thsi.createAlasan(parseInt(idLayanan), alasan)
+            const rejectionPayload = {
+                id_layanan: parseInt(idLayanan),
+                alasan: alasan
+            }
+            const alasanCreated = await layananRejectionRepository.create(rejectionPayload);
+            updated.layananRejection = alasanCreated;
+        }
+
+        return updated;
+    },
+    async createAlasan() {
+        //
+    },
+    async uploadLogbook(id_layanan, link) {
+        // this untuk step 3 pelaksanaan
+        // TODO : MEKANISME insert link logbook ke layanan
+    }
+}
+
+const layananRejectionServices = {
+    async create(idLayanan, alasan) {
+        payload = {
+            id_layanan: parseInt(idLayanan),
+            alasan: alasan
+        }
+        const created = await layananRejectionRepository.create(rejectionPayload);
         return created;
     }
 }
@@ -284,6 +434,7 @@ module.exports = {
     jenisLayananService,
     targetPesertaService,
     layananService,
+    statusKodeService
 };
 
 

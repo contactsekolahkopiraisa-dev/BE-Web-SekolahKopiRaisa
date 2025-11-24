@@ -51,6 +51,7 @@ const modulService = {
   async update(id, dataRaw, file) {
     // cari data itu ada tidak, reuse kode this.getById()
     const existingModul = await this.getById(id);
+    if (!existingModul) { throw new ApiError(404, "Data modul tidak ditemukan!")}
     // hapus id biar id nya g diupdate
     delete dataRaw.id;
     // bersihkan data : konvert integer, pemilihan data
@@ -84,11 +85,12 @@ const modulService = {
   async delete(id) {
     // cari data itu ada tidak, reuse kode this.getById()
     const existingModul = await this.getById(id);
+    if (!existingModul) { throw new ApiError(404, "Data modul tidak ditemukan!")}
     // hapus modulnya dulu
     const modulFileDeleted = await deleteFromCloudinaryByUrl( existingModul.file_modul, 'modul');
     // abort kalau file gagal dihapus
     if (!modulFileDeleted) {
-        throw new Error("Gagal hapus file modul di Cloudinary, data batal dihapus");
+        throw new ApiError(500, "Gagal hapus file modul di Cloudinary, data batal dihapus");
     }
     // hapus data
     const deleted = await modulRepository.delete(id);

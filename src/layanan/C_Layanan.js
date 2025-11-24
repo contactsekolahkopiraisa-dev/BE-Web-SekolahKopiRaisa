@@ -1,6 +1,28 @@
-const { jenisLayananService, targetPesertaService, layananService } = require("./C_Layanan.service.js");
+const { jenisLayananService, targetPesertaService, layananService, statusKodeService } = require("./C_Layanan.service.js");
 const ApiError = require ("../utils/apiError.js");
 
+
+const statusKodeController = {
+    // GET ALL STATUS KODE
+    async getAll(req, res, next) {
+        try {
+            const data = await statusKodeService.getAll();
+            res.status(200).json({ success: true, message: "Berhasil mendapatkan semua status kode !", data });
+        } catch (err) {
+            next(err);
+        }
+    },
+    // GET STATUS KODE BY ID
+    async getById(req, res, next) {
+        try {
+            const { id } = req.params;
+            const data = await statusKodeService.getById(id);
+            res.status(200).json({ success: true, message: `Berhasil Mendapatkan status kode ID '${id}' !`, data });
+        } catch (err) {
+            next(err);
+        }
+    }
+}
 
 const jenisLayananController = {
     // GET ALL JENIS LAYANAN
@@ -72,6 +94,24 @@ const targetPesertaController = {
 }
 
 const layananController = {
+    // GET ALL LAYANAN
+    async getAll(req, res, next) {
+        try {
+            const layanans = await layananService.getAll(req.user, req.query);
+            res.status(200).json({ success: true, message: "Berhasil mendapatkan semua layanan yang pernah diajukan!", data: layanans });
+        } catch (err) {
+            next(err);
+        }
+    },
+    // GET LAYANAN BY ID
+    async getById(req, res, next) {
+        try {
+            const layanan = await layananService.getById(req.params.id, req.user, req.query); 
+            res.status(200).json({ success: true, message: "Berhasil mendapatkan layanan!", data: layanan });
+        } catch (err) {
+            next(err);
+        }
+    },
     // POST AJUKAN LAYANAN BARU
     async create(req, res, next) {
         try {
@@ -83,6 +123,26 @@ const layananController = {
             next(err);
         }
     },
+    // PUT UBAH STATUS LAYANAN
+    async updateStatus(req, res, next) {
+        try {
+            const layanan = await layananService.updateStatus(req.params.id, req.body, req.user);
+            res.status(200).json({ success: true, message: "Berhasil memperbarui status layanan!", data: layanan });
+        } catch (err) {
+            next(err);
+        }
+    }
+    // // PUT UBAH STATUS PENGAJUAN LAYANAN
+    // async updateStatusPengajuan(req, res, next) {
+    //     try {
+    //         // kembalikan kalau bukan admin
+    //         if (req.user.role !== 'admin') { throw new ApiError(403, 'Akses ditolak! Hanya admin yang dapat mengubah layanan !'); }
+    //         const layanan = await layananService.updateStatusPengajuan(req.params.id, req.body.id_status_pengajuan, req.body.alasan);
+    //         res.status(200).json({ success: true, message: "Berhasil memperbarui status layanan!", data: layanan });
+    //     } catch (err) {
+    //         next(err);
+    //     }
+    // }
 }
 
 // bawah ini cm debug
@@ -100,5 +160,6 @@ const layananController = {
 module.exports = {
     jenisLayananController,
     targetPesertaController,
-    layananController
+    layananController,
+    statusKodeController
 }
