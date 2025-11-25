@@ -3667,12 +3667,12 @@
         }
       }
     },
-    "/api/v1/layanan/status/{id}": {
+    "/api/v1/layanan/{id}/accept-pengajuan": {
       "put": {
         "tags": [
           "Layanan"
         ],
-        "summary": "Update status pengajuan layanan, including rejection",
+        "summary": "Accept pengajuan layanan",
         "security": [
           {
             "cookieAuth": []
@@ -3682,7 +3682,48 @@
           {
             "name": "id",
             "in": "path",
-            "description": "ID dari layanan yang ingin diubah",
+            "description": "ID dari layanan yang ingin disetujui",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Modul created successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil memperbarui status layanan!",
+                  "data": {
+                    "id": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/layanan/{id}/reject-pengajuan": {
+      "put": {
+        "tags": [
+          "Layanan"
+        ],
+        "summary": "Reject pengajuan layanan with alasan",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID dari layanan yang ingin ditolak",
             "required": true,
             "schema": {
               "type": "integer",
@@ -3697,20 +3738,9 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "tahapan": {
-                    "type": "string",
-                    "description": "options: PENGAJUAN, MOU, PELAKSANAAN, LAPORAN",
-                    "example": "PENGAJUAN"
-                  },
-                  "id_status_pengajuan": {
-                    "type": "number",
-                    "description": "options: lihat di status kode",
-                    "example": 6
-                  },
                   "alasan": {
                     "type": "string",
-                    "description": "Diisi bila ditolak saja",
-                    "example": "Dokumen kurang valid"
+                    "example": "file proposal kurang jelas"
                   }
                 }
               }
@@ -3718,7 +3748,7 @@
           }
         },
         "responses": {
-          "201": {
+          "200": {
             "description": "Modul created successfully",
             "content": {
               "application/json": {
@@ -3726,34 +3756,105 @@
                   "success": true,
                   "message": "Berhasil memperbarui status layanan!",
                   "data": {
-                    "id": 1,
-                    "id_user": 43,
-                    "id_jenis_layanan": 1,
-                    "id_konfigurasi_layanan": 7,
-                    "id_status_pengajuan": 6,
-                    "id_status_pelaksanaan": 1,
-                    "nama_kegiatan": null,
-                    "tempat_kegiatan": null,
-                    "jumlah_peserta": 1,
-                    "instansi_asal": "Universitas Jember",
-                    "tanggal_mulai": "2025-11-08T08:00:00.000Z",
-                    "tanggal_selesai": "2025-11-08T12:00:00.000Z",
-                    "link_logbook": "google.com",
-                    "file_proposal": "https://res.cloudinary.com/db8lhx2hz/raw/upload/v1763479649/konten-kopiraisa/layanan/1763479647615_fd6b7fdabaf3ef7b9c84.pdf",
-                    "file_surat_permohonan": null,
-                    "file_surat_pengantar": "https://res.cloudinary.com/db8lhx2hz/raw/upload/v1763479650/konten-kopiraisa/layanan/1763479650010_b3e46146387f990d17c2.pdf",
-                    "file_surat_undangan": null,
-                    "created_at": "2025-11-18T15:27:31.018Z",
-                    "statusKodePengajuan": {
-                      "id": 6,
-                      "nama_status_kode": "Ditolak"
-                    },
-                    "alasan": {
-                      "id": 1,
-                      "id_layanan": 1,
-                      "alasan": "Dokumen kurang valid",
-                      "created_at": "2025-11-18T16:18:22.616Z"
-                    }
+                    "id": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/layanan/{id}/logbook": {
+      "put": {
+        "tags": [
+          "Layanan"
+        ],
+        "summary": "Upload logbook during pelaksanaan",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID dari layanan yang ingin diberi logbook",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "link_logbook": {
+                    "type": "string",
+                    "example": "docs.google.com"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Modul created successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil memperbarui status layanan!",
+                  "data": {
+                    "id": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/layanan/{id}/finish-pelaksanaan": {
+      "put": {
+        "tags": [
+          "Layanan"
+        ],
+        "summary": "Finish pelaksanaan layanan",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID dari layanan yang ingin diselesaikan",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Modul created successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil memperbarui status layanan!",
+                  "data": {
+                    "id": 1
                   }
                 }
               }
@@ -3821,7 +3922,7 @@
         }
       }
     },
-    "/api/v1/mou/accept/{id}": {
+    "/api/v1/mou/{id}/accept": {
       "put": {
         "tags": [
           "MoU"
@@ -3872,7 +3973,7 @@
         }
       }
     },
-    "/api/v1/mou/reject/{id}": {
+    "/api/v1/mou/{id}/reject": {
       "put": {
         "tags": [
           "MoU"
@@ -4006,7 +4107,7 @@
         }
       }
     },
-    "/api/v1/laporan-layanan/": {
+    "/api/v1/laporan-layanan": {
       "post": {
         "tags": [
           "Laporan Layanan"
