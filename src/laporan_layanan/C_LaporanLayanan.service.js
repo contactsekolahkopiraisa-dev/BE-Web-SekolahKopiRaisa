@@ -43,7 +43,7 @@ const laporanLayananService = {
         
         // kalau status pelaksanaan belum selesai maka tidak bisa submit
         if (layanan.pelaksanaan.id !== STATUS.SELESAI.id) {
-            throw new ApiError(400, "Pelaksanaan layanan belum selesai! tidak bisa mengirim laporan")
+            throw new ApiError(409, "Pelaksanaan layanan belum selesai! tidak bisa mengirim laporan")
         }
         // kalau sudah pernah selesai laporannya maka tidak bisa submit lagi
         if (layanan.laporan.nama_status_kode !== STATUS.BELUM_TERLAKSANA.nama_status_kode) {

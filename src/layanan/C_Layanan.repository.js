@@ -147,6 +147,21 @@ const layananRepository = {
                         no_sertifikat: true,
                         file_sertifikat: true,
                     }
+                },
+                konfigurasiLayanan: {
+                    select: {
+                        detailKonfigurasis: {
+                            select: {
+                                kegiatan: {
+                                    select: {
+                                        id: true,
+                                        nama_kegiatan: true
+
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         });
@@ -221,6 +236,21 @@ const layananRepository = {
                         tanggal_terbit: true,
                         no_sertifikat: true,
                         file_sertifikat: true,
+                    }
+                },
+                konfigurasiLayanan: {
+                    select: {
+                        detailKonfigurasis: {
+                            select: {
+                                kegiatan: {
+                                    select: {
+                                        id: true,
+                                        nama_kegiatan: true
+
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

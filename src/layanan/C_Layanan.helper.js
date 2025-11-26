@@ -1,5 +1,4 @@
 const ApiError = require("../utils/apiError.js");
-const { deleteFromCloudinaryByUrl } = require("../services/cloudinaryDelete.service.js");
 const { uploadToCloudinary } = require("../services/cloudinaryUpload.service.js");
 const { sendEmail } = require('../utils/email');
 const { STATUS } = require("../utils/constant/enum.js");
@@ -26,8 +25,15 @@ const formatLayanan = (l) => ({
     pengajuan: l.statusKodePengajuan,
     pelaksanaan: l.statusKodePelaksanaan,
     mou: injectStatus(l.mou, STATUS.BELUM_TERLAKSANA.nama_status_kode),
-    sertifikat: injectStatus(l.sertifikat, STATUS.BELUM_TERLAKSANA.nama_status_kode),
+    sertifikat: injectStatus(l.sertifikat, STATUS.BELUM_TERSEDIA.nama_status_kode),
     laporan: injectStatus(l.laporan, STATUS.BELUM_TERSEDIA.nama_status_kode),
+    kegiatan: [
+        ...new Map(
+            l.konfigurasiLayanan.detailKonfigurasis
+                .map(d => d.kegiatan)
+                .map(k => [k.id, k])
+        ).values()
+    ]
 });
 
 const buildFilter = (query) => {

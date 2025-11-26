@@ -51,10 +51,13 @@ const jenisLayananService = {
     // PUT JENIS LAYANAN BY ID
     async update(id, dataRaw, file) {
         // cari data itu ada tidak, reuse kode this.getById()
-        const existingJenisLayanan = await this.getById(id);
-        const existingTargetPeserta = await targetPesertaService.getById(dataRaw.id_target_peserta);
-        // kalo g ada kembalikan 404
-        if (!existingJenisLayanan || !existingTargetPeserta) throw new ApiError(404, 'Data jenis layanan / target peserta tidak ditemukan!');
+        const existingJenisLayanan = await jenisLayananService.getById(id);
+        let existingTargetPeserta;
+        if (dataRaw.id_target_peserta) {
+            // cari juga target peserta, 404 nya ngikut bawaan
+            existingTargetPeserta = await targetPesertaService.getById(dataRaw.id_target_peserta);
+        }
+
         // hapus id biar id nya g diupdate
         delete dataRaw.id;
         // bersihkan data : konvert integer
@@ -69,8 +72,19 @@ const jenisLayananService = {
             });
             data.image = uploaded.url;
         }
+        // buat payload baru
+        const payload = {
+            nama_jenis_layanan: data.nama_jenis_layanan ?? undefined,
+            deskripsi_singkat: data.deskripsi_singkat ?? undefined,
+            deskripsi_lengkap: data.deskripsi_lengkap ?? undefined,
+            image: data.image ?? undefined,
+            estimasi_waktu: data.estimasi_waktu ?? undefined,
+            id_target_peserta: data.id_target_peserta ?? undefined,
+            is_active: data.is_active ?? undefined
+        };
+
         // lempar ke repo
-        const updated = await jenisLayananRepository.update(id, data);
+        const updated = await jenisLayananRepository.update(id, payload);
         return updated;
     }
 }
@@ -204,7 +218,7 @@ const layananService = {
         });
 
     },
-    async getById(id, user, query = { } ) {
+    async getById(id, user, query = {}) {
         const filterOptions = buildFilter(query);
         filterOptions.where.id = parseInt(id);
 
@@ -237,7 +251,7 @@ const layananService = {
         if (jenisMagangPKL.includes(jenisLayanan.nama_jenis_layanan)) {
             const ongoing = await layananRepository.findOngoingByUserAndJenis(user.id, jenisMagangPKL);
             if (ongoing.length > 0) {
-                throw new ApiError(400, "Tidak bisa mengajukan layanan! Masih ada magang/PKL yang sedang berlangsung atau akan datang.");
+                throw new ApiError(409, "Tidak bisa mengajukan layanan! Masih ada magang/PKL yang sedang berlangsung atau akan datang.");
             }
         }
 
