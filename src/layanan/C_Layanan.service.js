@@ -8,7 +8,7 @@ const { sanitizeData } = require("../utils/sanitizeData.js");
 const { STATUS } = require("../utils/constant/enum.js");
 const { JENIS_SCHEMA, validateData } = require("./C_Layanan.validate.js");
 const { layananRepository, jenisLayananRepository, targetPesertaRepository, statusKodeRepository, konfigurasiLayananRepository, pesertaRepository, subKegiatanRepository, layananRejectionRepository } = require("./C_Layanan.repository.js");
-const { uploadFilesBySchema, sendNotifikasiAdminLayanan, sendNotifikasiPengusulLayanan, buildFilter, injectStatus } = require("./C_Layanan.helper.js");
+const { uploadFilesBySchema, sendNotifikasiAdminLayanan, sendNotifikasiPengusulLayanan, buildFilter, injectStatus, formatLayanan, hitungPeserta } = require("./C_Layanan.helper.js");
 const { calculateDurationMonth } = require("../utils/calculateDurationMonth.js");
 const { mouService } = require("../mou/C_Mou.service.js");
 
@@ -185,33 +185,6 @@ const pesertaService = {
     }
 }
 
-const TAHAPAN_RULES = {
-    PENGAJUAN: {
-        model: "layanan",
-        column: "id_status_pengajuan",
-        foreignKey: "id",
-        allowedRoles: ["admin"]
-    },
-    MOU: {
-        model: "mou",
-        column: "id_status_pengajuan",
-        foreignKey: "id_layanan",
-        allowedRoles: ["admin"]
-    },
-    PELAKSANAAN: {
-        model: "layanan",
-        column: "id_status_pelaksanaan",
-        foreignKey: "id",
-        allowedRoles: ["customer"]
-    },
-    LAPORAN: {
-        model: "laporan",
-        column: "id_status_pelaporan",
-        foreignKey: "id_layanan",
-        allowedRoles: ["admin"]
-    }
-};
-
 const layananService = {
     async getAll(user, query) {
         const filterOptions = buildFilter(query);
@@ -222,13 +195,16 @@ const layananService = {
 
         const layanans = await layananRepository.findAll(filterOptions);
         if (!layanans) { throw new ApiError(404, "Data layanan tidak ada!") };
-        return layanans.map(item => ({
-            ...item,
-            pemohon: item.user,
-            user: undefined,
-        }));
+
+        return layanans.map(item => {
+            item.durasi_dalam_bulan = item.tanggal_mulai && item.tanggal_selesai
+                ? calculateDurationMonth(new Date(item.tanggal_mulai), new Date(item.tanggal_selesai))
+                : null;
+            return formatLayanan(item);
+        });
+
     },
-    async getById(id, user, query) {
+    async getById(id, user, query = { } ) {
         const filterOptions = buildFilter(query);
         filterOptions.where.id = parseInt(id);
 
@@ -239,33 +215,9 @@ const layananService = {
         const layanan = await layananRepository.findById(filterOptions);
         if (!layanan) { throw new ApiError(404, "Data layanan tidak ada!") };
 
-        const mulai = new Date(layanan.tanggal_mulai);
-        const selesai = new Date(layanan.tanggal_selesai);
-        layanan.durasi_dalam_bulan = await calculateDurationMonth(mulai, selesai);
+        layanan.durasi_dalam_bulan = await calculateDurationMonth(new Date(layanan.tanggal_mulai), new Date(layanan.tanggal_selesai));
 
-        return {
-            id: layanan.id,
-            nama_kegiatan: layanan.nama_kegiatan,
-            tempat_kegiatan: layanan.tempat_kegiatan,
-            jumlah_peserta: layanan.jumlah_peserta,
-            instansi_asal: layanan.instansi_asal,
-            tanggal_mulai: layanan.tanggal_mulai,
-            tanggal_selesai: layanan.tanggal_selesai,
-            durasi_dalam_bulan: layanan.durasi_dalam_bulan,
-            link_logbook: layanan.link_logbook,
-            file_proposal: layanan.file_proposal,
-            file_surat_permohonan: layanan.file_surat_permohonan,
-            file_surat_pengantar: layanan.file_surat_pengantar,
-            file_surat_undangan: layanan.file_surat_undangan,
-            created_at: layanan.created_at,
-            pemohon: layanan.user,
-            peserta: layanan.pesertas,
-            pengajuan: layanan.statusKodePengajuan,
-            pelaksanaan: layanan.statusKodePelaksanaan,
-            mou: injectStatus(layanan.mou, STATUS.BELUM_TERLAKSANA.nama_status_kode),
-            sertifikat: injectStatus(layanan.sertifikat, STATUS.BELUM_TERLAKSANA.nama_status_kode),
-            laporan: injectStatus(layanan.laporan, STATUS.BELUM_TERSEDIA.nama_status_kode)
-        };
+        return formatLayanan(layanan)
     },
     async create(payloadRaw, files, userRaw) {
         // formatting
@@ -277,7 +229,9 @@ const layananService = {
 
         // LOGIC BAGIAN JENIS LAYANAN : pengecekan apakah jenis layanannya ada
         const jenisLayanan = await jenisLayananRepository.findById(payload.id_jenis_layanan);
-        if (!jenisLayanan) { throw new ApiError(404, "jenis layanan aktif tidak ditemukan!"); }
+        if (!jenisLayanan || jenisLayanan.is_active == false) {
+            throw new ApiError(404, "jenis layanan aktif tidak ditemukan!");
+        }
         // LOGIC MAGANG/PKL : kalau dia masih ada magang/pkl ongoing dia tidak bisa mengajukan
         const jenisMagangPKL = ['Magang', 'Praktek Kerja Lapangan (PKL)'];
         if (jenisMagangPKL.includes(jenisLayanan.nama_jenis_layanan)) {
@@ -288,10 +242,10 @@ const layananService = {
         }
 
         // VALIDATE SEMUA DATA
-        const hasilValidasi = await validateData(payload, jenisLayanan, files);
+        const rule = await validateData(payload, jenisLayanan, files);
 
-        // keluarkan hasil dari validasi
-        payload.jumlah_peserta = hasilValidasi.jumlah_peserta;
+        // hitung jumlah peserta
+        payload.jumlah_peserta = await hitungPeserta(payload.pesertas, rule.peserta);
 
         // LOGIC KONFIGURASI LAYANAN
         // memakai hash untuk menyimpan kombinasi konfigurasi kegiatan & sub yang dipih
@@ -304,13 +258,11 @@ const layananService = {
         const reqHashed = await konfigurasiLayananService.generateKonfigurasiHash(konfigurasiLengkap);
         // cari konfigurasi dengan hash dan jenis_layanan
         let konfigurasi = await konfigurasiLayananService.getByHashAndJenis(reqHashed, payload.id_jenis_layanan);
+        // kalau ada maka pakai yang lama
         if (!konfigurasi) {
             // kalau tidak ada konfigurasi yang sama maka buat baru
             konfigurasi = await konfigurasiLayananService.create(payload.id_jenis_layanan, reqHashed, konfigurasiLengkap);
-        } else {
-            // kalau ada maka pakai yang lama
-            console.log("[ LayananService.create ] Konfigurasi sudah ada, memakai konfigurasi yang sudah ada")
-        }
+        };
 
         // LOGIC FILE UPLOAD
         const uploadedFiles = await uploadFilesBySchema(
@@ -353,82 +305,84 @@ const layananService = {
 
         return created;
     },
-    async updateStatus(idLayanan, dataRaw, user) {
-        const data = sanitizeData(dataRaw);
-        // cari tahu ini tahapan mana
-        const rule = TAHAPAN_RULES[data.tahapan.toUpperCase()];
-        if (!rule) throw new ApiError(400, "Tahapan progres tidak diketahui");
-        // pastikan sesuai rolenya
-        if (!rule.allowedRoles.includes(user.role)) {
-            throw new ApiError(403, "Anda tidak memiliki akses untuk update tahap ini");
-        }
-        // khusus mou lempar ke modulnya sendiri
-        if (rule.model === "mou") {
-            const mouData = {
-                id_status_pengajuan: data.id_status_pengajuan,
-                alasan: data.alasan
-            }
-            return mouService.updateStatus(idLayanan, mouData)
-        }
-        // khusus laporan lempar ke modulnya sendiri
+    async updateStatus(idLayanan, user, idStatus, alasan = null) {
+        // ambil kode status tujuan dari req, 404 nya ngikut bawaan
+        const status = await statusKodeRepository.findById(idStatus);
+        // cari layanan ada atau tidak, 404 nya ngikut bawaan
+        const existingLayanan = await layananService.getById(idLayanan, user);
 
-        // ambil kode status tujuan dari req
-        const status = await statusKodeRepository.findById(data.id_status_pengajuan);
-        if (!status) {
-            throw new ApiError(500, "Kode status tidak ditemukan!");
+        // hanya admin yang bisa acc dan reject
+        if (idStatus === STATUS.DISETUJUI.id || idStatus === STATUS.DITOLAK.id) {
+            if (user.role !== 'admin') {
+                throw new ApiError(403, "Hanya admin yang boleh mengubah status pengajuan.");
+            }
         }
 
         // build payload update
         const payload = {
-            id_layanan: Number(idLayanan),
-            model: [rule.model],
-            [rule.column]: status.id
+            id_status_pengajuan: idStatus
         };
 
-        // kalau ditolak tapi alasannya kosong maka error
-        if ((status.id == STATUS.DITOLAK.id) && !alasan) {
-            throw new ApiError(400, "Alasan Penolakan harus disertakan!")
+        // LOGIC PENGAJUAN
+        if (existingLayanan.id_status_pengajuan == STATUS.MENUNGGU_PERSETUJUAN) {
+            // kalau pengajuan ditolak maka tolak juga pelaksanaan
+            if (idStatus == STATUS.DITOLAK.id) {
+                payload.id_status_pelaksanaan = STATUS.DITOLAK.id;
+                // kalau ditolak tapi alasannya kosong maka error
+                if ((status.id == STATUS.DITOLAK.id) && !alasan) {
+                    throw new ApiError(400, "Alasan Penolakan harus disertakan!")
+                }
+                // kalau ditolak tapi sudah pernah ditolak maka tidak bisa tolak lagi
+                if (existingLayanan.layananRejection) {
+                    throw new ApiError(400, "Layanan sudah pernah ditolak!");
+                }
+            }
+            // kalau pengajuan diacc maka ubah status pelaksanaan
+            if (idStatus == STATUS.DISETUJUI.id) {
+                payload.id_status_pelaksanaan = STATUS.BELUM_TERLAKSANA.id;
+            }
         }
-        // kalau pengajuan ditolak maka tolak juga pelaksanaan
-        if (idStatus == STATUS.DITOLAK.id) {
-            data.id_status_pelaksanaan = STATUS.DITOLAK.id;
+        // lupa validasi waktu
+        // LOGIC PENYELESAIAN
+        if (existingLayanan.id_status_pelaksanaan == STATUS.SEDANG_BERJALAN) {
+            if (idStatus == STATUS.SELESAI.id) {
+                // kalau di finish pelaksanaan tapi bukan id nya yang ngubah maka tolak
+                if (user.id !== existingLayanan.user_id)
+                    throw new ApiError(403, "Hanya user bersangkutan yang bisa menyelesaikan pelaksanaan !");
+            }
         }
 
         // update status ke db
-        const updated = await layananRepository.updateStatusDynamic(rule, idLayanan, idStatus);
+        const updated = await layananRepository.update(idLayanan, payload);
 
         // kalau ditolak maka insert juga alasan
         if (status.id == STATUS.DITOLAK.id) {
-            thsi.createAlasan(parseInt(idLayanan), alasan)
             const rejectionPayload = {
                 id_layanan: parseInt(idLayanan),
                 alasan: alasan
             }
+            // DEV NOTES : SEMENTARA LAYANANREJECTION HANYA DIPAKAI DISINI SEHINGGA LANGSUNG DIPANGGIL REPO NYA DISINI,
+            // KALAU NANTI APLIKASI BERKEMBANG MAKA PISAHKAN REJECTION INI KE CONST SERVICE TERPISAH
             const alasanCreated = await layananRejectionRepository.create(rejectionPayload);
             updated.layananRejection = alasanCreated;
         }
 
         return updated;
     },
-    async createAlasan() {
-        //
-    },
-    async uploadLogbook(id_layanan, link) {
-        // this untuk step 3 pelaksanaan
-        // TODO : MEKANISME insert link logbook ke layanan
+    async uploadLogbook(id_layanan, link, user) {
+        // cari layanan ada atau tidak, 404 nya ngikut bawaan
+        const existingLayanan = await layananService.getById(id_layanan, user);
+
+        // create payload
+        const payload = {
+            link_logbook: link
+        }
+        // lempar ke repo
+        const updated = await layananRepository.update(idLayanan, payload);
+        return updated;
     }
 }
 
-const layananRejectionServices = {
-    async create(idLayanan, alasan) {
-        payload = {
-            id_layanan: parseInt(idLayanan),
-            alasan: alasan
-        }
-        const created = await layananRejectionRepository.create(rejectionPayload);
-        return created;
-    }
-}
 
 module.exports = {
     jenisLayananService,
