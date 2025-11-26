@@ -1607,7 +1607,7 @@
         }
       }
     },
-    "/api/v1/sertifikat": {
+    "/api/v1/sertifikat/": {
       "post": {
         "tags": [
           "Sertifikat"

@@ -4,7 +4,7 @@ const { authMiddleware, roleMiddleware } = require('../middleware/middleware');
 const { uploadFile } = require('../middleware/multer.js');
 const { sertifikatController } = require('./C_Sertifikat.js');
 const { validate } = require('../middleware/validate.joi.js');
-const { createSchema } = require('./C_sertifikat.validate.js');
+const { createSchema } = require('./C_Sertifikat.validate.js');
 
 
 // SERTIFIKAT ROUTES
@@ -13,5 +13,5 @@ sertifikatRoutes.post('/', authMiddleware, roleMiddleware('admin'), uploadFile.s
 
 
 module.exports = {
-  mouRoutes,
+  sertifikatRoutes,
 };
