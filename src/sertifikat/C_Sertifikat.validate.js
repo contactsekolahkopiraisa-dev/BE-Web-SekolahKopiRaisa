@@ -3,23 +3,17 @@ const Joi = require("joi");
 
 // POST CREATE SERTIFIKAT BARU
 const createSchema = Joi.object({
-    body: ({
+    body: Joi.object({
         id_layanan: Joi.number().required(),
-        // file_mou di multer
-    }),
+        link_sertifikat: Joi.string().min(3),
+        file_sertifikat: Joi.string().min(3),
+        // file_sertifikat di multer
+        // antara file_sertifikat dan link minimal salah satu tidak boleh kosong
+    })
+        .or('link_sertifikat', 'file_sertifikat'),
     params: Joi.object({}), // kosong
     query: Joi.object({}),  // kosong
 })
-// // PUT REJECT MOU
-// const rejectSchema = Joi.object({
-//     body: Joi.object({
-//         alasan: Joi.string().min(3).required(),
-//     }),
-//     params: Joi.object({
-//         id: Joi.number().required(),
-//     }), // kosong
-//     query: Joi.object({}),  // kosong
-// })
 
 
 module.exports = {

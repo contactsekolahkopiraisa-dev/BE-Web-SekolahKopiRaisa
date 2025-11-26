@@ -143,8 +143,8 @@ const layananRepository = {
                 sertifikat: {
                     select: {
                         id: true,
-                        tanggal_terbit: true,
-                        no_sertifikat: true,
+                        created_at: true,
+                        link_sertifikat: true,
                         file_sertifikat: true,
                     }
                 },
@@ -233,8 +233,8 @@ const layananRepository = {
                 sertifikat: {
                     select: {
                         id: true,
-                        tanggal_terbit: true,
-                        no_sertifikat: true,
+                        created_at: true,
+                        link_sertifikat: true,
                         file_sertifikat: true,
                     }
                 },

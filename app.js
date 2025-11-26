@@ -117,6 +117,8 @@ const {
 const { modulRoutes } = require("./src/modul/C_Modul.routes");
 const { mouRoutes } = require("./src/mou/C_Mou.routes");
 const { laporanLayananRoutes } = require("./src/laporan_layanan/C_LaporanLayanan.routes");
+const { sertifikatRoutes } = require("./src/sertifikat/C_Sertifikat.routes");
+
 
 app.use(express.json());
 
@@ -146,6 +148,7 @@ app.use("/api/v1/target-peserta", targetPesertaRoutes);
 app.use("/api/v1/modul", modulRoutes);
 app.use("/api/v1/mou", mouRoutes);
 app.use("/api/v1/laporan-layanan", laporanLayananRoutes);
+app.use("/api/v1/sertifikat", sertifikatRoutes);
 
 // === Swagger Documentation ===
 // Serve raw swagger.json for external tools

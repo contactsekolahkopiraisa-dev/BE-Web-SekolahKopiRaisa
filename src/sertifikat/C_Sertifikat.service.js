@@ -15,7 +15,7 @@ const sertifikatService = {
         }
         return sertifikat;
     },
-    async create(data, file, user) {
+    async create(data, file, user) {console.log(user);
         // cari layanannya ada atau tidak, 404 nya include disana
         const existingLayanan = await layananService.getById(data.id_layanan, user)
 
@@ -24,13 +24,15 @@ const sertifikatService = {
             throw new ApiError(409, "Hanya bisa upload sertifikat setelah laporan disetujui !");
         }
 
-        // upload modul baru
-        const uploadedFile = await uploadToCloudinary(file.buffer, file.originalname, {
-            folder: "sertifikat",
-            mimetype: file.mimetype,
+        if (file) {
+            // upload modul baru
+            const uploadedFile = await uploadToCloudinary(file.buffer, file.originalname, {
+                folder: "sertifikat",
+                mimetype: file.mimetype,
+            }
+            );
+            data.file_sertifikat = uploadedFile.url;
         }
-        );
-        data.file_sertifikat = uploadedFile.url;
 
         const created = await sertifikatRepository.create(data);
         return created;
