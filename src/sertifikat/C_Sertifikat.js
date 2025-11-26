@@ -14,7 +14,7 @@ const sertifikatController = {
     // POST SERTIFIKAT TO DB
     async create(req, res, next) {
         try {
-            const data = await sertifikatService.create(req.body, req.file);
+            const data = await sertifikatService.create(req.body, req.file, req.user);
             res.status(201).json({ success: true, message: `Berhasil mengunggah sertifikat !`, data});
         } catch (err) {
             next(err);
