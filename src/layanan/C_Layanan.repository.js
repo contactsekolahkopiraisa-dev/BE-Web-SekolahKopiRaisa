@@ -82,26 +82,72 @@ const layananRepository = {
             select: {
                 id: true,
                 nama_kegiatan: true,
-                // tempat_kegiatan: true,
-                // jumlah_peserta: true,
-                // instansi_asal: true,
+                tempat_kegiatan: true,
+                jumlah_peserta: true,
+                instansi_asal: true,
                 tanggal_mulai: true,
                 tanggal_selesai: true,
-                // link_logbook: true,
-                // file_proposal: true,
-                // file_surat_permohonan: true,
-                // file_surat_pengantar: true,
-                // file_surat_undangan: true,
+                link_logbook: true,
+                file_proposal: true,
+                file_surat_permohonan: true,
+                file_surat_pengantar: true,
+                file_surat_undangan: true,
                 created_at: true,
                 jenisLayanan: {
                     select: { id: true, nama_jenis_layanan: true }
                 },
+                layananRejection: true,
                 statusKodePengajuan: true,
                 statusKodePelaksanaan: true,
                 user: {
                     select: { id: true, name: true }
                 },
-                pesertas: true
+                pesertas: {
+                    select: {
+                        id: true,
+                        nama_peserta: true,
+                        instansi_asal: true,
+                        fakultas: true,
+                        program_studi: true,
+                        nim: true,
+                    }
+                },
+                mou: {
+                    select: {
+                        id: true,
+                        statusKode: true,
+                        file_mou: true,
+                        tanggal_upload: true,
+                        mouRejection: true
+                    }
+                },
+                laporan: {
+                    select: {
+                        id: true,
+                        nama_p4s: true,
+                        asal_kab_kota: true,
+                        foto_kegiatan: true,
+                        statusPelaporan: true,
+                        layanan: {
+                            select: {
+                                nama_kegiatan: true,
+                                jenisLayanan: {
+                                    select: {
+                                        nama_jenis_layanan: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                sertifikat: {
+                    select: {
+                        id: true,
+                        tanggal_terbit: true,
+                        no_sertifikat: true,
+                        file_sertifikat: true,
+                    }
+                }
             }
         });
     },
@@ -173,13 +219,15 @@ const layananRepository = {
                     select: {
                         id: true,
                         tanggal_terbit: true,
-                        no_sertifikat: true
+                        no_sertifikat: true,
+                        file_sertifikat: true,
                     }
                 }
             }
         });
     },
-
+    // DEV NOTES : INI MASIH HARD CODE SEPERTI INI KARENA KEBUTUHANNYA MASIH HANYA INI
+    // KALAU NANTI BUTUH FIND DENGAN PARAM LEBIH BANYAK, CONSIDER PAKAI QUERY PARAM DAN FIND SECARA DYNAMIC
     findOngoingByUserAndJenis: async (userId, jenisList) => {
         return prisma.layanan.findMany({
             where: {
@@ -213,14 +261,12 @@ const layananRepository = {
             },
         });
     },
-    updateStatusDynamic: async (rule, idLayanan, statusId) => {
-        return prisma[rule.model].update({
+    update: async (idLayanan, data) => {
+        return prisma.Layanan.update({
             where: {
-                [rule.foreignKey]: Number(idLayanan)
+                id: Number(idLayanan)
             },
-            data: {
-                [rule.column]: statusId
-            },
+            data: data,
             include: {
                 layananRejection: true,
                 statusKodePengajuan: true,
@@ -229,25 +275,6 @@ const layananRepository = {
             }
         });
     },
-    createAlasanDynamic: (rule, id) => {
-        prisma[rule.model].update({
-            where: {
-                [rule.foreignKey]: Number(id)
-            },
-            data: {
-                [rule.column]: statusId
-            }
-        });
-    },
-    // updateStatusPengajuan: (data) => prisma.Layanan.update({
-    //     where: { id: parseInt(data.id_layanan) },
-    //     data: {
-    //         id_status_pengajuan: parseInt(data.id_status_pengajuan)
-    //     },
-    //     include: {
-    //         statusKodePengajuan: true
-    //     }
-    // })
 };
 
 const layananRejectionRepository = {

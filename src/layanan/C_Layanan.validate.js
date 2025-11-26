@@ -1,12 +1,68 @@
-const ApiError = require("../utils/apiError.js");
-const { jenisLayananRepository } = require("./C_Layanan.repository.js");
+const Joi = require("joi");
+const ApiError = require("../utils/apiError");
 
+
+// POST AJUKAN LAYANAN
+const layananGlobalSchema = Joi.object({
+    body: Joi.object({
+        id_jenis_layanan: Joi.number().required(),
+        instansi_asal: Joi.string().required(),
+        tanggal_mulai: Joi.date().required(),
+        tanggal_selesai: Joi.date().required(),
+    })
+        .custom((value, helpers) => {
+            const mulai = new Date(value.tanggal_mulai);
+            const selesai = new Date(value.tanggal_selesai);
+
+            if (mulai > selesai) {
+                return helpers.error("any.invalid", {
+                    message: "Tanggal mulai tidak boleh lebih besar dari tanggal selesai."
+                });
+            }
+            if (mulai.getTime() === selesai.getTime()) {
+                return helpers.error("any.invalid", {
+                    message: "Tanggal mulai dan tanggal selesai tidak boleh sama persis."
+                });
+            }
+            return value;
+        }),
+    params: Joi.object({}),
+    query: Joi.object({}),
+})
+    .messages({
+        "any.required": "Field '{{#label}}' wajib diisi.",
+        "date.base": "Field '{{#label}}' harus berupa tanggal valid.",
+        "any.invalid": "{{#message}}"
+    });
+// PUT ADD LOGBOOK INTO LAYANAN
+const uploadLogbookSchema = Joi.object({
+    body: Joi.object({
+        link_logbook: Joi.string().min(3).required(),
+    }),
+    params: Joi.object({
+        id: Joi.number().required(),
+    }), 
+    query: Joi.object({}),  // kosong
+})
+// PUT REJECT PENGAJUAN LAYANAN
+const rejectSchema = Joi.object({
+    body: Joi.object({
+        alasan: Joi.string().min(3).required(),
+    }),
+    params: Joi.object({
+        id: Joi.number().required(),
+    }),
+    query: Joi.object({}),  // kosong
+})
+
+
+
+// PEMBAGIAN FILE&FIELD MANA YANG WAJIB DAN MANA YANG TIDAK BOLEH
 const JENIS_SCHEMA = {
-    globalRequired: ["id_jenis_layanan", "instansi_asal", "tanggal_mulai", "tanggal_selesai"],
     "Magang": {
         fields: {
-            required: ["link_logbook", "isi_konfigurasi_layanan"],
-            forbidden: ["nama_kegiatan", "tempat_kegiatan"],
+            required: ["isi_konfigurasi_layanan", "nim", "fakultas", "prodi"],
+            forbidden: ["nama_kegiatan", "tempat_kegiatan", "pesertas"],
         },
         files: {
             required: ["file_proposal", "file_surat_pengantar"],
@@ -16,13 +72,11 @@ const JENIS_SCHEMA = {
             }
         },
         peserta: { mode: "single" },
-        logbook: true
     },
-
     "Praktek Kerja Lapangan (PKL)": {
         fields: {
-            required: ["link_logbook", "isi_konfigurasi_layanan"],
-            forbidden: ["nama_kegiatan", "tempat_kegiatan"]
+            required: ["isi_konfigurasi_layanan", "nim", "fakultas", "prodi"],
+            forbidden: ["nama_kegiatan", "tempat_kegiatan", "pesertas"]
         },
         files: {
             required: ["file_proposal", "file_surat_pengantar"],
@@ -32,9 +86,7 @@ const JENIS_SCHEMA = {
             }
         },
         peserta: { mode: "single" },
-        logbook: true
     },
-
     "Undangan Narasumber": {
         fields: {
             required: ["nama_kegiatan", "tempat_kegiatan"],
@@ -47,9 +99,7 @@ const JENIS_SCHEMA = {
             }
         },
         peserta: { mode: "zero" },
-        logbook: false
     },
-
     "Pelatihan": {
         fields: {
             required: ["pesertas", "isi_konfigurasi_layanan"],
@@ -62,9 +112,7 @@ const JENIS_SCHEMA = {
             }
         },
         peserta: { mode: "multiple" },
-        logbook: false
     },
-
     "Kunjungan": {
         fields: {
             required: ["pesertas", "isi_konfigurasi_layanan"],
@@ -77,82 +125,31 @@ const JENIS_SCHEMA = {
             }
         },
         peserta: { mode: "multiple" },
-        logbook: false
     }
 };
 
-// VALIDASI FIELDS WAJIB GLOBAL
-function validateGlobalFields(data, schema) {
-    for (const field of schema.globalRequired) {
-        if (!data[field] || data[field] === "") {
-            throw new ApiError(400, `Field global "${field}" wajib diisi untuk semua layanan.`);
-        }
-    }
-}
 // VALIDASI FIELDS WAJIB DAN DILARANG SESUAI JENIS_LAYANAN
-function validateFields(data, fieldsRule) {
-    const { required = [], forbidden = [] } = fieldsRule;
-    // required
-    for (const field of required) {
-        if (!data[field] || data[field].trim() === "") { throw new ApiError(400, `Field "${field}" wajib diisi.`); }
-    }
-    // forbidden
-    for (const field of forbidden) {
-        if (data[field] != null && String(data[field]).trim() !== "") { throw new ApiError(400, `Field "${field}" TIDAK boleh diisi.`); }
-    }
+function validateFields(data, rule) {
+    const { required = [], forbidden = [] } = rule;
+    required.forEach(f => {
+        if (!data[f] || String(data[f]).trim() === "") {
+            throw new ApiError(400, `Field "${f}" wajib diisi.`);
+        }
+    });
+    forbidden.forEach(f => {
+        if (data[f] != null && String(data[f]).trim() !== "") {
+            throw new ApiError(400, `Field "${f}" TIDAK boleh diisi.`);
+        }
+    });
 }
 // VALIDASI FILES YANG AKAN DI UPLOAD
-function validateFiles(files, fileRule) {
-    const { required = [] } = fileRule;
-
-    for (const field of required) {
-        if (!files[field]) { throw new ApiError(400, `File "${field}" wajib diupload.`); }
-    }
-}
-// VALIDASI APAKAH LOGBOOK DISERTAKAN ATAU TIDAK
-function validateLogbookRule(data, schema) {
-    if (schema.logbook === true) {
-        if (!data.link_logbook || data.link_logbook.trim() === "") { throw new ApiError(400, `Link logbook wajib diisi.`); }
-        return data.link_logbook;
-    }
-    return null; // hapus jika tidak berlaku
-}
-// VALIDASI WAKTU MULAI DAN SELESAI
-function validateWaktu(data) {
-    if (!data.tanggal_mulai || !data.tanggal_selesai) {
-        throw new ApiError(400, "Tanggal mulai dan tanggal selesai wajib diisi.");
-    }
-    const tanggalMulai = new Date(data.tanggal_mulai);
-    const tanggalSelesai = new Date(data.tanggal_selesai);
-
-    if (isNaN(tanggalMulai.getTime()) || isNaN(tanggalSelesai.getTime())) {
-        throw new ApiError(400, "Format tanggal tidak valid.");
-    }
-    // validasi: tanggal_mulai harus <= tanggal_selesai
-    if (tanggalMulai.getTime() > tanggalSelesai.getTime()) {
-        throw new ApiError(400, "Tanggal mulai tidak boleh lebih besar dari tanggal selesai.");
-    }
-    // optional: minimal durasi 1 detik
-    if (tanggalMulai.getTime() === tanggalSelesai.getTime()) {
-        throw new ApiError(400, "Tanggal mulai dan selesai tidak boleh sama persis");
-    }
-}
-// FUNGSI HITUNG PESERTA BERDASARKAN JENIS LAYANAN
-function hitungPeserta(pesertas, rule) {
-    switch (rule.mode) {
-        case "single":
-            return 1;
-
-        case "zero":
-            return 0;
-
-        case "multiple":
-            if (!Array.isArray(pesertas)) { throw new ApiError(400, "Format peserta tidak valid"); }
-            return pesertas.length;
-
-        default:
-            throw new ApiError(500, "Rule peserta tidak dikenali");
-    }
+function validateFiles(files, rule) {
+    const { required = [] } = rule;
+    required.forEach(f => {
+        if (!files[f]) {
+            throw new ApiError(400, `File "${f}" wajib diupload.`);
+        }
+    });
 }
 
 // PEMANGGIL SEMUA VALIDASI
@@ -162,25 +159,20 @@ async function validateData(data, jenisLayanan, files) {
         throw new ApiError(400, `Tidak ada aturan validasi untuk layanan "${jenisLayanan.nama_jenis_layanan}"`);
     }
 
-    const result = {};
-    // 1. Validate required / forbidden fields
-    validateGlobalFields(data, { globalRequired: JENIS_SCHEMA.globalRequired });
+    // Validate required / forbidden fields
     validateFields(data, schema.fields);
-    // 2. Validate required files
+    // Validate required files
     validateFiles(files, schema.files);
-    // 3. Validate logbook
-    result.link_logbook = validateLogbookRule(data, schema);
-    // 4. Validate waktu
-    validateWaktu(data);
-    // 4. Hitung jumlah peserta
-    result.jumlah_peserta = hitungPeserta(data.pesertas, schema.peserta);
 
-    return result;
+    return schema;
 }
 
 
 
 module.exports = {
     validateData,
-    JENIS_SCHEMA
+    JENIS_SCHEMA,
+    layananGlobalSchema,
+    rejectSchema,
+    uploadLogbookSchema
 };

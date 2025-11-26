@@ -1,5 +1,6 @@
 const { jenisLayananService, targetPesertaService, layananService, statusKodeService } = require("./C_Layanan.service.js");
 const ApiError = require ("../utils/apiError.js");
+const { STATUS } = require("../utils/constant/enum.js");
 
 
 const statusKodeController = {
@@ -15,9 +16,8 @@ const statusKodeController = {
     // GET STATUS KODE BY ID
     async getById(req, res, next) {
         try {
-            const { id } = req.params;
-            const data = await statusKodeService.getById(id);
-            res.status(200).json({ success: true, message: `Berhasil Mendapatkan status kode ID '${id}' !`, data });
+            const data = await statusKodeService.getById(req.params);
+            res.status(200).json({ success: true, message: `Berhasil Mendapatkan status kode !`, data });
         } catch (err) {
             next(err);
         }
@@ -37,9 +37,8 @@ const jenisLayananController = {
     // GET JENIS LAYANAN BY ID
     async getById(req, res, next) {
         try {
-            const { id } = req.params;
-            const data = await jenisLayananService.getById(id);
-            res.status(200).json({ success: true, message: `Berhasil Mendapatkan Jenis Layanan ID '${id}' !`, data });
+            const data = await jenisLayananService.getById(req.params);
+            res.status(200).json({ success: true, message: `Berhasil Mendapatkan Jenis Layanan !`, data });
         } catch (err) {
             next(err); // dilempar ke middleware errorHandler
         }
@@ -47,10 +46,9 @@ const jenisLayananController = {
     // PUT JENIS LAYANAN BY ID
     async update(req, res, next) {
         try {
-            const { id } = req.params, { nama_jenis_layanan: namaLama } = await jenisLayananService.getById(id);
             const img = req.file || null;
             const data = await jenisLayananService.update(id, req.body, img)
-            res.status(200).json({ success: true, message: `Berhasil mengubah Jenis Layanan '${namaLama || data.nama_jenis_layanan}' !`, data });
+            res.status(200).json({ success: true, message: `Berhasil mengubah Jenis Layanan !`, data });
         } catch (err) {
             next(err);
         }
@@ -70,25 +68,11 @@ const targetPesertaController = {
     },
     // GET TARGET PESERTA BY ID
     async getById(req, res, next) {
-        try {
-            const { id } = req.params;
+        try {            
             const data = await targetPesertaService.getById(id);
-            res.status(200).json({ success: true, message: `Berhasil Mendapatkan Target Peserta ID '${id}' !`, data });
+            res.status(200).json({ success: true, message: `Berhasil Mendapatkan Target Peserta !`, data });
         } catch (err) {
             next(err); // dilempar ke middleware errorHandler
-        }
-    },
-    // PUT JENIS LAYANAN BY ID
-    async update(req, res, next) {
-        try {
-            console.log(req.image);
-            // kembalikan kalau bukan admin
-            if (req.user.admin !== true) { throw new ApiError(403, 'Akses ditolak! Hanya admin yang dapat mengubah jenis layanan !'); }
-
-            const data = await jenisLayananService.update(req.user.id, req.body);
-            res.status(200).json({ success: true, message: `Berhasil mengubah Jenis Layanan '${data.nama_jenis_layanan}' !`, data });
-        } catch (err) {
-            next(err);
         }
     }
 }
@@ -123,39 +107,44 @@ const layananController = {
             next(err);
         }
     },
-    // PUT UBAH STATUS LAYANAN
-    async updateStatus(req, res, next) {
+    // PUT ACCEPT PENGAJUAN LAYANAN
+    async acceptPengajuan(req, res, next) {
         try {
-            const layanan = await layananService.updateStatus(req.params.id, req.body, req.user);
-            res.status(200).json({ success: true, message: "Berhasil memperbarui status layanan!", data: layanan });
+            const layanan = await layananService.updateStatus(req.params.id,req.user, STATUS.DISETUJUI.id);
+            res.status(200).json({ success: true, message: "Berhasil menyetujui layanan!", data: layanan });
         } catch (err) {
             next(err);
         }
-    }
-    // // PUT UBAH STATUS PENGAJUAN LAYANAN
-    // async updateStatusPengajuan(req, res, next) {
-    //     try {
-    //         // kembalikan kalau bukan admin
-    //         if (req.user.role !== 'admin') { throw new ApiError(403, 'Akses ditolak! Hanya admin yang dapat mengubah layanan !'); }
-    //         const layanan = await layananService.updateStatusPengajuan(req.params.id, req.body.id_status_pengajuan, req.body.alasan);
-    //         res.status(200).json({ success: true, message: "Berhasil memperbarui status layanan!", data: layanan });
-    //     } catch (err) {
-    //         next(err);
-    //     }
-    // }
+    },
+    // PUT REJECT PENGAJUAN LAYANAN
+    async rejectPengajuan(req, res, next) {
+        try {
+            const layanan = await layananService.updateStatus(req.params.id, req.user, STATUS.DITOLAK.id, req.body.alasan);
+            res.status(200).json({ success: true, message: "Berhasil menolak layanan!", data: layanan });
+        } catch (err) {
+            next(err);
+        }
+    },
+    // PUT UPLOAD LOGBOOK LAYANAN
+    async uploadLogbook(req, res, next) {
+        try {
+            const layanan = await layananService.uploadLogbook(req.params.id, req.body.link_logbook, req.user);
+            res.status(200).json({ success: true, message: "Berhasil mengunggah logbook!", data: layanan });
+        } catch (err) {
+            next(err);
+        }
+    },
+    // PUT SELESAIKAN PELAKSANAAN LAYANAN
+    async finishPelaksanaan(req, res, next) {
+        try {
+            const layanan = await layananService.updateStatus(req.params.id, req.user, STATUS.SELESAI.id);
+            res.status(200).json({ success: true, message: "Berhasil menyelesaikan layanan !", data: layanan });
+        } catch (err) {
+            next(err);
+        }
+    },
 }
 
-// bawah ini cm debug
-// const konfigurasiLayananController = {
-//     async get(req, res, next) {
-//         try {
-//             const konfigurasiLayanan = await konfigurasiLayananService.getByHash(req.body.hash_konfigurasi, req.body.id_jenis_layanan);
-//             res.status(200).json({ success: true, message: "berhasil mendapatkan konfigurasi layanan!", data: konfigurasiLayanan});
-//         } catch (err) {
-//             next(err);
-//         }
-//     }
-// }
 
 module.exports = {
     jenisLayananController,
