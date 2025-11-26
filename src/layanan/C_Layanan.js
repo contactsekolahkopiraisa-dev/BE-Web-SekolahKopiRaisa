@@ -47,7 +47,7 @@ const jenisLayananController = {
     async update(req, res, next) {
         try {
             const img = req.file || null;
-            const data = await jenisLayananService.update(id, req.body, img)
+            const data = await jenisLayananService.update(req.params.id, req.body, img)
             res.status(200).json({ success: true, message: `Berhasil mengubah Jenis Layanan !`, data });
         } catch (err) {
             next(err);
