@@ -1,5 +1,6 @@
 const Joi = require("joi");
 const ApiError = require("../utils/apiError");
+const { query } = require("express-validator");
 
 
 // POST AJUKAN LAYANAN
@@ -41,7 +42,7 @@ const uploadLogbookSchema = Joi.object({
     }),
     params: Joi.object({
         id: Joi.number().required(),
-    }), 
+    }),
     query: Joi.object({}),  // kosong
 })
 // PUT REJECT PENGAJUAN LAYANAN
@@ -53,6 +54,22 @@ const rejectSchema = Joi.object({
         id: Joi.number().required(),
     }),
     query: Joi.object({}),  // kosong
+})
+// PUT UPDATE JENIS_LAYANAN
+const updateScema = Joi.object({
+    body: Joi.object({
+        nama_jenis_layanan: Joi.string().trim().min(3),
+        deskripsi_singkat: Joi.string().trim().min(3),
+        deskripsi_lengkap: Joi.string().trim().min(3),
+        estimasi_waktu: Joi.string().trim().min(3),
+        id_target_peserta: Joi.number(),
+        is_active: Joi.boolean(),
+    })
+    .or("nama_jenis_layanan", "deskripsi_singkat", "deskripsi_lengkap", "estimasi_waktu", "id_target_peserta", "is_active"),
+    params: Joi.object({
+        id: Joi.number().required()
+    }),
+    query: Joi.object({})
 })
 
 
@@ -174,5 +191,6 @@ module.exports = {
     JENIS_SCHEMA,
     layananGlobalSchema,
     rejectSchema,
-    uploadLogbookSchema
+    uploadLogbookSchema,
+    updateScema
 };
