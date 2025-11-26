@@ -156,7 +156,7 @@ function validateFiles(files, rule) {
 async function validateData(data, jenisLayanan, files) {
     const schema = JENIS_SCHEMA[jenisLayanan.nama_jenis_layanan];
     if (!schema) {
-        throw new ApiError(400, `Tidak ada aturan validasi untuk layanan "${jenisLayanan.nama_jenis_layanan}"`);
+        throw new ApiError(500, `Tidak ada aturan validasi untuk layanan "${jenisLayanan.nama_jenis_layanan}"`);
     }
 
     // Validate required / forbidden fields

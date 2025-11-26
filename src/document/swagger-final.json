@@ -2839,6 +2839,9 @@
                   },
                   "id_target_peserta": {
                     "type": "Integer"
+                  },
+                  "is_active": {
+                    "type": "boolean"
                   }
                 }
               }
@@ -4211,6 +4214,130 @@
         "responses": {
           "201": {
             "description": "Laporan layanan retrieved successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil mendapatkan laporan!",
+                  "data": {
+                    "id": 1,
+                    "nama_p4s": "Magang Batch 2 Perkebunan 2025",
+                    "asal_kab_kota": "Kabupaten Jember",
+                    "jenis_layanan": "Praktek Kerja Lapangan (PKL)",
+                    "id_layanan": 1,
+                    "jumlah_peserta": 1,
+                    "lama_pelaksanaan": 1,
+                    "foto_kegiatan": "https://res.cloudinary.com/db8lhx2hz/image/upload/v1763827593/konten-kopiraisa/laporan-layanan/1763827591591_f12d3eb3cf85a75722b2.png",
+                    "statusPelaporan": {
+                      "id": 5,
+                      "nama_status_kode": "Disetujui"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sertifikat": {
+      "post": {
+        "tags": [
+          "Sertifikat"
+        ],
+        "summary": "Submit sertifikat",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "link_sertifikat": {
+                    "type": "string",
+                    "example": "drive.google.com"
+                  },
+                  "id_layanan": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "file_sertifikat": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Sertifikat created successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil mengirim laporan!",
+                  "data": {
+                    "id": 1,
+                    "nama_p4s": "Magang Batch 2 Perkebunan 2025",
+                    "asal_kab_kota": "Kabupaten Jember",
+                    "id_layanan": 1,
+                    "foto_kegiatan": "https://res.cloudinary.com/db8lhx2hz/image/upload/v1763826707/konten-kopiraisa/laporan-layanan/1763826705869_f349f0a69b9b0ff40c8b.png",
+                    "id_status_pelaporan": 5,
+                    "layanan": {
+                      "id": 1,
+                      "instansi_asal": "Universitas Jember",
+                      "jumlah_peserta": 1,
+                      "tanggal_mulai": "2025-11-08T08:00:00.000Z",
+                      "tanggal_selesai": "2025-11-08T12:00:00.000Z",
+                      "jenisLayanan": {
+                        "nama_jenis_layanan": "Praktek Kerja Lapangan (PKL)"
+                      }
+                    },
+                    "statusPelaporan": {
+                      "id": 5,
+                      "nama_status_kode": "Disetujui"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sertifikat/{id}": {
+      "get": {
+        "tags": [
+          "Sertifikat"
+        ],
+        "summary": "Get sertifikat by sertifikat ID",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID dari sertifikat yang hendak dilihat",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Sertifikat retrieved successfully",
             "content": {
               "application/json": {
                 "example": {

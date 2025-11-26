@@ -154,6 +154,9 @@
                   },
                   "id_target_peserta": {
                     "type": "Integer"
+                  },
+                  "is_active": {
+                    "type": "boolean"
                   }
                 }
               }
@@ -467,39 +470,82 @@
                   "message": "Berhasil mendapatkan semua layanan yang pernah diajukan!",
                   "data": [
                     {
-                      "id": 1,
-                      "nama_kegiatan": null,
-                      "tanggal_mulai": "2025-11-08T08:00:00.000Z",
-                      "tanggal_selesai": "2025-11-08T12:00:00.000Z",
-                      "created_at": "2025-11-18T15:27:31.018Z",
-                      "jenisLayanan": {
-                        "id": 1,
-                        "nama_jenis_layanan": "Praktek Kerja Lapangan (PKL)"
-                      },
-                      "statusKodePengajuan": {
-                        "id": 6,
-                        "nama_status_kode": "Ditolak"
-                      },
-                      "statusKodePelaksanaan": {
-                        "id": 7,
-                        "nama_status_kode": "Selesai"
-                      },
-                      "pesertas": [
+                      "success": true,
+                      "message": "Berhasil mendapatkan semua layanan yang pernah diajukan!",
+                      "data": [
                         {
                           "id": 1,
-                          "id_layanan": 1,
-                          "nama_peserta": "Hikam testing",
+                          "nama_kegiatan": null,
+                          "tempat_kegiatan": "sekolah kopi raisa",
+                          "jumlah_peserta": 1,
                           "instansi_asal": "Universitas Jember",
-                          "fakultas": "Pertanian",
-                          "program_studi": "Ilmu Tanah",
-                          "nim": "12345",
-                          "predikat": null
+                          "tanggal_mulai": "2025-11-08T08:00:00.000Z",
+                          "tanggal_selesai": "2025-11-08T12:00:00.000Z",
+                          "durasi_dalam_bulan": 1,
+                          "link_logbook": null,
+                          "file_proposal": "https://res.cloudinary.com/db8lhx2hz/raw/upload/v1764089487/konten-kopiraisa/layanan/1764089485562_71fa3fce1f354777a756.pdf",
+                          "file_surat_permohonan": null,
+                          "file_surat_pengantar": "https://res.cloudinary.com/db8lhx2hz/raw/upload/v1764089488/konten-kopiraisa/layanan/1764089488355_d41729b16843a852fc27.pdf",
+                          "file_surat_undangan": null,
+                          "created_at": "2025-11-25T16:51:29.339Z",
+                          "jenis_layanan": {
+                            "id": 1,
+                            "nama_jenis_layanan": "Praktek Kerja Lapangan (PKL)"
+                          },
+                          "pemohon": {
+                            "id": 68,
+                            "name": "ini farel ya"
+                          },
+                          "peserta": [
+                            {
+                              "id": 1,
+                              "nama_peserta": "Hikam testing",
+                              "instansi_asal": "Universitas Jember",
+                              "fakultas": "Pertanian",
+                              "program_studi": "Ilmu Tanah",
+                              "nim": "12345"
+                            }
+                          ],
+                          "pengajuan": {
+                            "id": 5,
+                            "nama_status_kode": "Disetujui"
+                          },
+                          "pelaksanaan": {
+                            "id": 4,
+                            "nama_status_kode": "Sedang Berjalan"
+                          },
+                          "mou": {
+                            "id": 1,
+                            "statusKode": {
+                              "id": 5,
+                              "nama_status_kode": "Disetujui"
+                            },
+                            "file_mou": "null",
+                            "tanggal_upload": "2025-11-30T00:00:00.000Z",
+                            "mouRejection": null
+                          },
+                          "sertifikat": {
+                            "nama_status_kode": "Belum Terlaksana"
+                          },
+                          "laporan": {
+                            "nama_status_kode": "Belum Tersedia"
+                          },
+                          "kegiatan": [
+                            {
+                              "id": 1,
+                              "nama_kegiatan": "Pengenalan Tanaman Kopi"
+                            },
+                            {
+                              "id": 2,
+                              "nama_kegiatan": "Persiapan Lahan"
+                            },
+                            {
+                              "id": 3,
+                              "nama_kegiatan": "Pembibitan"
+                            }
+                          ]
                         }
-                      ],
-                      "pemohon": {
-                        "id": 43,
-                        "name": "Hikam testing"
-                      }
+                      ]
                     }
                   ]
                 }
@@ -909,70 +955,79 @@
                   "success": true,
                   "message": "Berhasil mendapatkan layanan!",
                   "data": {
-                    "id": 1,
-                    "nama_kegiatan": null,
-                    "tempat_kegiatan": null,
-                    "jumlah_peserta": 1,
-                    "instansi_asal": "Universitas Jember",
-                    "tanggal_mulai": "2025-11-08T08:00:00.000Z",
-                    "tanggal_selesai": "2025-11-08T12:00:00.000Z",
-                    "durasi_dalam_bulan": 1,
-                    "link_logbook": "google.com",
-                    "file_proposal": "https://res.cloudinary.com/db8lhx2hz/raw/upload/v1763479649/konten-kopiraisa/layanan/1763479647615_fd6b7fdabaf3ef7b9c84.pdf",
-                    "file_surat_permohonan": null,
-                    "file_surat_pengantar": "https://res.cloudinary.com/db8lhx2hz/raw/upload/v1763479650/konten-kopiraisa/layanan/1763479650010_b3e46146387f990d17c2.pdf",
-                    "file_surat_undangan": null,
-                    "created_at": "2025-11-18T15:27:31.018Z",
-                    "pemohon": {
-                      "id": 43,
-                      "name": "Hikam testing"
-                    },
-                    "peserta": [
-                      {
-                        "id": 1,
-                        "nama_peserta": "Hikam testing",
-                        "instansi_asal": "Universitas Jember",
-                        "fakultas": "Pertanian",
-                        "program_studi": "Ilmu Tanah",
-                        "nim": "12345"
-                      }
-                    ],
-                    "pengajuan": {
-                      "id": 6,
-                      "nama_status_kode": "Ditolak"
-                    },
-                    "pelaksanaan": {
-                      "id": 7,
-                      "nama_status_kode": "Selesai"
-                    },
-                    "mou": {
+                    "success": true,
+                    "message": "Berhasil mendapatkan layanan!",
+                    "data": {
                       "id": 1,
-                      "statusKode": {
+                      "nama_kegiatan": null,
+                      "tempat_kegiatan": "sekolah kopi raisa",
+                      "jumlah_peserta": 1,
+                      "instansi_asal": "Universitas Jember",
+                      "tanggal_mulai": "2025-11-08T08:00:00.000Z",
+                      "tanggal_selesai": "2025-11-08T12:00:00.000Z",
+                      "durasi_dalam_bulan": 1,
+                      "link_logbook": null,
+                      "file_proposal": "https://res.cloudinary.com/db8lhx2hz/raw/upload/v1764089487/konten-kopiraisa/layanan/1764089485562_71fa3fce1f354777a756.pdf",
+                      "file_surat_permohonan": null,
+                      "file_surat_pengantar": "https://res.cloudinary.com/db8lhx2hz/raw/upload/v1764089488/konten-kopiraisa/layanan/1764089488355_d41729b16843a852fc27.pdf",
+                      "file_surat_undangan": null,
+                      "created_at": "2025-11-25T16:51:29.339Z",
+                      "jenis_layanan": {
                         "id": 1,
-                        "nama_status_kode": "Menunggu Persetujuan"
+                        "nama_jenis_layanan": "Praktek Kerja Lapangan (PKL)"
                       },
-                      "file_mou": "https://res.cloudinary.com/db8lhx2hz/raw/upload/v1763750120/konten-kopiraisa/mou/1763750119091_26d96f629da6490ec9fe.pdf",
-                      "tanggal_upload": "2025-11-21T18:10:57.080Z",
-                      "mouRejection": null
-                    },
-                    "sertifikat": {
-                      "nama_status_kode": "Belum Terlaksana"
-                    },
-                    "laporan": {
-                      "id": 1,
-                      "nama_p4s": "Magang Batch 2 Perkebunan 2025",
-                      "asal_kab_kota": "Kabupaten Jember",
-                      "foto_kegiatan": "https://res.cloudinary.com/db8lhx2hz/image/upload/v1763827593/konten-kopiraisa/laporan-layanan/1763827591591_f12d3eb3cf85a75722b2.png",
-                      "statusPelaporan": {
+                      "pemohon": {
+                        "id": 68,
+                        "name": "ini farel ya"
+                      },
+                      "peserta": [
+                        {
+                          "id": 1,
+                          "nama_peserta": "Hikam testing",
+                          "instansi_asal": "Universitas Jember",
+                          "fakultas": "Pertanian",
+                          "program_studi": "Ilmu Tanah",
+                          "nim": "12345"
+                        }
+                      ],
+                      "pengajuan": {
                         "id": 5,
                         "nama_status_kode": "Disetujui"
                       },
-                      "layanan": {
-                        "nama_kegiatan": null,
-                        "jenisLayanan": {
-                          "nama_jenis_layanan": "Praktek Kerja Lapangan (PKL)"
+                      "pelaksanaan": {
+                        "id": 4,
+                        "nama_status_kode": "Sedang Berjalan"
+                      },
+                      "mou": {
+                        "id": 1,
+                        "statusKode": {
+                          "id": 5,
+                          "nama_status_kode": "Disetujui"
+                        },
+                        "file_mou": "null",
+                        "tanggal_upload": "2025-11-30T00:00:00.000Z",
+                        "mouRejection": null
+                      },
+                      "sertifikat": {
+                        "nama_status_kode": "Belum Terlaksana"
+                      },
+                      "laporan": {
+                        "nama_status_kode": "Belum Tersedia"
+                      },
+                      "kegiatan": [
+                        {
+                          "id": 1,
+                          "nama_kegiatan": "Pengenalan Tanaman Kopi"
+                        },
+                        {
+                          "id": 2,
+                          "nama_kegiatan": "Persiapan Lahan"
+                        },
+                        {
+                          "id": 3,
+                          "nama_kegiatan": "Pembibitan"
                         }
-                      }
+                      ]
                     }
                   }
                 }
@@ -1526,6 +1581,130 @@
         "responses": {
           "201": {
             "description": "Laporan layanan retrieved successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil mendapatkan laporan!",
+                  "data": {
+                    "id": 1,
+                    "nama_p4s": "Magang Batch 2 Perkebunan 2025",
+                    "asal_kab_kota": "Kabupaten Jember",
+                    "jenis_layanan": "Praktek Kerja Lapangan (PKL)",
+                    "id_layanan": 1,
+                    "jumlah_peserta": 1,
+                    "lama_pelaksanaan": 1,
+                    "foto_kegiatan": "https://res.cloudinary.com/db8lhx2hz/image/upload/v1763827593/konten-kopiraisa/laporan-layanan/1763827591591_f12d3eb3cf85a75722b2.png",
+                    "statusPelaporan": {
+                      "id": 5,
+                      "nama_status_kode": "Disetujui"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sertifikat": {
+      "post": {
+        "tags": [
+          "Sertifikat"
+        ],
+        "summary": "Submit sertifikat",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "link_sertifikat": {
+                    "type": "string",
+                    "example": "drive.google.com"
+                  },
+                  "id_layanan": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "file_sertifikat": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Sertifikat created successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil mengirim laporan!",
+                  "data": {
+                    "id": 1,
+                    "nama_p4s": "Magang Batch 2 Perkebunan 2025",
+                    "asal_kab_kota": "Kabupaten Jember",
+                    "id_layanan": 1,
+                    "foto_kegiatan": "https://res.cloudinary.com/db8lhx2hz/image/upload/v1763826707/konten-kopiraisa/laporan-layanan/1763826705869_f349f0a69b9b0ff40c8b.png",
+                    "id_status_pelaporan": 5,
+                    "layanan": {
+                      "id": 1,
+                      "instansi_asal": "Universitas Jember",
+                      "jumlah_peserta": 1,
+                      "tanggal_mulai": "2025-11-08T08:00:00.000Z",
+                      "tanggal_selesai": "2025-11-08T12:00:00.000Z",
+                      "jenisLayanan": {
+                        "nama_jenis_layanan": "Praktek Kerja Lapangan (PKL)"
+                      }
+                    },
+                    "statusPelaporan": {
+                      "id": 5,
+                      "nama_status_kode": "Disetujui"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sertifikat/{id}": {
+      "get": {
+        "tags": [
+          "Sertifikat"
+        ],
+        "summary": "Get sertifikat by sertifikat ID",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID dari sertifikat yang hendak dilihat",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Sertifikat retrieved successfully",
             "content": {
               "application/json": {
                 "example": {

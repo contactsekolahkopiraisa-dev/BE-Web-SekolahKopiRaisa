@@ -5,6 +5,7 @@ const { deleteFromCloudinaryByUrl } = require("../services/cloudinaryDelete.serv
 const { sanitizeData } = require("../utils/sanitizeData.js");
 const STATUS = require("../utils/constant/enum.js");
 const prisma = require("../db/index.js");
+const { layananRepository } = require("../layanan/C_Layanan.repository.js");
 
 
 const mouService = {
@@ -88,9 +89,19 @@ const mouService = {
                 // kalau ditolak maka upload alasan
                 alasanCreated = await MouRejectionService.create(id, data.alasan, tx)
             }
+            let layananUpdated;
+            if (status == SITATUS.DISETUJUI.id) {
+                // trigger ubah status di tabel layanan jadi sedang berjalan
+                // DEV NOTES : memang agak g nyambung tp mmg blm bs pakai cron job
+                const layananPayload = {
+                    id_status_pelaksanaan: STATUS.SEDANG_BERJALAN.id
+                }
+                layananUpdated = await layananRepository.update(id, layananPayload);
+            }
             const updated = await mouRepository.update(id, payload, tx);
 
             if (alasanCreated) {updated.mouRejection = alasanCreated;}
+            if (layananUpdated) {updated.layanan = layananUpdated;}
             return updated;
         })
     }

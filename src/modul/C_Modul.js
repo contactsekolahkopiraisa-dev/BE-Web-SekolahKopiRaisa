@@ -44,7 +44,7 @@ const modulController = {
     async update(req, res, next) {
         try {
             // kembalikan kalau bukan admin
-            if (req.user.admin !== true) { throw new ApiError(403, 'Akses ditolak! Hanya admin yang dapat mengunggah modul !'); }
+            if (req.user.admin !== true) { throw new ApiError(403, 'Akses ditolak! Hanya admin yang dapat mengubah modul !'); }
             
             const { id } = req.params, { judul_modul: namaLama } = await modulService.getById(id);
 
@@ -59,7 +59,7 @@ const modulController = {
     async delete(req, res, next) {
         try {
             // kembalikan kalau bukan admin
-            if (req.user.admin !== true) { throw new ApiError(403, 'Akses ditolak! Hanya admin yang dapat mengunggah modul !'); }
+            if (req.user.admin !== true) { throw new ApiError(403, 'Akses ditolak! Hanya admin yang dapat menghapus modul !'); }
             const data = await modulService.delete(req.params.id);
             res.status(200).json({ success: true, message: `Berhasil menghapus Modul ID '${req.params.id}' !`, data});
         } catch (err) {
