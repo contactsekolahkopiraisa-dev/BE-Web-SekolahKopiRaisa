@@ -1,5 +1,5 @@
 const express = require('express');
-const { upload } = require('../middleware/multer'); // memory storage multer
+const { uploadUMKM } = require('../middleware/multer'); // memory storage multer for umkm
 const { multerErrorHandler, authMiddleware } = require('../middleware/middleware');
 const ApiError = require('../utils/apiError');
 const nodemailer = require('nodemailer');
@@ -51,7 +51,7 @@ async function sendEmail({ to, subject, html, text }) {
 router.post(
   '/',
   // do NOT require authMiddleware here so frontend can register user+umkm in one request
-  upload.array('sertifikatHalal'), // bisa upload unlimited
+  uploadUMKM.array('sertifikatHalal'), // bisa upload unlimited dengan uploadUMKM dari multer.js
   multerErrorHandler,
   validateCreateUMKM,
   async (req, res) => {
@@ -241,7 +241,7 @@ router.put(
   '/:idUmkm',
   authMiddleware,
   validateUpdateUMKM,
-  upload.array('sertifikatHalal'), // bisa upload unlimited
+  uploadUMKM.array('sertifikatHalal'), // bisa upload unlimited dengan uploadUMKM dari multer.js
   multerErrorHandler,
   async (req, res) => {
     try {
