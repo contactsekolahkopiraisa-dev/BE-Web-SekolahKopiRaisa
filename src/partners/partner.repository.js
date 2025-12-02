@@ -1,7 +1,7 @@
 const prisma = require("../db");
 
 const findPartner = async () => {
-  const partners = await prisma.Partner.findMany({
+  const partners = await prisma.partner.findMany({
     include: {
       products: {
         include: {
@@ -39,7 +39,7 @@ const findPartnerById = async (partnerId) => {
 };
 
 const insertNewPartner = async (newPartnerData) => {
-  const partner = await prisma.Partner.create({
+  const partner = await prisma.partner.create({
     data: {
       name: newPartnerData.name,
       owner_name: newPartnerData.owner_name,

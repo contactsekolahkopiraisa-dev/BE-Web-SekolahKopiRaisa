@@ -269,6 +269,7 @@ const productValidator = [
         .notEmpty().withMessage('*Stok produk wajib diisi')
         .isInt({ min: 0 }).withMessage('*Stok produk harus berupa angka'),
     body('partner_id')
+        .optional()
         .trim()
         .notEmpty().withMessage('*Partner tidak valid atau tidak boleh kosong'),
     body('weight')
