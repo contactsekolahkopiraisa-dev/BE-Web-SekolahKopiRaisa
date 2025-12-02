@@ -46,9 +46,9 @@ const laporanLayananService = {
             throw new ApiError(409, "Pelaksanaan layanan belum selesai! tidak bisa mengirim laporan")
         }
         // kalau sudah pernah selesai laporannya maka tidak bisa submit lagi
-        if (layanan.laporan.nama_status_kode !== STATUS.BELUM_TERLAKSANA.nama_status_kode) {
-            throw new ApiError(409, "Pelaksanaan layanan sudah selesai! tidak bisa mengirim laporan lagi")
-        }
+        if (layanan.laporan.nama_status_kode !== STATUS.BELUM_TERSEDIA.nama_status_kode) {
+            throw new ApiError(409, "Laporan sudah pernah dikirim! tidak bisa mengirim laporan lagi")
+        }return
         // upload file
         const uploadedFoto = await uploadToCloudinary(
             file.buffer,
