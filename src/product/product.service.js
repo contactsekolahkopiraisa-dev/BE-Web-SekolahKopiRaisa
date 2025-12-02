@@ -6,6 +6,43 @@ const { findAllProducts, createNewProduct, createInventory, findProductById, upd
 const { findPartnerById } = require('../partners/partner.repository');
 const { uploadToCloudinary } = require('../services/cloudinaryUpload.service');
 const { deleteFromCloudinaryByUrl, extractPublicId } = require('../utils/cloudinary');
+const prisma = require('../db');
+
+// Helper function untuk ambil partner berdasarkan user_id
+const getPartnerByUserId = async (userId) => {
+  const partner = await prisma.partner.findUnique({
+    where: { user_id: userId },
+  });
+  
+  if (!partner) {
+    throw new ApiError(404, "Partner UMKM tidak ditemukan! Pastikan UMKM sudah diverifikasi.");
+  }
+  
+  return partner;
+};
+
+// Helper function untuk validasi ownership produk
+const validateProductOwnership = async (productId, userId, isAdmin) => {
+  const product = await findProductById(productId);
+  
+  if (!product) {
+    throw new ApiError(404, "Produk tidak ditemukan!");
+  }
+
+  // Admin bisa akses semua produk
+  if (isAdmin) {
+    return product;
+  }
+
+  // UMKM hanya bisa akses produk sendiri
+  const partner = await getPartnerByUserId(userId);
+  
+  if (product.partner_id !== partner.id) {
+    throw new ApiError(403, "Akses ditolak! Produk ini bukan milik UMKM Anda.");
+  }
+
+  return product;
+};
 
 const getAllProducts = async () => {
     const products = await findAllProducts();
@@ -23,8 +60,8 @@ const getProductById = async (productId) => {
     return product;
 }
 
-const removeProductById = async (idProduct) => {
-    const existingProduct = await findProductById(idProduct);
+const removeProductById = async (idProduct, userId, isAdmin) => {
+    const existingProduct = await validateProductOwnership(idProduct, userId, isAdmin);
     console.log("produk yang dicari: ", existingProduct)
 
     if (!existingProduct) {
@@ -49,28 +86,39 @@ const removeProductById = async (idProduct) => {
 
 const createProduct = async (newProductData) => {
     try {
-        const { image, stock, partner_id, ...rest } = newProductData
+        const { image, stock, partner_id, user_id, is_admin, ...rest } = newProductData
 
-        if (
-            partner_id === null ||
-            partner_id === undefined ||
-            isNaN(parseInt(partner_id))
-        ) {
-            throw new ApiError(400, 'Partner ID tidak valid atau tidak boleh kosong!');
+        let finalPartnerId;
+
+        // Jika admin: gunakan partner_id dari body
+        if (is_admin) {
+            if (
+                partner_id === null ||
+                partner_id === undefined ||
+                isNaN(parseInt(partner_id))
+            ) {
+                throw new ApiError(400, 'Partner ID tidak valid atau tidak boleh kosong!');
+            }
+            finalPartnerId = parseInt(partner_id);
+            
+            const partnerExists = await findPartnerById(finalPartnerId);
+            if (!partnerExists) {
+                throw new ApiError(404, 'Partner tidak ditemukan!');
+            }
+        } 
+        // Jika UMKM: ambil partner_id dari user_id
+        else {
+            const partner = await getPartnerByUserId(user_id);
+            finalPartnerId = partner.id;
         }
 
         const cleanProductData = {
             ...rest,
             price: parseInt(rest.price),
-            partner_id: parseInt(partner_id),
+            partner_id: finalPartnerId,
             weight: parseInt(rest.weight),
         };
         const stockProduct = parseInt(stock)
-
-        const partnerExists = await findPartnerById(cleanProductData.partner_id);
-        if (!partnerExists) {
-            throw new ApiError(404, 'Partner tidak ditemukan!');
-        }
 
         let imageUrl = null;
         if (image) {
@@ -101,17 +149,17 @@ const createProduct = async (newProductData) => {
         return productNewData;
     } catch (error) {
         console.error('Error in createProduct:', error);
-        throw new ApiError(500, (error.message || error));
+        throw error instanceof ApiError ? error : new ApiError(500, (error.message || error));
     }
 }
 
-const updateProduct = async (id, updatedProductData) => {
+const updateProduct = async (id, updatedProductData, userId, isAdmin) => {
     try {
         if (isNaN(parseInt(id))) {
             throw new ApiError(400, 'ID produk tidak valid!');
         }
         
-        const product = await findProductById(id);
+        const product = await validateProductOwnership(id, userId, isAdmin);
         if (!product) {
             throw new ApiError(404, 'Produk tidak ditemukan!');
         }
@@ -125,6 +173,11 @@ const updateProduct = async (id, updatedProductData) => {
             ...(rest.price !== undefined && {price: parseInt(rest.price)}),
             ...(rest.partner_id !== undefined && {partner_id: parseInt(rest.partner_id)}),
         };
+
+        // Admin bisa update partner_id, UMKM tidak bisa
+        if (!isAdmin && cleanProductData.partner_id) {
+            delete cleanProductData.partner_id;
+        }
 
         if (cleanProductData.partner_id) {
             const partnerExists = await findPartnerById(cleanProductData.partner_id);
@@ -167,7 +220,7 @@ const updateProduct = async (id, updatedProductData) => {
         return updatedProduct;
     } catch (error) {
         console.error('Error in updateProduct:', error);
-        throw new ApiError(500, 'Terjadi kesalahan saat memperbarui produk.' + (error.message || error));
+        throw error instanceof ApiError ? error : new ApiError(500, 'Terjadi kesalahan saat memperbarui produk.' + (error.message || error));
     }
 }
 

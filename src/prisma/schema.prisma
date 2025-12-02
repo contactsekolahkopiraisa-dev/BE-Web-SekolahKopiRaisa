@@ -21,6 +21,7 @@ model User {
   google_id          String?             @unique
   role               Role?               // gunakan enum Role untuk menandai UMKM
 
+  partner            Partner?
   carts              Cart?
   facebookAccounts   FacebookAccount?
   formEntries        FormEntry[]
@@ -78,9 +79,11 @@ model Partner {
   name               String
   owner_name         String
   phone_number       String
+  user_id            Int?        @unique // opsional untuk backward compatibility
   created_at         DateTime    @default(now())
   updated_at         DateTime    @updatedAt
 
+  user               User?       @relation(fields: [user_id], references: [id]) 
   ordersItems        OrderItem[]
   products           Product[]
 }
