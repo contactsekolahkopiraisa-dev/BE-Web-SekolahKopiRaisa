@@ -8,13 +8,13 @@ const { uploadFile } = require('../middleware/multer.js');
 const { authMiddleware, roleMiddleware } = require('../middleware/middleware');
 const { jenisLayananController, targetPesertaController, layananController, statusKodeController } = require('./C_Layanan.js');
 const { validate } = require('../middleware/validate.joi.js');
-const { layananGlobalSchema, rejectSchema, uploadLogbookSchema } = require('./C_Layanan.validate.js');
+const { layananGlobalSchema, rejectSchema, uploadLogbookSchema, updateScema } = require('./C_Layanan.validate.js');
 
 
 // JENIS LAYANAN ROUTES
 jenisLayananRoutes.get('/', jenisLayananController.getAll);
 jenisLayananRoutes.get('/:id', jenisLayananController.getById);
-jenisLayananRoutes.put('/:id', authMiddleware, roleMiddleware('admin'), upload.single('image'), jenisLayananController.update);
+jenisLayananRoutes.put('/:id', authMiddleware, roleMiddleware('admin'), upload.single('image'), validate(updateScema), jenisLayananController.update);
 // LAYANAN ROUTES
 layananRoutes.get('/', authMiddleware, roleMiddleware('customer', 'admin'), layananController.getAll);
 layananRoutes.get('/:id', authMiddleware, roleMiddleware('customer', 'admin'), layananController.getById);

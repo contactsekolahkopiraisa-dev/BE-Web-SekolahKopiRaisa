@@ -15,7 +15,7 @@ const sertifikatService = {
         }
         return sertifikat;
     },
-    async create(data, file, user) {console.log(user);
+    async create(data, file, user) {
         // cari layanannya ada atau tidak, 404 nya include disana
         const existingLayanan = await layananService.getById(data.id_layanan, user)
 
