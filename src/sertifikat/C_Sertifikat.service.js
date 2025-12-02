@@ -21,9 +21,6 @@ const sertifikatService = {
         // cari layanannya ada atau tidak, 404 nya include disana
         const existingLayanan = await layananService.getById(data.id_layanan, user)
         data = sanitizeData(data);
-        // console.log(existingLayanan)
-        // console.log(existingLayanan.laporan.statusPelaporan.nama_status_kode)
-        // console.log(STATUS.DISETUJUI.nama_status_kode)
 
         // hanya bisa upload ketika laporan sudah selesai
         if (existingLayanan.laporan.statusPelaporan.nama_status_kode !== STATUS.DISETUJUI.nama_status_kode) {
