@@ -392,7 +392,7 @@ const layananService = {
             link_logbook: link
         }
         // lempar ke repo
-        const updated = await layananRepository.update(idLayanan, payload);
+        const updated = await layananRepository.update(id_layanan, payload);
         return updated;
     }
 }
