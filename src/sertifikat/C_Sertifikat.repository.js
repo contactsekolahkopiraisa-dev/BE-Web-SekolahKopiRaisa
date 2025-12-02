@@ -12,7 +12,7 @@ const sertifikatRepository = {
                 layanan: {
                     select: {
                         id: true,
-                        user_id: true,
+                        id_user: true,
                     }
                 }
             }
