@@ -23,6 +23,23 @@ const handleValidationResultFinal = require("../middleware/handleValidationResul
 
 const router = express.Router();
 
+// Middleware untuk cek akses Admin atau UMKM
+const checkAdminOrUMKMAccess = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({
+      message: "Unauthorized! Silakan login terlebih dahulu.",
+    });
+  }
+  
+  if (!req.user.admin && req.user.role !== 'UMKM') {
+    return res.status(403).json({
+      message: "Akses ditolak! Hanya admin dan UMKM yang bisa mengakses.",
+    });
+  }
+  
+  next();
+};
+
 router.get("/", async (req, res) => {
   try {
     const products = await getAllProducts();
@@ -112,6 +129,7 @@ router.get("/:id", async (req, res) => {
 router.post(
   "/",
   authMiddleware,
+  checkAdminOrUMKMAccess,
   upload.single("productFile"),
   multerErrorHandler,
   validateProductMedia,
@@ -145,11 +163,6 @@ router.post(
         });
       }
 
-      if (!req.user.admin) {
-        return res
-          .status(403)
-          .json({ message: "Akses ditolak! Hanya admin yang bisa mengakses." });
-      }
       const { name, weight, price, stock, description, partner_id } = req.body;
       const file = req.file;
 
@@ -177,6 +190,8 @@ router.post(
         description: cleanHtml,
         partner_id,
         image: file,
+        user_id: req.user.id,
+        is_admin: req.user.admin,
       });
 
       console.log("data product:", product);
@@ -203,6 +218,7 @@ router.post(
 router.put(
   "/:id",
   authMiddleware,
+  checkAdminOrUMKMAccess,
   upload.single("productFile"),
   multerErrorHandler,
   productValidator,
@@ -228,13 +244,6 @@ router.put(
           errors: errorObject,
         });
       }
-      if (!req.user.admin) {
-        return res
-          .status(403)
-          .json({
-            message: "Akses ditolak! Hanya admin yang bisa mengedit produk.",
-          });
-      }
 
       const { id } = req.params;
       const dataProduct = req.body;
@@ -245,7 +254,12 @@ router.put(
       };
 
       console.log("editedProductData:", editedProductData);
-      const product = await updateProduct(parseInt(id), editedProductData);
+      const product = await updateProduct(
+        parseInt(id),
+        editedProductData,
+        req.user.id,
+        req.user.admin
+      );
 
       console.log(product);
       res.status(200).json({
@@ -269,19 +283,15 @@ router.put(
   }
 );
 
-router.delete("/:idProduct", authMiddleware, async (req, res) => {
+router.delete("/:idProduct", authMiddleware, checkAdminOrUMKMAccess, async (req, res) => {
   try {
     const { idProduct } = req.params;
 
-    if (!req.user.admin) {
-      return res
-        .status(403)
-        .json({
-          message: "Akses ditolak! Hanya admin yang bisa menghapus produk.",
-        });
-    }
-
-    const product = await removeProductById(idProduct);
+    const product = await removeProductById(
+      idProduct,
+      req.user.id,
+      req.user.admin
+    );
 
     console.log(product);
     res.status(200).json({
