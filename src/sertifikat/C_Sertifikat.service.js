@@ -1,6 +1,8 @@
 const { layananService } = require("../layanan/C_Layanan.service");
+const { uploadToCloudinary } = require("../services/cloudinaryUpload.service");
 const ApiError = require("../utils/apiError");
 const { STATUS } = require("../utils/constant/enum");
+const { sanitizeData } = require("../utils/sanitizeData");
 const { sertifikatRepository } = require("./C_Sertifikat.repository");
 
 
@@ -18,9 +20,13 @@ const sertifikatService = {
     async create(data, file, user) {
         // cari layanannya ada atau tidak, 404 nya include disana
         const existingLayanan = await layananService.getById(data.id_layanan, user)
+        data = sanitizeData(data);
+        // console.log(existingLayanan)
+        // console.log(existingLayanan.laporan.statusPelaporan.nama_status_kode)
+        // console.log(STATUS.DISETUJUI.nama_status_kode)
 
         // hanya bisa upload ketika laporan sudah selesai
-        if (existingLayanan.laporan.nama_status_kode !== STATUS.DISETUJUI.nama_status_kode) {
+        if (existingLayanan.laporan.statusPelaporan.nama_status_kode !== STATUS.DISETUJUI.nama_status_kode) {
             throw new ApiError(409, "Hanya bisa upload sertifikat setelah laporan disetujui !");
         }
 
