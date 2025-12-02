@@ -68,20 +68,26 @@ const validate = (schema) => {
         req.query = value;
       }
 
-      // validasi khusus sementara untuk sertif
-      const hasLink =
-        typeof req.body.link_sertifikat === 'string' &&
-        req.body.link_sertifikat.trim().length >= 3;
-
-      const hasFile = !!req.file;
-
-      if (!hasLink && !hasFile) {
-        return next(
-          new ApiError(
-            422,
-            'Minimal salah satu harus diisi: link sertifikat atau file sertifikat'
-          )
+      if ('link_sertifikat' in req.body) {
+        req.body.link_sertifikat = normalizeEmptyString(
+          req.body.link_sertifikat
         );
+        // validasi khusus sementara untuk sertif
+        const hasLink =
+          typeof req.body.link_sertifikat === 'string' &&
+          req.body.link_sertifikat.trim().length >= 3;
+
+        const hasFile = !!req.file;
+
+        if (!hasLink && !hasFile) {
+          return next(
+            new ApiError(
+              422,
+              'Minimal salah satu harus diisi: link sertifikat atau file sertifikat'
+            )
+          );
+        }
+
       }
 
       next();
