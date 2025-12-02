@@ -11,6 +11,7 @@ const { layananRepository, jenisLayananRepository, targetPesertaRepository, stat
 const { uploadFilesBySchema, sendNotifikasiAdminLayanan, sendNotifikasiPengusulLayanan, buildFilter, injectStatus, formatLayanan, hitungPeserta } = require("./C_Layanan.helper.js");
 const { calculateDurationMonth } = require("../utils/calculateDurationMonth.js");
 const { mouService } = require("../mou/C_Mou.service.js");
+const { Console } = require('console');
 
 const statusKodeService = {
     // GET ALL KODE STATUS
@@ -326,19 +327,21 @@ const layananService = {
         const existingLayanan = await layananService.getById(idLayanan, user);
 
         // hanya admin yang bisa acc dan reject
-        if (idStatus === STATUS.DISETUJUI.id || idStatus === STATUS.DITOLAK.id) {
-            if (user.role !== 'admin') {
-                throw new ApiError(403, "Hanya admin yang boleh mengubah status pengajuan.");
+        if (existingLayanan.pengajuan.id === STATUS.MENUNGGU_PERSETUJUAN.id) {
+            if (idStatus === STATUS.DISETUJUI.id || idStatus === STATUS.DITOLAK.id) {
+                if (user.role !== 'admin') {
+                    throw new ApiError(403, "Hanya admin yang boleh mengubah status pengajuan.");
+                }
             }
         }
-
         // build payload update
         const payload = {
             id_status_pengajuan: idStatus
         };
-
+        
         // LOGIC PENGAJUAN
-        if (existingLayanan.id_status_pengajuan == STATUS.MENUNGGU_PERSETUJUAN) {
+        if (existingLayanan.pengajuan.id == STATUS.MENUNGGU_PERSETUJUAN.id) {
+            console.log("updating pengajuan...")
             // kalau pengajuan ditolak maka tolak juga pelaksanaan
             if (idStatus == STATUS.DITOLAK.id) {
                 payload.id_status_pelaksanaan = STATUS.DITOLAK.id;
@@ -358,11 +361,15 @@ const layananService = {
         }
         // lupa validasi waktu
         // LOGIC PENYELESAIAN
-        if (existingLayanan.id_status_pelaksanaan == STATUS.SEDANG_BERJALAN) {
+        if (existingLayanan.pelaksanaan.id == STATUS.SEDANG_BERJALAN.id) {
+            console.log("updating pelaksanaan...")
             if (idStatus == STATUS.SELESAI.id) {
                 // kalau di finish pelaksanaan tapi bukan id nya yang ngubah maka tolak
-                if (user.id !== existingLayanan.user_id)
+                if (user.id !== existingLayanan.pemohon.id) {
                     throw new ApiError(403, "Hanya user bersangkutan yang bisa menyelesaikan pelaksanaan !");
+                } else {
+                    payload.id_status_pelaksanaan = STATUS.SELESAI.id;
+                }
             }
         }
 
