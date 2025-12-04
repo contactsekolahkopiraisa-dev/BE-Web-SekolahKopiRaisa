@@ -69,31 +69,30 @@ const createLaporanKeuangan = async (data, userId, isAdmin = false) => {
 };
 
 /**
- * Get all laporan keuangan (laporan manual + pemasukan dari payment)
- * Admin only
+ * Get all laporan keuangan
+ * - Admin: Lihat semua laporan
+ * - UMKM: Hanya lihat laporan miliknya sendiri
  */
 const getLaporanKeuangan = async (filters, user) => {
   try {
-    if (!user.admin) {
-      throw new ApiError(403, 'Akses ditolak – hanya admin yang diperbolehkan');
-    }
+    // Jika bukan admin, filter hanya untuk user yang sedang login
+    const userId = user.admin ? filters.id_user : user.id;
 
-    // 1. Ambil laporan manual dari admin
-    const laporanManual = await getAllLaporanForAdmin(filters);
+    // 1. Ambil laporan manual
+    const laporanManual = user.admin 
+      ? await getAllLaporanForAdmin(filters)
+      : await findLaporanKeuanganByUserId(userId);
 
-    // 2. Ambil pemasukan dari payment user
-    const paymentOrders = await getTransactionsByFilters(filters);
+    // 2. Ambil pemasukan dari payment
+    const paymentFilters = user.admin ? filters : { ...filters, userId };
+    const paymentOrders = await getTransactionsByFilters(paymentFilters);
     
     console.log(`📦 Laporan manual: ${laporanManual.length}`);
     console.log(`💰 Payment SUCCESS: ${paymentOrders.length}`);
-    
-    if (paymentOrders.length > 0) {
-      console.log('Sample payment order:', JSON.stringify(paymentOrders[0], null, 2));
-    }
 
     // 3. Gabungkan data
     const allData = [
-      // Laporan manual (bisa ada pemasukan + pengeluaran)
+      // Laporan manual
       ...laporanManual.map(lap => ({
         source: 'manual',
         id: lap.id_financialreport,
@@ -107,7 +106,7 @@ const getLaporanKeuangan = async (filters, user) => {
         detail_pengeluaran: lap.pengeluaran
       })),
       
-      // Pemasukan dari payment (hanya pemasukan, pengeluaran = 0)
+      // Pemasukan dari payment
       ...paymentOrders.map(order => ({
         source: 'payment',
         id: order.id,
@@ -117,7 +116,7 @@ const getLaporanKeuangan = async (filters, user) => {
         tanggal: order.created_at,
         description: `Pembayaran Order #${order.id}`,
         pemasukan: Number(order.payment.amount || 0),
-        pengeluaran: 0,  // Payment tidak ada pengeluaran
+        pengeluaran: 0,
         saldo: Number(order.payment.amount || 0),
         payment_method: order.payment.method,
         payment_status: order.payment.status
@@ -153,7 +152,9 @@ const getLaporanKeuangan = async (filters, user) => {
 };
 
 /**
- * Get laporan keuangan by ID (hanya laporan manual)
+ * Get laporan keuangan by ID
+ * - Admin: Akses semua laporan
+ * - UMKM: Hanya laporan miliknya
  */
 const getLaporanKeuanganById = async (id, user) => {
   try {
@@ -163,6 +164,7 @@ const getLaporanKeuanganById = async (id, user) => {
       throw new ApiError(404, 'Laporan keuangan tidak ditemukan');
     }
 
+    // Cek akses: admin atau pemilik laporan
     if (!user.admin && laporan.id_user !== user.id) {
       throw new ApiError(403, 'Anda tidak memiliki akses ke laporan ini');
     }
@@ -175,9 +177,12 @@ const getLaporanKeuanganById = async (id, user) => {
 
 /**
  * Get laporan keuangan by User ID
+ * - Admin: Bisa lihat laporan user manapun
+ * - UMKM: Hanya bisa lihat laporan diri sendiri
  */
 const getLaporanKeuanganByUserId = async (userId, requestUser) => {
   try {
+    // Cek akses: admin atau user yang sama
     if (!requestUser.admin && requestUser.id !== Number(userId)) {
       throw new ApiError(403, 'Anda tidak memiliki akses ke data ini');
     }
@@ -190,7 +195,7 @@ const getLaporanKeuanganByUserId = async (userId, requestUser) => {
 };
 
 /**
- * Update laporan keuangan (hanya laporan manual, bisa tambah pengeluaran)
+ * Update laporan keuangan (Admin only)
  */
 const updateLaporanKeuangan = async (id, updateData, user) => {
   try {
@@ -199,6 +204,7 @@ const updateLaporanKeuangan = async (id, updateData, user) => {
       throw new ApiError(404, 'Laporan keuangan tidak ditemukan');
     }
 
+    // Hanya admin yang bisa update
     if (!user.admin) {
       throw new ApiError(403, 'Hanya admin yang bisa mengubah laporan');
     }
@@ -215,7 +221,7 @@ const updateLaporanKeuangan = async (id, updateData, user) => {
 };
 
 /**
- * Delete laporan keuangan (hanya laporan manual)
+ * Delete laporan keuangan (Admin only)
  */
 const deleteLaporanKeuangan = async (id, user) => {
   try {
@@ -224,6 +230,7 @@ const deleteLaporanKeuangan = async (id, user) => {
       throw new ApiError(404, 'Laporan keuangan tidak ditemukan');
     }
 
+    // Hanya admin yang bisa delete
     if (!user.admin) {
       throw new ApiError(403, 'Hanya admin yang bisa menghapus laporan');
     }
@@ -236,15 +243,18 @@ const deleteLaporanKeuangan = async (id, user) => {
 };
 
 /**
- * Get ringkasan keuangan (laporan manual + payment)
+ * Get ringkasan keuangan
+ * - Admin: Bisa lihat summary user manapun
+ * - UMKM: Hanya bisa lihat summary diri sendiri
  */
 const getSummaryKeuangan = async (userId, filters, requestUser) => {
   try {
+    // Cek akses: admin atau user yang sama
     if (!requestUser.admin && requestUser.id !== Number(userId)) {
       throw new ApiError(403, 'Anda tidak memiliki akses ke data ini');
     }
 
-    // Cari UMKM langsung pakai prisma
+    // Cari UMKM
     const umkm = await prisma.verifikasiUMKM.findFirst({
       where: { id_user: Number(userId) }
     });
