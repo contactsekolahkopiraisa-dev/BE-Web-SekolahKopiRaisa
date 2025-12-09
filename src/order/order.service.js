@@ -9,17 +9,16 @@ const rajaOngkirApi = require("../utils/rajaOngkir");
 const qs = require('qs');
 
 const {
-
     findAllOrders,
     findAllMyNotifikasi,
     findOrdersByUser,
+    findOrdersByPartnerId,
     findOrdersById,
     findAllComplietedOrders,
     findUserComplietedOrders,
-    findOrdersByPartnerId,
+    findOrdersByPartner,
     findOrderDetailById,
     getProductsByCartItem,
-    // getDetailNotifikasiId,
     insertNewOrders,
     markOrderItemsAsNotified,
     updatePaymentSnapToken,
@@ -51,14 +50,58 @@ const getOrdersByUser = async (userId, status) => {
     return orders;
 };
 
+const getOrdersByPartner = async (userId, status) => {
+    // Cari partner berdasarkan user_id
+    const partner = await findPartnerByUserId(userId);
+    
+    if (!partner) {
+        throw new ApiError(404, "Profil partner tidak ditemukan! Silakan hubungi admin.");
+    }
+
+    // Cari orders yang mengandung produk dari partner ini
+    const orders = await findOrdersByPartner(partner.id, status);
+    
+    if (!orders || orders.length === 0) {
+        return []; // Tidak ada pesanan
+    }
+
+    return orders.map(order => ({
+        orderId: order.id,
+        statusOrder: order.status,
+        createdAt: order.created_at,
+        customerName: order.user?.name || "-",
+        customerPhone: order.user?.phone_number || "-",
+        items: order.orderItems
+            .filter(item => item.partner_id === partner.id) // Hanya item dari partner ini
+            .map(item => ({
+                productId: item.product.id,
+                productImage: item.product.image,
+                name: item.product.name,
+                quantity: item.quantity,
+                price: item.price,
+                subtotal: item.quantity * item.price,
+                note: item.custom_note || "-",
+            })),
+        shippingAddress: order.shippingAddress?.address || "-",
+        payment: {
+            method: order.payment?.method,
+            status: order.payment?.status,
+            // Hanya tampilkan total untuk item partner ini
+            amount: order.orderItems
+                .filter(item => item.partner_id === partner.id)
+                .reduce((sum, item) => sum + (item.quantity * item.price), 0)
+        }
+    }));
+};
+
 const getOrderHistoryByRole = async (userId, role, statusFilter) => {
     if (role === "admin") {
         return await findAllOrders(statusFilter);
     } else {
+        // Untuk user biasa dan UMKM, tampilkan berdasarkan userId
         return await findOrdersByUser(userId, statusFilter);
     }
 };
-
 
 const getCompleteOrderByRole = async (userId, role) => {
     if (role === "admin") {
@@ -67,7 +110,6 @@ const getCompleteOrderByRole = async (userId, role) => {
         return await findUserComplietedOrders(userId);
     }
 };
-
 
 const createOrders = async (userId, orderData) => {
     console.log("Membuat order untuk user:", userId);
@@ -113,7 +155,6 @@ const createOrders = async (userId, orderData) => {
     }
 
     const productIds = items.map((item) => item.products_id);
-    // Log detail tipe data setiap productId
     productIds.forEach((id, index) => {
         console.log(`Tipe data productId di index ${index}:`, id, "-", typeof id);
     });
@@ -134,7 +175,6 @@ const createOrders = async (userId, orderData) => {
         const product = productMap[item.products_id];
         if (!product) {
             throw new ApiError(404, `Produk dengan ID ${item.products_id} tidak ditemukan`);
-
         }
         if (!product.partner?.id) {
             throw new ApiError(400, `Produk ID ${product.id} belum memiliki partner!`);
@@ -145,7 +185,6 @@ const createOrders = async (userId, orderData) => {
             throw new ApiError(400, `Stok produk "${product.name}" tidak mencukupi. Tersedia: ${availableStock}, diminta: ${item.quantity}`);
         }
 
-        // Hitung harga per unit
         const pricePerUnit = product.price;
         totalProductPrice += item.quantity * pricePerUnit;
 
@@ -165,7 +204,6 @@ const createOrders = async (userId, orderData) => {
         .filter(item => item.fromCart)
         .map(item => item.products_id);
 
-    // Hapus field fromCart
     const itemsToSave = itemsWithPrice.map(({ fromCart, ...rest }) => rest);
 
     const orders = await insertNewOrders(userId, {
@@ -218,7 +256,6 @@ const createOrders = async (userId, orderData) => {
         }
     }
 
-    // Hapus produk dari cart jika perlu
     if (fromCartProductId.length > 0) {
         await deleteProductCartItems(userId, fromCartProductId);
     }
@@ -242,7 +279,6 @@ const handleMidtransNotification = async (notification) => {
         throw new ApiError(400, "Data tidak lengkap dari Midtrans");
     }
 
-    // Validasi & parsing order_id
     const idMatch = order_id?.match(/ORDER-(\d+)-/);
     const orderId = idMatch ? parseInt(idMatch[1], 10) : null;
 
@@ -250,7 +286,6 @@ const handleMidtransNotification = async (notification) => {
         throw new Error(`order_id tidak valid: ${order_id}`);
     }
 
-    // Mapping status Midtrans → status internal
     const internalStatus = mapTransactionStatus(transaction_status, payment_type, fraud_status);
     const paymentMethod = mapPaymentMethod(payment_type);
 
@@ -259,10 +294,9 @@ const handleMidtransNotification = async (notification) => {
     }
 
     console.log("✅ Parsed Order ID:", orderId);
-    console.log("🔁 Mapped Status:", internalStatus);
+    console.log("🔍 Mapped Status:", internalStatus);
     console.log("💳 Mapped Payment Method:", paymentMethod);
 
-    // Update status pembayaran di database
     const { order, updatedPayment } = await updateOrderPaymentStatus(orderId, {
         payment_status: internalStatus,
         payment_method: paymentMethod,
@@ -270,10 +304,8 @@ const handleMidtransNotification = async (notification) => {
 
     if (internalStatus === 'SUCCESS') {
         try {
-            // Panggil service notifikasi yang baru kita buat
             await createNotificationForPaymentSuccess(order, updatedPayment);
         } catch (notificationError) {
-            // Kegagalan membuat notifikasi tidak boleh menghentikan proses utama
             console.error(
                 "⚠️ Gagal membuat notifikasi pembayaran untuk order:",
                 orderId,
@@ -283,10 +315,8 @@ const handleMidtransNotification = async (notification) => {
     }
 
     return updatedPayment;
-
 };
 
-// Helper untuk mapping status transaksi
 const mapTransactionStatus = (status, type, fraud) => {
     switch (status) {
         case "capture":
@@ -308,7 +338,6 @@ const mapTransactionStatus = (status, type, fraud) => {
     }
 };
 
-// Helper untuk mapping payment_type Midtrans → enum PaymentMethod di Prisma
 const mapPaymentMethod = (type) => {
     const mapping = {
         bank_transfer: "BANK_TRANSFER",
@@ -318,75 +347,92 @@ const mapPaymentMethod = (type) => {
     return mapping[type] || null;
 };
 
-
 const getOrderDetailById = async (orderId, isAdmin, userId) => {
-    if (isAdmin === true) {
-        const order = await findOrderDetailById(orderId);
-        if (!order) {
-            throw new ApiError(404, "Order tidak ditemukan");
-        }
-        return {
-            orderId: order.id,
-            namaCustomer: order.user?.name || "-",
-            nomerCustomer: order.user?.phone_number || "-",
-            alamatCustomer: order.shippingAddress?.address || "-",
-            provinsiCustomer: order.shippingAddress?.destination_province || "-",
-            kotaCustomer: order.shippingAddress?.destination_city || "-",
-            kodePos: order.shippingAddress?.destination_zip_code || "-",
-            tanggalTransaksi: order.created_at,
-            statusOrder: order.status,
-            items: order.orderItems.map(item => ({
-                namaProduk: item.product.name,
-                gambarProduk: item.product.image,
-                harga: item.price,
-                quantity: item.quantity,
-                catatan: item.custom_note,
-                namaMitra: item.partner?.name || "-",
-            })),
-            metodePembayaran: order.payment?.method || "-",
-            statusPembayaran: order.payment?.status || "-",
-            totalHarga: order.payment?.amount ?? 0,
-        };
-    } else {
-        const order = await findOrderDetailById(orderId);
-        if (!order || order.user_id !== userId) {
-            throw new ApiError(403, "Anda tidak memiliki akses ke order ini");
-        }
-        return {
-            orderId: order.id,
-            namaCustomer: order.user?.name || "-",
-            nomerCustomer: order.user?.phone_number || "-",
-            alamatCustomer: order.shippingAddress?.address || "-",
-            provinsiCustomer: order.shippingAddress?.destination_province || "-",
-            kotaCustomer: order.shippingAddress?.destination_city || "-",
-            kodePos: order.shippingAddress?.destination_zip_code || "-",
-            tanggalTransaksi: order.created_at,
-            statusOrder: order.status,
-            items: order.orderItems.map(item => ({
-                namaProduk: item.product.name,
-                gambarProduk: item.product.image,
-                harga: item.price,
-                quantity: item.quantity,
-                catatan: item.custom_note,
-                namaMitra: item.partner?.name || "-",
-            })),
-            metodePembayaran: order.payment?.method || "-",
-            statusPembayaran: order.payment?.status || "-",
-            totalHarga: order.payment?.amount ?? 0,
-        };
+    const order = await findOrderDetailById(orderId);
+    
+    if (!order) {
+        throw new ApiError(404, "Order tidak ditemukan");
     }
+
+    // Admin bisa akses semua order
+    if (isAdmin) {
+        return formatOrderDetail(order);
+    }
+
+    // Customer hanya bisa akses order miliknya
+    if (order.user_id === userId) {
+        return formatOrderDetail(order);
+    }
+
+    // UMKM hanya bisa akses order yang mengandung produk mereka
+    const partner = await findPartnerByUserId(userId);
+    if (partner) {
+        const hasPartnerProduct = order.orderItems.some(
+            item => item.partner_id === partner.id
+        );
+        
+        if (hasPartnerProduct) {
+            // Filter hanya item milik partner ini
+            const filteredOrder = {
+                ...order,
+                orderItems: order.orderItems.filter(
+                    item => item.partner_id === partner.id
+                )
+            };
+            return formatOrderDetail(filteredOrder, true); // true = partner view
+        }
+    }
+
+    throw new ApiError(403, "Anda tidak memiliki akses ke order ini");
+};
+
+const formatOrderDetail = (order, isPartnerView = false) => {
+    const detail = {
+        orderId: order.id,
+        namaCustomer: order.user?.name || "-",
+        nomerCustomer: order.user?.phone_number || "-",
+        alamatCustomer: order.shippingAddress?.address || "-",
+        provinsiCustomer: order.shippingAddress?.destination_province || "-",
+        kotaCustomer: order.shippingAddress?.destination_city || "-",
+        kodePos: order.shippingAddress?.destination_zip_code || "-",
+        tanggalTransaksi: order.created_at,
+        statusOrder: order.status,
+        items: order.orderItems.map(item => ({
+            namaProduk: item.product.name,
+            gambarProduk: item.product.image,
+            harga: item.price,
+            quantity: item.quantity,
+            catatan: item.custom_note,
+            namaMitra: item.partner?.name || "-",
+        })),
+        metodePembayaran: order.payment?.method || "-",
+        statusPembayaran: order.payment?.status || "-",
+    };
+
+    if (isPartnerView) {
+        // Untuk partner, hitung hanya total item mereka
+        detail.totalHarga = order.orderItems.reduce(
+            (sum, item) => sum + (item.quantity * item.price), 
+            0
+        );
+    } else {
+        detail.totalHarga = order.payment?.amount ?? 0;
+    }
+
+    return detail;
 };
 
 const getOrderStatuses = (isAdmin) => {
     if (isAdmin) {
         return Object.values(OrderStatus);
     } else {
-        return Object.values(OrderStatus).filter(status => [OrderStatus.DELIVERED].includes(status));
+        return Object.values(OrderStatus).filter(status => 
+            [OrderStatus.DELIVERED].includes(status)
+        );
     }
 };
 
 const getDomestic = async (searchParams) => {
-
     const {
         search,
         limit = 1000,
@@ -408,7 +454,6 @@ const getDomestic = async (searchParams) => {
 }
 
 const getCost = async (searchCost) => {
-
     const payload = {
         courier: "jnt",
         origin: "31366",
@@ -422,7 +467,7 @@ const getCost = async (searchCost) => {
     try {
         const response = await rajaOngkirApi.post(
             '/calculate/domestic-cost',
-            qs.stringify(payload), // ← ini mengubah jadi x-www-form-urlencoded
+            qs.stringify(payload),
             {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
@@ -440,71 +485,11 @@ const getCost = async (searchCost) => {
         console.error("Error dari getCost():", error?.response?.data || error.message);
         throw error;
     }
-
 }
 
 const getPaymentMethod = () => {
     return Object.values(PaymentMethod);
 };
-
-//tidak digunakan//
-const updateStatus = async (orderId, newStatus, user, reason) => {
-    const order = await findOrdersById(orderId);
-    if (!order) {
-        throw new ApiError(404, "Pesanan tidak ditemukan!");
-    }
-
-    const isAdmin = user.admin;
-
-    // Validasi role dan perubahan status
-    if (isAdmin) {
-        if (
-            ![
-                OrderStatus.PROCESSING,
-                OrderStatus.SHIPPED,
-                OrderStatus.DELIVERED,
-                OrderStatus.CANCELED,
-            ].includes(newStatus)
-        ) {
-            throw new Error(
-                "Admin hanya bisa mengubah status ke: PROCESSING, SHIPPED, DELIVERED, atau CANCELED"
-            );
-        }
-    } else {
-        // Customer validasi hak milik order
-        if (order.user_id !== user.id)
-            throw new Error("Akses ditolak: bukan pesanan Anda");
-
-        // hanya bisa batalkan dari pending
-        if (
-            newStatus === OrderStatus.CANCELED
-        ) {
-            throw new ApiError(
-                403, "Customer tidak diizinkan membatalkan pesanan tanpa alasan"
-            );
-        }
-
-        // hanya bisa tandai selesai dari SHIPPED
-        if (
-            newStatus === OrderStatus.DELIVERED &&
-            order.status !== OrderStatus.SHIPPED
-        ) {
-            throw new Error(
-                "Pesanan hanya bisa ditandai selesai setelah dikirim"
-            );
-        }
-
-        if (
-            ![OrderStatus.CANCELED, OrderStatus.DELIVERED].includes(newStatus)
-        ) {
-            throw new Error(
-                "Customer tidak berhak mengubah ke status tersebut"
-            );
-        }
-    }
-    return await updateStatusOrders(orderId, newStatus, reason);
-};
-//tidak digunakan//
 
 const updatedOrderStatus = async (orderId, newStatus, user) => {
     const order = await findOrdersById(orderId);
@@ -514,7 +499,7 @@ const updatedOrderStatus = async (orderId, newStatus, user) => {
 
     const isAdmin = user.admin;
 
-    // Hanya admin yang bisa mengubah status 
+    // Admin bisa mengubah status tertentu
     if (isAdmin) {
         if (
             ![
@@ -529,35 +514,48 @@ const updatedOrderStatus = async (orderId, newStatus, user) => {
             );
         }
     } else {
-        // Customer validasi hak milik order
-        if (order.user_id !== user.id)
-            throw new ApiError(403, "Akses ditolak: bukan pesanan Anda");
+        // Cek apakah user adalah customer pemilik order
+        const isCustomer = order.user_id === user.id;
+        
+        if (isCustomer) {
+            // Customer hanya bisa tandai selesai dari SHIPPED
+            if (
+                newStatus === OrderStatus.DELIVERED &&
+                order.status !== OrderStatus.SHIPPED
+            ) {
+                throw new ApiError(
+                    403, "Pesanan hanya bisa ditandai selesai setelah dikirim"
+                );
+            }
 
-        // hanya bisa batalkan dari pending
-        if (
-            newStatus === OrderStatus.CANCELED
-        ) {
-            throw new ApiError(
-                403, "Customer tidak diizinkan membatalkan pesanan tanpa alasan"
-            );
-        }
+            if (![OrderStatus.DELIVERED].includes(newStatus)) {
+                throw new ApiError(
+                    403, "Customer tidak berhak mengubah ke status tersebut"
+                );
+            }
+        } else {
+            // Cek apakah user adalah UMKM partner
+            const partner = await findPartnerByUserId(user.id);
+            
+            if (!partner) {
+                throw new ApiError(403, "Akses ditolak: bukan pesanan Anda");
+            }
 
-        // hanya bisa tandai selesai dari SHIPPED
-        if (
-            newStatus === OrderStatus.DELIVERED &&
-            order.status !== OrderStatus.SHIPPED
-        ) {
-            throw new ApiError(
-                403, "Pesanan hanya bisa ditandai selesai setelah dikirim"
+            // Cek apakah order mengandung produk dari partner ini
+            const hasPartnerProduct = order.orderItems.some(
+                item => item.partner_id === partner.id
             );
-        }
 
-        if (
-            ![OrderStatus.DELIVERED].includes(newStatus)
-        ) {
-            throw new ApiError(
-                403, "Customer tidak berhak mengubah ke status tersebut"
-            );
+            if (!hasPartnerProduct) {
+                throw new ApiError(403, "Akses ditolak: pesanan tidak mengandung produk Anda");
+            }
+
+            // Partner bisa mengubah status ke PROCESSING atau SHIPPED
+            if (![OrderStatus.PROCESSING, OrderStatus.SHIPPED].includes(newStatus)) {
+                throw new ApiError(
+                    403, "Partner hanya bisa mengubah status ke: PROCESSING atau SHIPPED"
+                );
+            }
         }
     }
 
@@ -570,12 +568,10 @@ const cancelOrder = async (orderId, user, reason) => {
         throw new ApiError(404, "Pesanan tidak ditemukan.");
     }
 
-    // Hanya pemilik pesanan yang bisa membatalkan
     if (order.user_id !== user.id) {
         throw new ApiError(403, "Akses ditolak: bukan pesanan Anda.");
     }
 
-    // Hanya bisa dibatalkan jika masih PENDING
     if (order.status !== OrderStatus.PENDING) {
         throw new ApiError(400, "Pesanan hanya bisa dibatalkan saat status masih PENDING.");
     }
@@ -585,16 +581,7 @@ const cancelOrder = async (orderId, user, reason) => {
         throw new ApiError(500, "Gagal membatalkan pesanan dan mengembalikan stok.");
     }
 
-    // const updatedOrder = await updateStatusOrders(orderId, OrderStatus.CANCELED);
-    // if (!updatedOrder) {
-    //     throw new ApiError(500, "Gagal membatalkan pesanan.");
-    // }
-
-    // // Simpan alasan resmi pembatalan
-    // await createOrderCancellation(orderId, user.id, reason);
-
     try {
-        // Panggil service notifikasi yang baru
         await createNotificationForOrderCancellation(order, reason);
     } catch (notificationError) {
         console.error(
@@ -606,7 +593,6 @@ const cancelOrder = async (orderId, user, reason) => {
 
     return updatedOrder;
 };
-
 
 const contactPartner = async (partnerId) => {
     if (!partnerId || isNaN(partnerId)) {
@@ -626,7 +612,6 @@ const contactPartner = async (partnerId) => {
         throw new ApiError(400, "Nomor telepon mitra tidak tersedia atau tidak valid.");
     }
 
-    // Kelompokkan order berdasarkan ID
     const groupedOrders = {};
 
     orderItems.forEach((item) => {
@@ -652,6 +637,7 @@ const contactPartner = async (partnerId) => {
     if (!result || !result.message) {
         throw new ApiError(500, "Gagal membuat pesan notifikasi untuk mitra.");
     }
+    
     const itemIds = orderItems.map((i) => i.id);
     await markOrderItemsAsNotified(itemIds);
 
@@ -665,7 +651,6 @@ const updateOrders = async (id, editedOrdersData) => {
     }
 
     const ordersData = await updateItemOrders(id, editedOrdersData);
-
     return ordersData;
 };
 
@@ -675,6 +660,7 @@ const removeOrders = async (id) => {
     if (!existingOrders) {
         throw new ApiError(404, "Order tidak ditemukan!");
     }
+    
     const ordersData = await deleteOrders(id);
 
     if (!ordersData) {
@@ -684,21 +670,16 @@ const removeOrders = async (id) => {
 };
 
 const createNotificationForNewOrder = async (userId, order) => {
-    // Menghitung jumlah item dalam pesanan
     const itemCount = order.orderItems.length;
-
-    // Mengambil total pembayaran dari objek pesanan
     const totalAmount = new Intl.NumberFormat('id-ID', {
         style: 'currency',
         currency: 'IDR',
         minimumFractionDigits: 0
     }).format(order.payment.amount);
 
-    // Membuat pesan yang deskriptif
     const notificationName = `Pesanan #${order.id} Berhasil Dibuat`;
     const notificationDescription = `Pesanan Anda berisi ${itemCount} produk dengan total ${totalAmount} telah dibuat dan sedang menunggu pembayaran.`;
 
-    // Data yang akan disimpan ke database
     const notificationData = {
         name: notificationName,
         description: notificationDescription,
@@ -710,22 +691,19 @@ const createNotificationForNewOrder = async (userId, order) => {
 };
 
 const createNotificationForPaymentSuccess = async (order, payment) => {
-    // Format jumlah pembayaran agar mudah dibaca
     const formattedAmount = new Intl.NumberFormat('id-ID', {
         style: 'currency',
         currency: 'IDR',
         minimumFractionDigits: 0
     }).format(payment.amount);
 
-    // Siapkan data notifikasi yang deskriptif
     const notificationData = {
         name: `Pembayaran untuk Pesanan #${order.id} Berhasil`,
         description: `Pembayaran Anda sebesar ${formattedAmount} telah kami konfirmasi.`,
-        user_id: order.user_id, // Kita butuh user_id dari objek order
+        user_id: order.user_id,
         order_id: order.id,
     };
 
-    // Panggil repository untuk menyimpan notifikasi
     await createNotification(notificationData);
     console.log(`✅ Notifikasi pembayaran berhasil dibuat untuk order ID: ${order.id}`);
 };
@@ -756,21 +734,11 @@ const getMyNotifikasi = async (userId) => {
     return myNotifikasi
 }
 
-// const getDetailNotifikasi = async (notifikasiId, userId) => {
-//     const notifikasiService = await getDetailNotifikasiId(notifikasiId, userId);
-//     if (!notifikasiService || notifikasiService.length === 0) {
-//         throw new ApiError(404, "Notifikasi tidak ditemukan!");
-//     }
-
-//     return notifikasiService;
-// }
-
-
-
 module.exports = {
     getDomestic,
     getAllOrders,
     getOrdersByUser,
+    getOrdersByPartner,
     getMyNotifikasi,
     getCompleteOrderByRole,
     getCost,
@@ -778,7 +746,6 @@ module.exports = {
     getOrderStatuses,
     getOrderHistoryByRole,
     getPaymentMethod,
-    // getDetailNotifikasi,
     createOrders,
     contactPartner,
     cancelOrder,
@@ -786,7 +753,6 @@ module.exports = {
     createNotificationForOrderCancellation,
     createNotificationForPaymentSuccess,
     handleMidtransNotification,
-    updateStatus,
     updateOrders,
     updatedOrderStatus,
     removeOrders,

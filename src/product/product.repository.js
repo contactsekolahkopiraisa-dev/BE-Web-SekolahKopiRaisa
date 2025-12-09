@@ -39,6 +39,51 @@ const findAllProducts = async () => {
   return productsWithSales;
 };
 
+// Fungsi baru: Find products by partner ID (untuk UMKM)
+const findProductsByPartnerId = async (partnerId) => {
+  const products = await prisma.product.findMany({
+    where: {
+      partner_id: parseInt(partnerId),
+    },
+    include: {
+      inventory: {
+        select: {
+          stock: true,
+        },
+      },
+      partner: true,
+    },
+  });
+
+  // Hitung total terjual berdasarkan products_id dari order yang berstatus DELIVERED
+  const productIds = products.map(p => p.id);
+  
+  const soldQuantities = await prisma.orderItem.groupBy({
+    by: ["products_id"],
+    where: {
+      products_id: { in: productIds },
+      order: {
+        status: "DELIVERED",
+      },
+    },
+    _sum: {
+      quantity: true,
+    },
+  });
+
+  // Gabungkan data produk dengan penjualan
+  const productsWithSales = products.map((product) => {
+    const soldData = soldQuantities.find((sq) => sq.products_id === product.id);
+    return {
+      ...product,
+      stock: product.inventory?.stock || 0,
+      sold: soldData?._sum?.quantity || 0,
+    };
+  });
+
+  return productsWithSales;
+};
+
 const deleteProductById = async (idProduct) => {
   const product = await prisma.product.delete({
     where: {
@@ -173,6 +218,7 @@ const getProductsByIds = async (productIds) => {
 
 module.exports = {
   findAllProducts,
+  findProductsByPartnerId,
   createNewProduct,
   createInventory,
   findProductById,

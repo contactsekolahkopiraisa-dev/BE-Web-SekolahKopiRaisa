@@ -2,7 +2,17 @@
 
 const ApiError = require('../utils/apiError');
 
-const { findAllProducts, createNewProduct, createInventory, findProductById, updateDataProduct, updateInventoryStock, deleteProductById, deleteInventoryByProductId } = require('./product.repository');
+const { 
+  findAllProducts, 
+  createNewProduct, 
+  createInventory, 
+  findProductById, 
+  updateDataProduct, 
+  updateInventoryStock, 
+  deleteProductById, 
+  deleteInventoryByProductId,
+  findProductsByPartnerId 
+} = require('./product.repository');
 const { findPartnerById } = require('../partners/partner.repository');
 const { uploadToCloudinary } = require('../services/cloudinaryUpload.service');
 const { deleteFromCloudinaryByUrl, extractPublicId } = require('../utils/cloudinary');
@@ -44,22 +54,47 @@ const validateProductOwnership = async (productId, userId, isAdmin) => {
   return product;
 };
 
+// Get all products (untuk admin atau public)
 const getAllProducts = async () => {
     const products = await findAllProducts();
     if (!products || products.length === 0) {
-        throw new ApiError(404, 'Produk tidak tidak ada!');
+        throw new ApiError(404, 'Produk tidak ada!');
     }
     return products;
 }
 
-const getProductById = async (productId) => {
+// Get products by partner (untuk UMKM)
+const getProductsByPartner = async (userId) => {
+    const partner = await getPartnerByUserId(userId);
+    const products = await findProductsByPartnerId(partner.id);
+    
+    if (!products || products.length === 0) {
+        return []; // Return empty array jika belum ada produk
+    }
+    return products;
+}
+
+// Get product by ID dengan validasi ownership untuk UMKM
+const getProductById = async (productId, userId, isAdmin) => {
     const product = await findProductById(productId);
-    if (!product|| product=== null) {
+    
+    if (!product || product === null) {
         throw new ApiError(404, 'Produk tidak ditemukan!');
     }
+    
+    // Jika ada userId dan bukan admin, validasi ownership
+    if (userId && !isAdmin) {
+        const partner = await getPartnerByUserId(userId);
+        
+        if (product.partner_id !== partner.id) {
+            throw new ApiError(403, "Akses ditolak! Produk ini bukan milik UMKM Anda.");
+        }
+    }
+    
     return product;
 }
 
+// Remove product by ID
 const removeProductById = async (idProduct, userId, isAdmin) => {
     const existingProduct = await validateProductOwnership(idProduct, userId, isAdmin);
     console.log("produk yang dicari: ", existingProduct)
@@ -84,6 +119,7 @@ const removeProductById = async (idProduct, userId, isAdmin) => {
     return productData;
 }
 
+// Create new product
 const createProduct = async (newProductData) => {
     try {
         const { image, stock, partner_id, user_id, is_admin, ...rest } = newProductData
@@ -153,6 +189,7 @@ const createProduct = async (newProductData) => {
     }
 }
 
+// Update product
 const updateProduct = async (id, updatedProductData, userId, isAdmin) => {
     try {
         if (isNaN(parseInt(id))) {
@@ -224,4 +261,11 @@ const updateProduct = async (id, updatedProductData, userId, isAdmin) => {
     }
 }
 
-module.exports = { getAllProducts, createProduct, updateProduct, getProductById, removeProductById };
+module.exports = { 
+  getAllProducts, 
+  getProductsByPartner,
+  createProduct, 
+  updateProduct, 
+  getProductById, 
+  removeProductById 
+};

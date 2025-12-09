@@ -11,11 +11,11 @@ const handleValidationResultFinal = require('../middleware/handleValidationResul
 const verifyMidtransSignature = require("../middleware/midtransSignatureValidator");
 const { upload } = require("../middleware/multer");
 
-
 const {
     getDomestic,
     getAllOrders,
     getOrdersByUser,
+    getOrdersByPartner,
     getMyNotifikasi,
     getCompleteOrderByRole,
     getCost,
@@ -39,7 +39,7 @@ const { order } = require("../db");
 
 const router = express.Router();
 
-// Get all orders-admin
+// Get all orders - admin only
 router.get("/", authMiddleware, async (req, res) => {
     if (!req.user.admin) {
         return res.status(403).json({
@@ -68,7 +68,41 @@ router.get("/", authMiddleware, async (req, res) => {
     }
 });
 
-// Get order detail user-admin
+// Get orders for UMKM partner - orders containing their products
+router.get("/partner-orders", authMiddleware, async (req, res) => {
+    try {
+        if (req.user.admin) {
+            return res.status(403).json({
+                message: "Akses ditolak! Endpoint ini hanya untuk UMKM.",
+            });
+        }
+
+        const userId = req.user.id;
+        const { status } = req.query;
+
+        const orders = await getOrdersByPartner(userId, status);
+
+        res.status(200).json({
+            message: "Data pesanan partner berhasil didapatkan!",
+            data: orders,
+        });
+    } catch (error) {
+        if (error instanceof ApiError) {
+            console.error("ApiError:", error);
+            return res.status(error.statusCode).json({
+                message: error.message,
+            });
+        }
+
+        console.error("Error getting partner orders:", error);
+        return res.status(500).json({
+            message: "Terjadi kesalahan di server!",
+            error: error.message,
+        });
+    }
+});
+
+// Get order detail - admin, customer owner, or UMKM partner
 router.get("/:id/detail", authMiddleware, async (req, res) => {
     try {
         const isAdmin = req.user.admin;
@@ -78,10 +112,8 @@ router.get("/:id/detail", authMiddleware, async (req, res) => {
 
         if (ref) {
             try {
-                // Panggil service untuk mengubah status 'viewed' menjadi true
                 await readNotification(ref, userId);
             } catch (notifError) {
-                // Jika gagal, jangan hentikan proses. Cukup catat errornya.
                 console.error("Gagal menandai notifikasi sebagai dibaca:", notifError);
             }
         }
@@ -107,9 +139,15 @@ router.get("/:id/detail", authMiddleware, async (req, res) => {
     }
 });
 
-// Get orders by user
+// Get orders by user - customer only
 router.get("/my-order", authMiddleware, async (req, res) => {
     try {
+        if (req.user.admin) {
+            return res.status(403).json({
+                message: "Akses ditolak! Endpoint ini hanya untuk customer.",
+            });
+        }
+
         const userId = req.user.id;
         const { status } = req.query;
 
@@ -170,16 +208,14 @@ router.get("/my-order", authMiddleware, async (req, res) => {
     }
 });
 
-//history order untuk admin dan user bisa filter status order
+// History order - admin, customer, or UMKM
 router.get("/history", authMiddleware, async (req, res) => {
     try {
         const userId = req.user.id;
-        const role = req.user.admin;
+        const role = req.user.admin ? "admin" : "user";
 
-        // Dapatkan parameter status dari query, bisa string atau array
         let { status } = req.query;
 
-        // Normalize jadi array (bisa string tunggal atau array)
         if (status && !Array.isArray(status)) {
             status = [status];
         }
@@ -196,7 +232,7 @@ router.get("/history", authMiddleware, async (req, res) => {
     }
 });
 
-//(opsional)
+// (opsional)
 router.get("/completed", authMiddleware, async (req, res) => {
     try {
         const sold = await getCompleteOrderByRole();
@@ -220,7 +256,7 @@ router.get("/completed", authMiddleware, async (req, res) => {
     }
 });
 
-// status untuk order
+// Status untuk order
 router.get("/Order-statuses", authMiddleware, (req, res) => {
     try {
         const isAdmin = req.user.admin;
@@ -254,9 +290,15 @@ router.get("/payment-method", authMiddleware, (req, res) => {
     }
 });
 
-// Create new order-user
+// Create new order - user only
 router.post("/", authMiddleware, orderValidator, handleValidationResult, handleValidationResultFinal,
     async (req, res) => {
+        if (req.user.admin) {
+            return res.status(403).json({
+                message: "Akses ditolak! Admin tidak bisa membuat pesanan.",
+            });
+        }
+
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             const errorObject = errors.array().reduce((acc, curr) => {
@@ -277,14 +319,6 @@ router.post("/", authMiddleware, orderValidator, handleValidationResult, handleV
             const userId = req.user.id;
             const orderData = req.body;
             console.log("📦 Received order data:", orderData);
-            console.log("🧪 Type Checking:");
-            console.log("- typeof orderData:", typeof orderData);
-
-            if (Array.isArray(orderData.items)) {
-                orderData.items.forEach((item, index) => {
-                    console.log(`  🧾 Item[${index}] - products_id:`, item.products_id, "| typeof:", typeof item.products_id);
-                });
-            }
 
             const { paymentInfo, updatedOrder } = await createOrders(userId, orderData);
             console.log("Order created successfully:", updatedOrder);
@@ -292,14 +326,11 @@ router.post("/", authMiddleware, orderValidator, handleValidationResult, handleV
             try {
                 await createNotificationForNewOrder(userId, updatedOrder);
             } catch (notificationError) {
-                // Jika pembuatan notifikasi gagal, jangan gagalkan seluruh request.
-                // Cukup catat errornya agar bisa ditinjau nanti.
                 console.error("⚠️ Failed to create notification for order:", updatedOrder.id, notificationError);
             }
 
             res.status(201).json({
                 message: "Pesanan kamu berhasil dibuat dan sedang diproses.",
-                // data: updatedOrder,
                 order: {
                     orderId: updatedOrder.id,
                     items: updatedOrder.orderItems.map(item => ({
@@ -332,7 +363,6 @@ router.post("/", authMiddleware, orderValidator, handleValidationResult, handleV
                 },
             });
 
-
         } catch (error) {
             if (error instanceof ApiError) {
                 console.error("ApiError:", error);
@@ -349,12 +379,11 @@ router.post("/", authMiddleware, orderValidator, handleValidationResult, handleV
         }
     });
 
-
-//notifikasi midtrans setelah transaksi
+// Notifikasi midtrans setelah transaksi
 router.post("/midtrans/notification", async (req, res) => {
     try {
         const notification = req.body;
-        console.log("🔔 Notifikasi Midtrans diterima:", notification)
+        console.log("📢 Notifikasi Midtrans diterima:", notification)
 
         const notifikasi = await handleMidtransNotification(notification);
 
@@ -371,10 +400,7 @@ router.post("/midtrans/notification", async (req, res) => {
                 message: error.message,
             });
         }
-        console.error("❌ Error in /midtrans/notification:");
-        console.error("🧾 Error Message:", error.message);
-        console.error("📦 Full Error Stack:", error.stack);
-        console.error("Error in /midtrans/notification:", error);
+        console.error("❌ Error in /midtrans/notification:", error);
         return res.status(500).json({ message: "Gagal memproses notifikasi", error: error.message });
     }
 });
@@ -413,8 +439,6 @@ router.post("/contact-partner/:partnerId", authMiddleware, async (req, res) => {
 
 router.get("/search-address", authMiddleware, validateQueryDomestic, handleValidationResult, handleValidationResultFinal,
     async (req, res) => {
-
-        // Validasi query params
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             const errorObject = errors.array().reduce((acc, curr) => {
@@ -431,7 +455,6 @@ router.get("/search-address", authMiddleware, validateQueryDomestic, handleValid
             });
         }
 
-        // fungsi pencarian alamat domestik
         try {
             const searchParams = req.query
             console.log("Search Query Params (searchParams):", searchParams);
@@ -452,7 +475,6 @@ router.get("/search-address", authMiddleware, validateQueryDomestic, handleValid
                 })
             }
 
-            // Coba ambil info error dari axios
             if (error.isAxiosError && error.response) {
                 return res.status(error.response.status).json({
                     message: error.response.data?.message || error.message,
@@ -464,14 +486,11 @@ router.get("/search-address", authMiddleware, validateQueryDomestic, handleValid
             return res.status(error.statusCode || 500).json({
                 message: error.message || "Terjadi kesalahan saat mengambil data provinsi.",
             });
-
         }
     })
 
 router.post("/search-cost", authMiddleware, upload.none(), validateCost, handleValidationResult, handleValidationResultFinal,
     async (req, res) => {
-
-        // Validasi query params
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             const errorObject = errors.array().reduce((acc, curr) => {
@@ -488,7 +507,6 @@ router.post("/search-cost", authMiddleware, upload.none(), validateCost, handleV
             });
         }
 
-        // fungsi pencarian alamat domestik
         try {
             const searchCost = req.body
 
@@ -508,7 +526,6 @@ router.post("/search-cost", authMiddleware, upload.none(), validateCost, handleV
                 })
             }
 
-            // Coba ambil info error dari axios
             if (error.isAxiosError && error.response) {
                 return res.status(error.response.status).json({
                     message: error.response.data?.message || error.message,
@@ -520,15 +537,19 @@ router.post("/search-cost", authMiddleware, upload.none(), validateCost, handleV
             return res.status(error.statusCode || 500).json({
                 message: error.message || "Terjadi kesalahan saat mengambil data provinsi.",
             });
-
         }
     }
 )
 
-
-// Cancel order - user
+// Cancel order - user only
 router.put("/:id/cancel", authMiddleware, async (req, res, next) => {
     try {
+        if (req.user.admin) {
+            return res.status(403).json({
+                message: "Akses ditolak! Admin tidak bisa membatalkan pesanan customer.",
+            });
+        }
+
         const orderId = parseInt(req.params.id);
         const { reason } = req.body;
         const user = req.user;
@@ -560,7 +581,7 @@ router.put("/:id/cancel", authMiddleware, async (req, res, next) => {
     }
 });
 
-// Update order status - admin&user
+// Update order status - admin & user & UMKM
 router.put("/:id/update-status", authMiddleware, async (req, res) => {
     try {
         const orderId = req.params.id;
@@ -584,7 +605,6 @@ router.put("/:id/update-status", authMiddleware, async (req, res) => {
             message: "Terjadi kesalahan di server!",
             error: error.message,
         });
-
     }
 })
 
@@ -667,34 +687,7 @@ router.get("/notifications", authMiddleware, async (req, res) => {
             message: "Terjadi kesalahan di server!",
             error: error.message,
         });
-
     }
 })
-
-// router.get("/notifications/:id", authMiddleware, async (req, res) => {
-//     try {
-//         const userId = req.user.id;
-//         const { id } = req.params;
-
-//         const detailNotifikasi = await getDetailNotifikasi(id, userId);
-
-//         res.status(200).json({
-//             message: "Notifikasi berhasil diambil!",
-//             data: detailNotifikasi,
-//         });
-//     } catch (error) {
-//         if (error instanceof ApiError) {
-//             console.error("ApiError:", error);
-//             return res.status(error.statusCode).json({
-//                 message: error.message,
-//             });
-//         }
-//         console.error("Error getting notification detail:", error);
-//         return res.status(500).json({
-//             message: "Terjadi kesalahan di server!",
-//             error: error.message,
-//         });
-//     }
-// })
 
 module.exports = router;
