@@ -50,7 +50,7 @@
     },
     {
       "name": "Laporan Keuangan",
-      "description": "Endpoint untuk pengelolaan laporan keuangan UMKM dan admin"
+      "description": "Endpoint untuk pengelolaan laporan keuangan Admin dan UMKM"
     },
     {
       "name": "Wilayah",
@@ -1943,7 +1943,7 @@
           "Laporan Keuangan"
         ],
         "summary": "Create laporan keuangan baru (Admin only)",
-        "description": "Hanya admin yang boleh membuat laporan keuangan.",
+        "description": "Hanya admin yang boleh membuat laporan keuangan manual.",
         "security": [
           {
             "cookieAuth": []
@@ -1966,28 +1966,38 @@
                   },
                   "report_date": {
                     "type": "string",
-                    "format": "date"
+                    "format": "date",
+                    "example": "2025-01-15"
                   },
                   "description": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Laporan keuangan bulan Januari"
                   },
                   "income": {
-                    "type": "number"
+                    "type": "number",
+                    "example": 5000000
                   },
                   "pengeluarans": {
                     "type": "array",
                     "items": {
                       "type": "object",
+                      "required": [
+                        "tanggal",
+                        "jumlah_pengeluaran"
+                      ],
                       "properties": {
                         "tanggal": {
                           "type": "string",
-                          "format": "date"
+                          "format": "date",
+                          "example": "2025-01-10"
                         },
                         "jumlah_pengeluaran": {
-                          "type": "number"
+                          "type": "number",
+                          "example": 500000
                         },
                         "keterangan": {
-                          "type": "string"
+                          "type": "string",
+                          "example": "Pembelian bahan baku kopi"
                         }
                       }
                     }
@@ -1999,30 +2009,33 @@
         },
         "responses": {
           "201": {
-            "description": "Laporan berhasil dibuat"
-          },
-          "400": {
-            "description": "Validasi gagal"
-          },
-          "403": {
-            "description": "Akses ditolak — hanya admin yang diperbolehkan",
+            "description": "Laporan berhasil dibuat",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": false
+                    "status": {
+                      "type": "string",
+                      "example": "success"
                     },
                     "message": {
                       "type": "string",
-                      "example": "Akses ditolak — hanya admin yang diperbolehkan"
+                      "example": "Laporan keuangan berhasil dibuat"
+                    },
+                    "data": {
+                      "type": "object"
                     }
                   }
                 }
               }
             }
+          },
+          "400": {
+            "description": "Validasi gagal"
+          },
+          "403": {
+            "description": "Hanya admin yang bisa membuat laporan keuangan"
           }
         }
       },
@@ -2030,8 +2043,8 @@
         "tags": [
           "Laporan Keuangan"
         ],
-        "summary": "Get all laporan keuangan (Admin only)",
-        "description": "Hanya admin yang boleh melihat semua laporan keuangan.",
+        "summary": "Get all laporan keuangan",
+        "description": "Admin dapat melihat semua laporan, UMKM hanya melihat laporan miliknya sendiri (laporan manual + pemasukan dari payment produk Tsarisma Coffee).",
         "security": [
           {
             "cookieAuth": []
@@ -2040,35 +2053,140 @@
         "parameters": [
           {
             "in": "query",
-            "name": "periode (opsional)",
+            "name": "periode",
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "Filter berdasarkan periode (opsional)"
+          },
+          {
+            "in": "query",
+            "name": "bulan",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 12
+            },
+            "description": "Filter berdasarkan bulan 1-12 (opsional)"
+          },
+          {
+            "in": "query",
+            "name": "tahun",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Filter berdasarkan tahun (opsional)",
+            "example": 2025
+          },
+          {
+            "in": "query",
+            "name": "tanggal_dari",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Filter tanggal awal (opsional)"
+          },
+          {
+            "in": "query",
+            "name": "tanggal_sampai",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Filter tanggal akhir (opsional)"
           }
         ],
         "responses": {
           "200": {
-            "description": "List laporan dengan summary"
-          },
-          "403": {
-            "description": "Akses ditolak — hanya admin yang diperbolehkan",
+            "description": "List laporan dengan summary",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": false
-                    },
-                    "message": {
+                    "status": {
                       "type": "string",
-                      "example": "Akses ditolak — hanya admin yang diperbolehkan"
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "source": {
+                            "type": "string",
+                            "enum": [
+                              "manual",
+                              "payment"
+                            ]
+                          },
+                          "id": {
+                            "type": "integer"
+                          },
+                          "periode": {
+                            "type": "string"
+                          },
+                          "tanggal": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "pemasukan": {
+                            "type": "number"
+                          },
+                          "pengeluaran": {
+                            "type": "number"
+                          },
+                          "saldo": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    },
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "total_income": {
+                          "type": "number"
+                        },
+                        "total_expenses": {
+                          "type": "number"
+                        },
+                        "saldo": {
+                          "type": "number"
+                        },
+                        "jumlah_transaksi": {
+                          "type": "integer"
+                        },
+                        "detail": {
+                          "type": "object",
+                          "properties": {
+                            "jumlah_laporan_manual": {
+                              "type": "integer"
+                            },
+                            "jumlah_payment": {
+                              "type": "integer"
+                            },
+                            "income_manual": {
+                              "type": "number"
+                            },
+                            "income_payment": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      }
                     }
                   }
                 }
               }
             }
+          },
+          "403": {
+            "description": "Akses ditolak"
           }
         }
       }
@@ -2078,8 +2196,8 @@
         "tags": [
           "Laporan Keuangan"
         ],
-        "summary": "Get laporan keuangan by ID (Admin only)",
-        "description": "Hanya admin yang boleh mengakses detail laporan keuangan.",
+        "summary": "Get laporan keuangan by ID",
+        "description": "Admin dapat melihat semua laporan, UMKM hanya dapat melihat laporan miliknya sendiri.",
         "security": [
           {
             "cookieAuth": []
@@ -2097,27 +2215,53 @@
         ],
         "responses": {
           "200": {
-            "description": "Detail laporan keuangan"
-          },
-          "403": {
-            "description": "Akses ditolak — hanya admin yang diperbolehkan",
+            "description": "Detail laporan keuangan",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": false
-                    },
-                    "message": {
+                    "status": {
                       "type": "string",
-                      "example": "Akses ditolak — hanya admin yang diperbolehkan"
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id_financialreport": {
+                          "type": "integer"
+                        },
+                        "periode": {
+                          "type": "string"
+                        },
+                        "report_date": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "income": {
+                          "type": "number"
+                        },
+                        "expenses": {
+                          "type": "number"
+                        },
+                        "User": {
+                          "type": "object"
+                        },
+                        "pengeluaran": {
+                          "type": "array"
+                        }
+                      }
                     }
                   }
                 }
               }
             }
+          },
+          "403": {
+            "description": "Anda tidak memiliki akses ke laporan ini"
           },
           "404": {
             "description": "Laporan tidak ditemukan"
@@ -2158,6 +2302,9 @@
                     "type": "string",
                     "format": "date"
                   },
+                  "description": {
+                    "type": "string"
+                  },
                   "income": {
                     "type": "number"
                   },
@@ -2189,24 +2336,10 @@
             "description": "Laporan berhasil diupdate"
           },
           "403": {
-            "description": "Akses ditolak — hanya admin yang diperbolehkan",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": false
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Akses ditolak — hanya admin yang diperbolehkan"
-                    }
-                  }
-                }
-              }
-            }
+            "description": "Hanya admin yang bisa mengubah laporan"
+          },
+          "404": {
+            "description": "Laporan tidak ditemukan"
           }
         }
       },
@@ -2233,27 +2366,30 @@
         ],
         "responses": {
           "200": {
-            "description": "Laporan berhasil dihapus"
-          },
-          "403": {
-            "description": "Akses ditolak — hanya admin yang diperbolehkan",
+            "description": "Laporan berhasil dihapus",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": false
+                    "status": {
+                      "type": "string",
+                      "example": "success"
                     },
                     "message": {
                       "type": "string",
-                      "example": "Akses ditolak — hanya admin yang diperbolehkan"
+                      "example": "Laporan keuangan berhasil dihapus"
                     }
                   }
                 }
               }
             }
+          },
+          "403": {
+            "description": "Hanya admin yang bisa menghapus laporan"
+          },
+          "404": {
+            "description": "Laporan tidak ditemukan"
           }
         }
       }

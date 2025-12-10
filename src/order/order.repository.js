@@ -50,6 +50,42 @@ const findOrdersByUser = async (userId, statusFilter) => {
     });
 };
 
+// NEW: Fungsi untuk mendapatkan orders berdasarkan partner
+const findOrdersByPartner = async (partnerId, statusFilter) => {
+    return prisma.order.findMany({
+        where: {
+            orderItems: {
+                some: {
+                    partner_id: partnerId,
+                },
+            },
+            ...(statusFilter && {
+                status: statusFilter,
+            }),
+        },
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    phone_number: true,
+                },
+            },
+            orderItems: {
+                include: {
+                    product: true,
+                    partner: true,
+                },
+            },
+            shippingAddress: true,
+            payment: true,
+            OrderCancellation: true,
+        },
+        orderBy: {
+            created_at: "desc",
+        },
+    });
+};
 
 const findOrderDetailById = async (orderId) => {
     return prisma.order.findUnique({
@@ -73,7 +109,12 @@ const findOrdersById = async (orderId) => {
     return await prisma.order.findUnique({
         where: { id: parseInt(orderId) },
         include: {
-            orderItems: true,
+            orderItems: {
+                include: {
+                    product: true,
+                    partner: true,
+                },
+            },
         }
     });
 };
@@ -90,9 +131,8 @@ const findOrdersByPartnerId = async (partnerId) => {
         include: {
             product: true,
             order: {
-                // Semua item dalam pesanan ini
                 include: {
-                    user: true, // Detail mitra
+                    user: true,
                 },
             },
             partner: true,
@@ -103,7 +143,6 @@ const findOrdersByPartnerId = async (partnerId) => {
 const markOrderItemsAsNotified = async (itemIds) => {
     if (!itemIds.length) return;
 
-    // Update orderItem: set notified_to_partner_at
     await prisma.orderItem.updateMany({
         where: {
             id: { in: itemIds },
@@ -113,7 +152,6 @@ const markOrderItemsAsNotified = async (itemIds) => {
         },
     });
 
-    // Ambil order_id unik dari itemIds
     const relatedOrderItems = await prisma.orderItem.findMany({
         where: {
             id: { in: itemIds },
@@ -127,7 +165,6 @@ const markOrderItemsAsNotified = async (itemIds) => {
         ...new Set(relatedOrderItems.map((item) => item.order_id)),
     ];
 
-    // Update semua order terkait: set status ke PROCESSING
     if (orderIds.length > 0) {
         await prisma.order.updateMany({
             where: {
@@ -143,7 +180,7 @@ const markOrderItemsAsNotified = async (itemIds) => {
 const findAllComplietedOrders = async () => {
     return prisma.order.findMany({
         where: {
-            status: "DELIVERED", // Atau status lain yang dianggap selesai
+            status: "DELIVERED",
         },
         include: {
             user: true,
@@ -219,6 +256,7 @@ const insertNewOrders = async (
                 },
             });
         }
+        
         const newOrder = await tx.order.create({
             data: {
                 user: { connect: { id: userId } },
@@ -249,7 +287,6 @@ const insertNewOrders = async (
                         shipping_code: shipping_code || null,
                         service_name: shipping_service || null,
                         shipping_cost: parsedCost || 0,
-
                     },
                 },
                 payment: {
@@ -276,6 +313,7 @@ const insertNewOrders = async (
                 payment: true,
             },
         });
+        
         if (paymentMethod !== "COD") {
             const midtransResult = await midtransCallback(newOrder);
 
@@ -289,12 +327,10 @@ const insertNewOrders = async (
             return { ...newOrder, midtransResult };
         }
         return { ...newOrder, midtransResult: null };
-
     });
 };
 
 const updatePaymentSnapToken = async (orderId, snapToken, snapRedirectUrl) => {
-    // Ambil payment ID dari order
     const order = await prisma.order.findUnique({
         where: { id: orderId },
         include: { payment: true },
@@ -304,7 +340,6 @@ const updatePaymentSnapToken = async (orderId, snapToken, snapRedirectUrl) => {
         throw new Error("Order atau payment tidak ditemukan!");
     }
 
-    // Update snap_token di payment
     await prisma.payment.update({
         where: { id: order.payment.id },
         data: {
@@ -313,7 +348,6 @@ const updatePaymentSnapToken = async (orderId, snapToken, snapRedirectUrl) => {
         },
     });
 
-    // Ambil ulang order lengkap setelah update
     const updatedOrder = await prisma.order.findUnique({
         where: { id: orderId },
         include: {
@@ -362,7 +396,6 @@ const updateOrderPaymentStatus = async (orderId, { payment_status, payment_metho
     return { order, updatedPayment };
 };
 
-
 const updateStatusOrders = async (orderId, newStatus) => {
     return await prisma.order.update({
         where: { id: parseInt(orderId) },
@@ -383,16 +416,6 @@ const createOrderCancellation = async (orderId, userId, reason) => {
     });
 };
 
-// const createNotification = async ({ user_id, name, description }) => {
-//     return await prisma.notification.create({
-//         data: {
-//             user_id,
-//             name,
-//             description,
-//         },
-//     });
-// };
-
 const updateItemOrders = async (orderId, updatedData) => {
     return await prisma.order.update({
         where: { id: parseInt(orderId) },
@@ -401,23 +424,22 @@ const updateItemOrders = async (orderId, updatedData) => {
 };
 
 const deleteOrders = async (orderId) => {
-    // Hapus semua OrderItem terkait
     await prisma.orderItem.deleteMany({
         where: { order_id: parseInt(orderId) }
     });
 
-    // Hapus data lain jika perlu (payment, shippingAddress, dsb)
     await prisma.payment.deleteMany({
         where: { order_id: parseInt(orderId) }
     });
+    
     await prisma.shippingAddress.deleteMany({
         where: { order_id: parseInt(orderId) }
     });
+    
     await prisma.shippingDetail.deleteMany({
         where: { order_id: parseInt(orderId) }
     });
 
-    // Terakhir, hapus order-nya
     return await prisma.order.delete({
         where: { id: parseInt(orderId) }
     });
@@ -425,17 +447,14 @@ const deleteOrders = async (orderId) => {
 
 const deleteProductCartItems = async (userId, productIds) => {
     if (!productIds || productIds.length === 0) {
-        return; // Tidak ada yang perlu dihapus
+        return;
     }
 
-    // Gunakan filter relasional untuk mengakses user_id melalui tabel Cart
     const result = await prisma.cartItem.deleteMany({
         where: {
-            // Filter berdasarkan produk yang ada di dalam cart milik user tertentu
             cart: {
-                user_id: userId, // ✨ Filter melalui relasi 'cart'
+                user_id: userId,
             },
-            // DAN yang product_id-nya ada di dalam daftar yang mau dihapus
             products_id: {
                 in: productIds,
             },
@@ -445,7 +464,6 @@ const deleteProductCartItems = async (userId, productIds) => {
     console.log(`✅ ${result.count} item berhasil dihapus dari keranjang user ID: ${userId}`);
     return result;
 };
-
 
 const getProductsByCartItem = async (cartItemIds) => {
     return await prisma.cartItem.findMany({
@@ -495,34 +513,6 @@ const findAllMyNotifikasi = async (userId) => {
     });
 };
 
-// const getDetailNotifikasiId = async (notifikasiId,userId) => {
-//     return await prisma.notification.findUnique({
-//         where: {
-//             id: parseInt(notifikasiId),
-//             user_id: userId,
-//         },
-//         include: {
-//             user: {
-//                 include:{
-//                     orders:{
-//                         include: {
-//                             orderItems: {
-//                                 include: {
-//                                     product: true,
-//                                     partner: true,
-//                                 },
-//                             },
-//                             shippingAddress: true,
-//                             payment: true,
-//                             shippingDetail: true,
-//                         }
-//                     }
-//                 }
-//             },
-//         }
-//     });
-// }
-
 const markNotificationAsViewed = async (ref, userId) => {
     return await prisma.notification.updateMany({
         where: {
@@ -536,11 +526,9 @@ const markNotificationAsViewed = async (ref, userId) => {
 };
 
 const cancelOrderAndRestoreStock = async (order, userId, reason) => {
-    // Ambil item-item dari pesanan
     const itemsToRestore = order.orderItems;
 
     return prisma.$transaction(async (tx) => {
-        // 1. Kembalikan stok untuk setiap item dalam pesanan
         for (const item of itemsToRestore) {
             await tx.inventory.update({
                 where: {
@@ -548,22 +536,20 @@ const cancelOrderAndRestoreStock = async (order, userId, reason) => {
                 },
                 data: {
                     stock: {
-                        increment: item.quantity, // Tambah stok kembali
+                        increment: item.quantity,
                     },
                 },
             });
         }
 
-        // 2. Perbarui status pesanan menjadi CANCELED
         const updatedOrder = await tx.order.update({
             where: { id: order.id },
             data: {
-                status: "CANCELED", // Gunakan enum jika ada (OrderStatus.CANCELED)
+                status: "CANCELED",
                 updated_at: new Date(),
             },
         });
 
-        // 3. Catat alasan pembatalan
         await tx.orderCancellation.create({
             data: {
                 order_id: order.id,
@@ -576,18 +562,17 @@ const cancelOrderAndRestoreStock = async (order, userId, reason) => {
     });
 };
 
-
 module.exports = {
     findAllOrders,
     findAllMyNotifikasi,
     findOrdersByUser,
+    findOrdersByPartner,
     findOrdersById,
     findAllComplietedOrders,
     findUserComplietedOrders,
     findOrdersByPartnerId,
     findOrderDetailById,
     getProductsByCartItem,
-    // getDetailNotifikasiId,
     insertNewOrders,
     markOrderItemsAsNotified,
     markNotificationAsViewed,
