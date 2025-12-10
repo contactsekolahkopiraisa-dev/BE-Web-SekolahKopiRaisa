@@ -9,6 +9,7 @@ const {
   createProduct,
   updateProduct,
   removeProductById,
+  getProductsByPartner,
 } = require("./product.service");
 const {
   authMiddleware,
@@ -40,9 +41,18 @@ const checkAdminOrUMKMAccess = (req, res, next) => {
   next();
 };
 
+// GET all products - Public access atau filtered untuk UMKM
 router.get("/", async (req, res) => {
   try {
-    const products = await getAllProducts();
+    let products;
+    
+    // Jika user adalah UMKM, hanya tampilkan produk mereka
+    if (req.user && req.user.role === 'UMKM' && !req.user.admin) {
+      products = await getProductsByPartner(req.user.id);
+    } else {
+      // Admin atau public bisa lihat semua produk
+      products = await getAllProducts();
+    }
 
     const formatedProducts = products.map((product) => ({
       idProduct: product.id,
@@ -61,6 +71,7 @@ router.get("/", async (req, res) => {
         addressPartner: product.partner.address,
       },
     }));
+    
     console.log("data :", products);
     res.status(200).json({
       message: "Data produk berhasil didapatkan!",
@@ -82,10 +93,11 @@ router.get("/", async (req, res) => {
   }
 });
 
+// GET product by ID - dengan validasi ownership untuk UMKM
 router.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const product = await getProductById(id);
+    const product = await getProductById(id, req.user?.id, req.user?.admin);
 
     const formatedProductId = {
       idProduct: product.id,
@@ -101,7 +113,6 @@ router.get("/:id", async (req, res) => {
         namePartner: product.partner.name,
         ownerPartner: product.partner.owner_name,
         phoneNumberPartner: product.partner.phone_number,
-        // addressPartner: product.partner.address
       },
     };
 
@@ -126,6 +137,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// POST - Create product
 router.post(
   "/",
   authMiddleware,
@@ -153,6 +165,7 @@ router.post(
           errors: errorObject,
         });
       }
+      
       if (
         req.mediaValidationErrors &&
         Object.keys(req.mediaValidationErrors).length > 0
@@ -166,8 +179,8 @@ router.post(
       const { name, weight, price, stock, description, partner_id } = req.body;
       const file = req.file;
 
-      // Sanitize HTML untuk disimpan
-      const cleanHtml = DOMPurify.sanitize(description || "");
+      // Sanitize HTML untuk disimpan (jika menggunakan DOMPurify)
+      // const cleanHtml = DOMPurify.sanitize(description || "");
 
       // Bersihkan konten dari tag HTML
       const plainDescription = description
@@ -187,7 +200,7 @@ router.post(
         price,
         weight: parseInt(weight),
         stock,
-        description: cleanHtml,
+        description: description, // atau cleanHtml jika pakai DOMPurify
         partner_id,
         image: file,
         user_id: req.user.id,
@@ -201,7 +214,6 @@ router.post(
       });
     } catch (error) {
       if (error instanceof ApiError) {
-        // console.error('ApiError:', error);
         return res.status(error.statusCode).json({
           message: error.message,
         });
@@ -215,6 +227,7 @@ router.post(
   }
 );
 
+// PUT - Update product
 router.put(
   "/:id",
   authMiddleware,
@@ -283,6 +296,7 @@ router.put(
   }
 );
 
+// DELETE product
 router.delete("/:idProduct", authMiddleware, checkAdminOrUMKMAccess, async (req, res) => {
   try {
     const { idProduct } = req.params;

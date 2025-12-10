@@ -121,19 +121,22 @@ model Inventory {
 }
 
 model Transaction {
-  id           Int               @id @default(autoincrement())
-  user_id      Int
-  payment_id   Int
-  status       TransactionStatus
-  total_amount Int
-  created_at   DateTime          @default(now())
-  updated_at   DateTime          @updatedAt
+  id                  Int               @id @default(autoincrement())
+  user_id             Int
+  payment_id          Int
+  status              TransactionStatus
+  total_amount        Int
+  created_at          DateTime          @default(now())
+  updated_at          DateTime          @updatedAt
+  metode_pembayaran   PaymentMethod?
 
   payment             Payment    @relation(fields: [payment_id], references: [id])
   user                User       @relation(fields: [user_id], references: [id])
 
   detailTransactions  DetailTransaction[]
   salesReports        SalesReport[]
+  financialreportpengeluaran FinancialReportPengeluaran[] @relation("TransactionPengeluaran")
+  financialreportpemasukan   FinancialReportPemasukan[]   @relation("TransactionPemasukan")
 }
 
 model Cart {
@@ -495,6 +498,8 @@ model FinancialReport {
 
   User               User     @relation(fields: [id_user], references: [id])
   pengeluaran       Pengeluaran[]  // ← TAMBAHAN: One-to-many ke Pengeluaran
+  financialreportpengeluaran FinancialReportPengeluaran[]
+  financialreportpemasukan   FinancialReportPemasukan[]
 
   @@map("financial_report")
 }
@@ -508,7 +513,7 @@ model Pengeluaran {
   keterangan          String?          @db.Text
 
   financialReport     FinancialReport  @relation(fields: [id_financialreport], references: [id_financialreport], onDelete: Cascade)
-  user              User               @relation(fields: [id_user], references: [id])
+  user                User               @relation(fields: [id_user], references: [id])
 
   @@map("pengeluaran")
 }
@@ -525,6 +530,27 @@ model SalesReport {
   @@map("sales_report")
 }
 
+model FinancialReportPengeluaran {
+  id_financialreportpengeluaran Int              @id @default(autoincrement())
+  id_financialreport            Int
+  id_transaksi                  Int
+
+  financialReport               FinancialReport  @relation(fields: [id_financialreport], references: [id_financialreport])
+  transaction                   Transaction      @relation("TransactionPengeluaran", fields: [id_transaksi], references: [id])
+
+  @@map("financial_report_pengeluaran")
+}
+
+model FinancialReportPemasukan {
+  id_financialreportpemasukan   Int              @id @default(autoincrement())
+  id_financialreport            Int
+  id_transaksi                  Int
+
+  financialReport               FinancialReport  @relation(fields: [id_financialreport], references: [id_financialreport])
+  transaction                   Transaction      @relation("TransactionPemasukan", fields: [id_transaksi], references: [id])
+
+  @@map("financial_report_pemasukan")
+}
 
 // DI DB ADA TABEL detail_transaction
 model DetailTransaction {
