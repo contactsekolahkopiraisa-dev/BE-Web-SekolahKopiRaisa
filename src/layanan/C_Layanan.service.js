@@ -455,7 +455,10 @@ const layananService = {
           throw new ApiError(400, "Alasan Penolakan harus disertakan!");
         }
         // kalau ditolak tapi sudah pernah ditolak maka tidak bisa tolak lagi
-        if (existingLayanan.layananRejection) {
+        if (
+          Array.isArray(existingLayanan.layananRejection) &&
+          existingLayanan.layananRejection.length > 0
+        ) {
           throw new ApiError(400, "Layanan sudah pernah ditolak!");
         }
       }
@@ -486,16 +489,33 @@ const layananService = {
 
     // kalau ditolak maka insert juga alasan
     if (status.id == STATUS.DITOLAK.id) {
-      const rejectionPayload = {
-        id_layanan: parseInt(idLayanan),
-        alasan: alasan,
-      };
-      // DEV NOTES : SEMENTARA LAYANANREJECTION HANYA DIPAKAI DISINI SEHINGGA LANGSUNG DIPANGGIL REPO NYA DISINI,
-      // KALAU NANTI APLIKASI BERKEMBANG MAKA PISAHKAN REJECTION INI KE CONST SERVICE TERPISAH
-      const alasanCreated = await layananRejectionRepository.create(
-        rejectionPayload
-      );
-      updated.layananRejection = alasanCreated;
+      // Cek apakah sudah pernah ditolak sebelumnya
+      const existingRejection =
+        Array.isArray(updated.layananRejection) &&
+        updated.layananRejection.length > 0
+          ? updated.layananRejection[0]
+          : null;
+
+      if (existingRejection) {
+        // Kalau sudah ada rejection, UPDATE alasan nya
+        const alasanUpdated = await layananRejectionRepository.update(
+          existingRejection.id,
+          { alasan }
+        );
+        updated.layananRejection = [alasanUpdated];
+      } else {
+        // Kalau belum ada, INSERT baru
+        const rejectionPayload = {
+          id_layanan: parseInt(idLayanan),
+          alasan: alasan,
+        };
+        // DEV NOTES : SEMENTARA LAYANANREJECTION HANYA DIPAKAI DISINI SEHINGGA LANGSUNG DIPANGGIL REPO NYA DISINI,
+        // KALAU NANTI APLIKASI BERKEMBANG MAKA PISAHKAN REJECTION INI KE CONST SERVICE TERPISAH
+        const alasanCreated = await layananRejectionRepository.create(
+          rejectionPayload
+        );
+        updated.layananRejection = [alasanCreated];
+      }
     }
 
     return updated;
