@@ -22,7 +22,7 @@ const formatLayanan = (l) => ({
     jenis_layanan: l.jenisLayanan,
     pemohon: l.user,
     peserta: l.pesertas,
-    pengajuan: l.statusKodePengajuan,
+    pengajuan: injectStatus(l.pengajuan, STATUS.MENUNGGU_PERSETUJUAN.nama_status_kode),
     pelaksanaan: l.statusKodePelaksanaan,
     mou: injectStatus(l.mou, STATUS.BELUM_TERLAKSANA.nama_status_kode),
     sertifikat: injectStatus(l.sertifikat, STATUS.BELUM_TERSEDIA.nama_status_kode),
