@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1765382305335" clover="3.2.0">
-  <project timestamp="1765382305335" name="All files">
+<coverage generated="1765385922072" clover="3.2.0">
+  <project timestamp="1765385922072" name="All files">
     <metrics statements="526" coveredstatements="364" conditionals="2" coveredconditionals="1" methods="22" coveredmethods="1" elements="550" coveredelements="366" complexity="0" loc="526" ncloc="526" packages="4" files="6" classes="6"/>
     <package name="layanan">
       <metrics statements="396" coveredstatements="261" conditionals="2" coveredconditionals="1" methods="17" coveredmethods="1"/>

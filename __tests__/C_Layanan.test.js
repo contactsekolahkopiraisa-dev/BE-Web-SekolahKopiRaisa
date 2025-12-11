@@ -104,7 +104,7 @@ describe('LAYANAN Controller (/api/v1/layanan)', () => {
                 .get('/api/v1/layanan')
                 .set('x-user-role', 'admin');
             expect(res.statusCode).toEqual(200);
-            // expect(res.body.data.length).toBeGreaterThan(0);
+            expect(res.body.data.length).toBeGreaterThan(0);
         });
         it('should return 200 and his layanan for customer', async () => {
             layananService.getAll.mockResolvedValue([mockLayanan]);
@@ -112,7 +112,7 @@ describe('LAYANAN Controller (/api/v1/layanan)', () => {
                 .get('/api/v1/layanan')
                 .set('x-user-role', 'customer');
             expect(res.statusCode).toEqual(200);
-            // expect(res.body.data.length).toBeGreaterThan(0);
+            expect(res.body.data.length).toBeGreaterThan(0);
         });
         it('should return 403 for forbidden role', async () => {
             layananService.getAll.mockResolvedValue([mockLayanan]);
