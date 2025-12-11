@@ -42,4 +42,5 @@ module.exports = {
   layananRoutes,
   jenisLayananRoutes,
   targetPesertaRoutes,
+  statusKodeRoutes
 };
