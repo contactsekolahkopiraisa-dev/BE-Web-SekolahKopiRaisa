@@ -23,29 +23,16 @@ const formatLayanan = (l) => ({
   jenis_layanan: l.jenisLayanan,
   pemohon: l.user,
   peserta: l.pesertas,
-  pengajuan: injectStatus(l.statusKodePengajuan, STATUS.MENUNGGU_PERSETUJUAN.nama_status_kode),
-  pelaksanaan: injectStatus(l.statusKodePelaksanaan, STATUS.MENUNGGU_PERSETUJUAN.nama_status_kode),
-  // mou: injectStatus(l.mou, STATUS.BELUM_TERLAKSANA.nama_status_kode),
-  mou: l.mou
-    ? {
-      ...l.mou,
-      nama_status_kode: l.mou.statusKode?.nama_status_kode
-    }
-    : { nama_status_kode: STATUS.BELUM_TERLAKSANA.nama_status_kode },
-  // sertifikat: injectStatus(l.sertifikat, STATUS.BELUM_TERSEDIA.nama_status_kode),
-  sertifikat: l.sertifikat
-    ? {
-      ...l.sertifikat,
-      nama_status_kode: STATUS.BELUM_TERSEDIA.nama_status_kode
-    }
-    : { nama_status_kode: STATUS.BELUM_TERSEDIA.nama_status_kode },
-  // laporan: injectStatus(l.laporan, STATUS.BELUM_TERSEDIA.nama_status_kode),
-  laporan: l.laporan
-    ? {
-      ...l.laporan,
-      nama_status_kode: l.laporan.statusPelaporan?.nama_status_kode
-    }
-    : { nama_status_kode: STATUS.BELUM_TERSEDIA.nama_status_kode },
+  // ✅ FIX: Use direct field access to get actual DB status instead of default
+  pengajuan: l.statusKodePengajuan,
+  pelaksanaan: l.statusKodePelaksanaan,
+  // ✅ Keep injectStatus for optional relations (MOU, Sertifikat, Laporan)
+  mou: injectStatus(l.mou, STATUS.BELUM_TERLAKSANA.nama_status_kode),
+  sertifikat: injectStatus(
+    l.sertifikat,
+    STATUS.BELUM_TERSEDIA.nama_status_kode
+  ),
+  laporan: injectStatus(l.laporan, STATUS.BELUM_TERSEDIA.nama_status_kode),
   layananRejection: l.layananRejection,
   kegiatan: [
     ...new Map(
@@ -111,7 +98,7 @@ const injectStatus = (relationData, defaultStatus) => {
   }
   return {
     ...relationData,
-    nama_status_kode: relationData.nama_status_kode,
+    nama_status_kode: relationData.status,
   };
 };
 
@@ -143,8 +130,9 @@ async function uploadFilesBySchema(schemaFiles, files) {
 const formatRangkumanKegiatan = (detailKonfigurasis) => {
   return detailKonfigurasis
     .map((d, i) => {
-      return `${i + 1}. ${d.kegiatan.nama_kegiatan} - ${d.subKegiatan.nama_sub_kegiatan
-        }`;
+      return `${i + 1}. ${d.kegiatan.nama_kegiatan} - ${
+        d.subKegiatan.nama_sub_kegiatan
+      }`;
     })
     .join("\n");
 };
@@ -156,8 +144,9 @@ const sendNotifikasiAdminLayanan = async (emailAdmin, layanan) => {
   );
 
   const mail = {
-    from: `"Sistem Layanan RAISA" <${process.env.EMAIL_USER || process.env.SMTP_USER
-      }>`,
+    from: `"Sistem Layanan RAISA" <${
+      process.env.EMAIL_USER || process.env.SMTP_USER
+    }>`,
     to: emailAdmin,
     subject: `Pengajuan Layanan Baru - ${layanan.jenisLayanan.nama_jenis_layanan}`,
     text: `Telah masuk pengajuan layanan baru.
@@ -186,8 +175,8 @@ ${kegiatanList}
 
 === PESERTA (Jika Ada) ===
 ${layanan.peserta
-        .map((p) => `- ${p.nama_peserta} (${p.nim || "NIM tidak ada"})`)
-        .join("\n")}
+  .map((p) => `- ${p.nama_peserta} (${p.nim || "NIM tidak ada"})`)
+  .join("\n")}
 
 Pengajuan ini sedang menunggu proses persetujuan.
 `,
@@ -204,8 +193,9 @@ const sendNotifikasiPengusulLayanan = async (emailPemohon, layanan) => {
   );
 
   const mail = {
-    from: `"Sistem Layanan RAISA" <${process.env.EMAIL_USER || process.env.SMTP_USER
-      }>`,
+    from: `"Sistem Layanan RAISA" <${
+      process.env.EMAIL_USER || process.env.SMTP_USER
+    }>`,
     to: emailPemohon,
     subject: `Pengajuan Layanan Berhasil - ${layanan.jenisLayanan.nama_jenis_layanan}`,
     text: `Pengajuan layanan Anda telah berhasil kami terima.
