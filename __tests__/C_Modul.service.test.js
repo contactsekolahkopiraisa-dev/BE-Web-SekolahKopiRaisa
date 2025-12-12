@@ -1,21 +1,9 @@
-// __tests__/C_Modul.service.test.js (FINAL FIX)
-
-// Mock Utilities
-jest.mock('../src/utils/apiError.js', () => {
-    return class ApiError extends Error {
-        constructor(statusCode, message) { super(message); this.statusCode = statusCode; }
-    };
-});
-jest.mock('../src/services/cloudinaryUpload.service.js', () => ({ 
-    uploadToCloudinary: jest.fn() 
-}));
-jest.mock('../src/services/cloudinaryDelete.service.js', () => ({ 
-    deleteFromCloudinaryByUrl: jest.fn() 
-}));
-// PENTING: Import sanitizeData explicitly
+// mock printilan
+jest.mock('../src/utils/apiError.js', () => require('../__mocks__/apiError.mock.js'));
+jest.mock('../src/services/cloudinaryUpload.service.js', () => require('../__mocks__/cloudinaryUpload.mock.js'));
+jest.mock('../src/services/cloudinaryDelete.service.js', () => require('../__mocks__/cloudinaryDelete.mock.js'));
 jest.mock('../src/utils/sanitizeData.js');
 const { sanitizeData } = require('../src/utils/sanitizeData.js');
-
 
 // Mock Repository Layer
 jest.mock('../src/modul/C_Modul.repository.js');
@@ -33,10 +21,10 @@ describe('MODUL SERVICE UNIT TESTS', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         
-        // FIX KRUSIAL: Pastikan sanitizeData mengembalikan objek copy
+        // make sure sanitizeData mengembalikan objek copy
         sanitizeData.mockImplementation(data => data ? { ...data } : {}); 
         
-        // FIX: Perbaiki mock upload
+        // mock upload
         require('../src/services/cloudinaryUpload.service.js').uploadToCloudinary.mockResolvedValue({ 
             url: 'http://cloudinary.com/new_modul.pdf' 
         });
@@ -49,10 +37,9 @@ describe('MODUL SERVICE UNIT TESTS', () => {
     it('update should update file and delete old file from cloudinary', async () => {
         modulRepository.update.mockResolvedValue({ ...mockModul, file_modul: 'http://cloudinary.com/new_modul.pdf' });
         
-        // Kirim dataRaw yang terdefinisi
+        // Kirim dataRaw
         await modulService.update(1, { deskripsi: 'Updated Desc' }, mockFile); 
 
-        // Test berhasil karena data.judul_modul diambil dari existingModul
         expect(modulRepository.update).toHaveBeenCalled();
     });
     

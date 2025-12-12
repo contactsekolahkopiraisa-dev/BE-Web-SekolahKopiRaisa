@@ -1,32 +1,22 @@
-// Mock 1: Utilities (ApiError, Cloudinary, Email, dll.)
-jest.mock('../src/utils/apiError.js', () => {
-    return class ApiError extends Error {
-        constructor(statusCode, message) {
-            super(message);
-            this.statusCode = statusCode;
-        }
-    };
-});
-jest.mock('../src/services/cloudinaryUpload.service.js', () => ({ uploadToCloudinary: jest.fn() }));
-jest.mock('../src/services/cloudinaryDelete.service.js', () => ({ deleteFromCloudinaryByUrl: jest.fn() }));
+jest.mock('../src/utils/apiError.js', () => require('../__mocks__/apiError.mock.js'));
+jest.mock('../src/services/cloudinaryUpload.service.js', () => require('../__mocks__/cloudinaryUpload.mock.js'));
+jest.mock('../src/services/cloudinaryDelete.service.js', () => require('../__mocks__/cloudinaryDelete.mock.js'));
 jest.mock('../src/utils/email.js', () => ({ sendEmail: jest.fn() }));
 jest.mock('../src/utils/sanitizeData.js', () => ({ sanitizeData: jest.fn(data => data) }));
 jest.mock('../src/utils/calculateDurationMonth.js', () => ({ calculateDurationMonth: jest.fn(() => 3) }));
 
-// Mock 2: Repository Layer (Inti Isolasi)
+// Mock layanan
 jest.mock('../src/layanan/C_Layanan.repository.js');
 const { layananRepository, jenisLayananRepository, statusKodeRepository, layananRejectionRepository } = require('../src/layanan/C_Layanan.repository.js');
-
-// Mock 3: Helper Layer
 jest.mock('../src/layanan/C_Layanan.helper.js');
 const { buildFilter, hitungPeserta, sendNotifikasiAdminLayanan, sendNotifikasiPengusulLayanan } = require('../src/layanan/C_Layanan.helper.js');
 
-// Mock 4: Prisma Transaction
+// Mock Prisma Transaction
 jest.mock('../src/db/index.js', () => ({ 
     $transaction: jest.fn(async (callback) => await callback({})), 
 }));
 
-// Import Target
+// Impor Target
 const { layananService, jenisLayananService } = require('../src/layanan/C_Layanan.service.js');
 const ApiError = require('../src/utils/apiError.js');
 const { STATUS } = require('../src/utils/constant/enum.js');
@@ -39,9 +29,7 @@ describe('LAYANAN SERVICE UNIT TESTS', () => {
         buildFilter.mockReturnValue({ where: {}, orderBy: { created_at: 'desc' } });
     });
 
-    // ------------------------------------------
-    // JENIS LAYANAN SERVICE (Tests Sederhana)
-    // ------------------------------------------
+
     describe('jenisLayananService', () => {
         const mockJenisLayanan = { id: 1, nama_jenis_layanan: 'Pelatihan', is_active: true };
         
@@ -57,9 +45,7 @@ describe('LAYANAN SERVICE UNIT TESTS', () => {
         });
     });
 
-    // ------------------------------------------
-    // LAYANAN SERVICE (Logika Bisnis Update Status)
-    // ------------------------------------------
+
     describe('layananService.updateStatus', () => {
         const mockAdmin = { id: 1, admin: true, role: 'admin' };
         const mockCustomer = { id: 2, role: 'customer' };

@@ -3,7 +3,7 @@ const { mouRepository, mouRejectionRepository } = require("./C_Mou.repository.js
 const { uploadToCloudinary } = require("../services/cloudinaryUpload.service.js");
 const { deleteFromCloudinaryByUrl } = require("../services/cloudinaryDelete.service.js");
 const { sanitizeData } = require("../utils/sanitizeData.js");
-const STATUS = require("../utils/constant/enum.js");
+const { STATUS } = require("../utils/constant/enum.js");
 const prisma = require("../db/index.js");
 const { layananRepository } = require("../layanan/C_Layanan.repository.js");
 
@@ -25,8 +25,7 @@ const mouService = {
         const fileUpload = await uploadToCloudinary(file.buffer, file.originalname, {
             folder: "mou",
             mimetype: file.mimetype,
-        }
-        );
+        });console.log('File Upload Result:', fileUpload);
         // build payload
         const payload = {
             id_layanan: data.id_layanan,
@@ -90,7 +89,7 @@ const mouService = {
                 alasanCreated = await MouRejectionService.create(id, data.alasan, tx)
             }
             let layananUpdated;
-            if (status == SITATUS.DISETUJUI.id) {
+            if (status == STATUS.DISETUJUI.id) {
                 // trigger ubah status di tabel layanan jadi sedang berjalan
                 // DEV NOTES : memang agak g nyambung tp mmg blm bs pakai cron job
                 const layananPayload = {
@@ -100,8 +99,8 @@ const mouService = {
             }
             const updated = await mouRepository.update(id, payload, tx);
 
-            if (alasanCreated) {updated.mouRejection = alasanCreated;}
-            if (layananUpdated) {updated.layanan = layananUpdated;}
+            if (alasanCreated) { updated.mouRejection = alasanCreated; }
+            if (layananUpdated) { updated.layanan = layananUpdated; }
             return updated;
         })
     }
@@ -119,7 +118,7 @@ const MouRejectionService = {
     },
     // CREATE NEW MOU REJECTION
     async create(idMou, alasan, tx) {
-        const mou = await mouRepository.findById(parseInt(id));
+        const mou = await mouRepository.findById(parseInt(idMou));
         if (!mou) { throw new ApiError(404, "Data mou tidak ditemukan!"); }
         const payload = {
             id_mou: idMou,

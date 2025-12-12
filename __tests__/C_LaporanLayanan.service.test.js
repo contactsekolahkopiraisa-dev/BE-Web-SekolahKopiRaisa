@@ -1,15 +1,7 @@
-// __tests__/C_LaporanLayanan.service.test.js (FINAL FIX)
-
 // Mock Utilities
-jest.mock('../src/utils/apiError.js', () => {
-    return class ApiError extends Error {
-        constructor(statusCode, message) { super(message); this.statusCode = statusCode; }
-    };
-});
-jest.mock('../src/services/cloudinaryUpload.service.js', () => ({ 
-    uploadToCloudinary: jest.fn()
-}));
-// PENTING: Import sanitizeData explicitly
+jest.mock('../src/utils/apiError.js', () => require('../__mocks__/apiError.mock.js'));
+jest.mock('../src/services/cloudinaryUpload.service.js', () => require('../__mocks__/cloudinaryUpload.mock.js'));
+jest.mock('../src/services/cloudinaryDelete.service.js', () => require('../__mocks__/cloudinaryDelete.mock.js'));
 jest.mock('../src/utils/sanitizeData.js');
 const { sanitizeData } = require('../src/utils/sanitizeData.js');
 
@@ -31,7 +23,7 @@ const { STATUS } = require('../src/utils/constant/enum.js');
 describe('LAPORAN LAYANAN SERVICE UNIT TESTS', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        // FIX: Pastikan sanitizeData mengembalikan objek
+        // make sure sanitizeData mengembalikan objek
         sanitizeData.mockImplementation(data => data ? { ...data } : {}); 
         // Mock Cloudinary untuk berhasil
         require('../src/services/cloudinaryUpload.service.js').uploadToCloudinary.mockResolvedValue({ url: 'http://cloudinary.com/laporan_foto.jpg' });
