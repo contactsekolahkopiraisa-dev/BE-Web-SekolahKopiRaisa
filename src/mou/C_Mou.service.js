@@ -81,7 +81,7 @@ const mouService = {
             const payload = {
                 file_mou: existingMou.file_mou,
                 id_status_pengajuan: status,
-                tanggal_disetujui: status == STATUS.DISETUJUI.id ? now() : null
+                tanggal_disetujui: status == STATUS.DISETUJUI.id ? new Date() : null
             };
             let alasanCreated = null;
             if (status == STATUS.DITOLAK.id) {
