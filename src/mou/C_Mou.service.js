@@ -25,7 +25,7 @@ const mouService = {
         const fileUpload = await uploadToCloudinary(file.buffer, file.originalname, {
             folder: "mou",
             mimetype: file.mimetype,
-        });console.log('File Upload Result:', fileUpload);
+        }); console.log('File Upload Result:', fileUpload);
         // build payload
         const payload = {
             id_layanan: data.id_layanan,
@@ -60,9 +60,9 @@ const mouService = {
             id_status_pengajuan: STATUS.MENUNGGU_PERSETUJUAN.id
         }
         // hapus mouRejection nya
-        const rejection = await MouRejectionService.findById(id);
+        const rejection = await MouRejectionService.getById(existingMou.mouRejection.id);
         if (rejection) {
-            await MouRejectionService.delete(id);
+            await MouRejectionService.delete(rejection.id);
         }
         // lempar ke repo
         const updated = await mouRepository.update(id, data);
@@ -72,10 +72,10 @@ const mouService = {
     async updateStatus(idRaw, dataRaw, status) {
         // pakai transaction agar ketika rejection / mou gagal maka semuanya batal
         return prisma.$transaction(async (tx) => {
-            const id = sanitizeData(idRaw);
+            const { id } = sanitizeData(idRaw);
             const data = sanitizeData(dataRaw);
             // cari data itu ada tidak, pakai tx
-            const existingMou = await mouRepository.getById(id, tx);
+            const existingMou = await mouRepository.findById(id, tx);
             if (!existingMou) { throw new ApiError(404, "Data mou tidak ditemukan!"); }
             // create payload
             const payload = {
@@ -95,21 +95,20 @@ const mouService = {
                 const layananPayload = {
                     id_status_pelaksanaan: STATUS.SEDANG_BERJALAN.id
                 }
-                layananUpdated = await layananRepository.update(id, layananPayload);
+                layananUpdated = await layananRepository.update(id, layananPayload, tx);
             }
             const updated = await mouRepository.update(id, payload, tx);
 
             if (alasanCreated) { updated.mouRejection = alasanCreated; }
             if (layananUpdated) { updated.layanan = layananUpdated; }
             return updated;
+        }, {
+            timeout: 10000
         })
     }
 };
 
 const MouRejectionService = {
-    async findById(id) {
-        return await mouRejectionRepository.findById(parseInt(id));
-    },
     // GET MOU REJECTION BY ID
     async getById(id) {
         const mou = await mouRejectionRepository.findById(parseInt(id));

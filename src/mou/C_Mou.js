@@ -48,7 +48,7 @@ const mouController = {
     },
     // PUT REJECT MOU SUBMISSION
     async reject(req, res, next) {
-        try {
+        try { 
             const data = await mouService.updateStatus(req.params, req.body, STATUS.DITOLAK.id);
             res.status(200).json({success: true, message: 'Berhasil menolak MOU !', data});
         } catch (err) {
