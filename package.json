@@ -8,16 +8,14 @@
     "dev": "npm run swagger:merge && nodemon app.js",
     "postinstall": "prisma generate --schema=src/prisma/schema.prisma",
     "swagger:merge": "node src/document/swagger-merge.js",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "test:verbose": "jest --verbose",
-    "test:layanan": "jest C_Layanan.test.js",
-    "test:service": "jest C_Layanan.service.test.js",
-    "test:unit": "jest --testPathPattern=service.test.js",
-    "test:integration": "jest --testPathPattern=(?<!service).test.js",
-    "test:ci": "jest --ci --coverage --maxWorkers=2"
+    "test:unit": "jest --testMatch \"**/*.service.test.js\"",
+    "test:api": "jest --testMatch \"**/*.test.js\" --testPathIgnorePatterns \"service\\.test\\.js\""
   },
-  "keywords": [],
+  "keywords": [
+    "express",
+    "prisma",
+    "rest-api"
+  ],
   "author": "",
   "license": "ISC",
   "description": "",
