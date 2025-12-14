@@ -439,9 +439,10 @@ const layananService = {
         }
       }
     }
-
-    // ✅ FIX: Inisialisasi payload kosong, biar tidak override status pengajuan saat finish pelaksanaan
-    const payload = {};
+    // build payload update
+    const payload = {
+      id_status_pengajuan: idStatus,
+    };
 
     // LOGIC PENGAJUAN
     if (existingLayanan.pengajuan.id == STATUS.MENUNGGU_PERSETUJUAN.id) {
