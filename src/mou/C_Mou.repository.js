@@ -37,7 +37,7 @@ const mouRepository = {
 };
 
 const mouRejectionRepository = {
-    findById: async (id = tx = prisma) => {
+    findById: async (id, tx = prisma) => {
         return tx.MouRejection.findUnique({
             where: { id: parseInt(id) }
         })
