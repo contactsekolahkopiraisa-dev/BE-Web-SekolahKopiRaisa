@@ -10,7 +10,7 @@ const { jenisLayananController, targetPesertaController, layananController, stat
 const { validate } = require('../middleware/validate.joi.js');
 const { layananGlobalSchema, rejectSchema, uploadLogbookSchema, updateScema } = require('./C_Layanan.validate.js');
 
-
+  
 // JENIS LAYANAN ROUTES
 jenisLayananRoutes.get('/', jenisLayananController.getAll);
 jenisLayananRoutes.get('/:id', jenisLayananController.getById);
