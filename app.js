@@ -107,6 +107,8 @@ const wilayahRoutes = require('./src/utils/wilayah.controller');
 // === LAPORAN
 const umkmRoutes = require("./src/auth/umkm.controller");
 const keuanganRoutes = require('./src/laporan_keuangan/keuangan.controller');
+const penjualanRoutes  = require("./src/laporan_penjualan/penjualan.controller");
+
 
 // === LAYANAN
 const {
@@ -140,6 +142,8 @@ app.use("/api/v1/company", companyRoutes);
 app.use("/api/v1/auth/umkm", umkmRoutes);
 app.use('/api/v1/laporan-keuangan', keuanganRoutes);
 app.use('/api/v1/wilayah', wilayahRoutes);
+app.use("/api/v1/penjualan", penjualanRoutes);
+
 
 // === LAYANAN
 app.use("/api/v1/layanan", layananRoutes);

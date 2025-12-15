@@ -9,6 +9,10 @@
       "description": "Endpoint untuk pengelolaan laporan keuangan Admin dan UMKM"
     },
     {
+      "name": "Laporan Penjualan",
+      "description": "Endpoint untuk laporan penjualan UMKM (summary, chart, top products)"
+    },
+    {
       "name": "Wilayah",
       "description": "Endpoint untuk mendapatkan data wilayah (provinsi, kabupaten, kecamatan, desa)"
     }
@@ -428,6 +432,439 @@
           },
           "403": { "description": "Hanya admin yang bisa menghapus laporan" },
           "404": { "description": "Laporan tidak ditemukan" }
+        }
+      }
+    },
+    "/api/v1/penjualan/my-report": {
+      "get": {
+        "tags": ["Laporan Penjualan"],
+        "summary": "Get laporan penjualan UMKM (UMKM only)",
+        "description": "UMKM dapat melihat laporan penjualan produk mereka sendiri dengan summary (jumlah produk terjual, laba kotor, pajak 10%, laba bersih), chart penjualan per hari, dan top 5 products berdasarkan jumlah terjual.",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "bulan",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 12 },
+            "description": "Filter berdasarkan bulan (1-12)",
+            "example": 9
+          },
+          {
+            "in": "query",
+            "name": "tahun",
+            "schema": { "type": "integer" },
+            "description": "Filter berdasarkan tahun (YYYY)",
+            "example": 2025
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Laporan penjualan berhasil didapatkan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Laporan penjualan berhasil didapatkan!" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "partner": {
+                          "type": "object",
+                          "properties": {
+                            "id": { "type": "integer", "example": 1 },
+                            "nama": { "type": "string", "example": "UMKM Kopi Raisa" },
+                            "owner": { "type": "string", "example": "Pak Budi" }
+                          }
+                        },
+                        "periode": { "type": "string", "example": "September 2025" },
+                        "summary": {
+                          "type": "object",
+                          "properties": {
+                            "jumlahProdukTerjual": { "type": "integer", "example": 20 },
+                            "labaBersih": { "type": "string", "example": "Rp 225.000" },
+                            "labaBersihRaw": { "type": "number", "example": 225000 },
+                            "labaKotor": { "type": "string", "example": "Rp 250.000" },
+                            "labaKotorRaw": { "type": "number", "example": 250000 },
+                            "pajak": { "type": "string", "example": "Rp 25.000" },
+                            "pajakRaw": { "type": "number", "example": 25000 },
+                            "persentasePajak": { "type": "string", "example": "10%" }
+                          }
+                        },
+                        "chart": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "tanggal": { "type": "integer", "example": 1 },
+                              "totalPenjualan": { "type": "number", "example": 50000 }
+                            }
+                          },
+                          "description": "Data penjualan per hari dalam bulan (tanggal 1-31)"
+                        },
+                        "topProducts": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "ranking": { "type": "integer", "example": 1 },
+                              "namaProduk": { "type": "string", "example": "Kopi Arabika Premium" },
+                              "jumlahTerjual": { "type": "integer", "example": 10 },
+                              "totalPendapatan": { "type": "string", "example": "Rp 150.000" },
+                              "totalPendapatanRaw": { "type": "number", "example": 150000 }
+                            }
+                          },
+                          "description": "Top 5 produk berdasarkan jumlah terjual"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": { "description": "Akses ditolak! Endpoint ini hanya untuk UMKM." },
+          "404": { "description": "Profil partner tidak ditemukan" },
+          "500": { "description": "Terjadi kesalahan di server" }
+        }
+      }
+    },
+    "/api/v1/penjualan/admin/report": {
+      "get": {
+        "tags": ["Laporan Penjualan"],
+        "summary": "Get laporan penjualan semua UMKM (Admin only)",
+        "description": "Admin dapat melihat laporan penjualan dari semua UMKM dengan summary total dan list per UMKM.",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "bulan",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 12 },
+            "description": "Filter berdasarkan bulan (1-12)",
+            "example": 9
+          },
+          {
+            "in": "query",
+            "name": "tahun",
+            "schema": { "type": "integer" },
+            "description": "Filter berdasarkan tahun (YYYY)",
+            "example": 2025
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Laporan penjualan semua UMKM berhasil didapatkan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Laporan penjualan semua UMKM berhasil didapatkan!" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "periode": { "type": "string", "example": "September 2025" },
+                        "totalSummary": {
+                          "type": "object",
+                          "properties": {
+                            "totalJumlahProdukTerjual": { "type": "integer", "example": 100 },
+                            "totalLabaBersih": { "type": "string", "example": "Rp 4.500.000" },
+                            "totalLabaBersihRaw": { "type": "number", "example": 4500000 },
+                            "totalLabaKotor": { "type": "string", "example": "Rp 5.000.000" },
+                            "totalLabaKotorRaw": { "type": "number", "example": 5000000 },
+                            "totalPajak": { "type": "string", "example": "Rp 500.000" },
+                            "totalPajakRaw": { "type": "number", "example": 500000 }
+                          }
+                        },
+                        "umkmList": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "partnerId": { "type": "integer", "example": 1 },
+                              "namaUMKM": { "type": "string", "example": "UMKM Kopi Raisa" },
+                              "owner": { "type": "string", "example": "Pak Budi" },
+                              "jumlahProdukTerjual": { "type": "integer", "example": 50 },
+                              "labaBersih": { "type": "string", "example": "Rp 2.250.000" },
+                              "labaBersihRaw": { "type": "number", "example": 2250000 },
+                              "labaKotor": { "type": "string", "example": "Rp 2.500.000" },
+                              "labaKotorRaw": { "type": "number", "example": 2500000 }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": { "description": "Akses ditolak! Hanya admin yang bisa mengakses." },
+          "404": { "description": "Tidak ada data UMKM yang terdaftar" },
+          "500": { "description": "Terjadi kesalahan di server" }
+        }
+      }
+    },
+    "/api/v1/penjualan/admin/partner/{partnerId}": {
+      "get": {
+        "tags": ["Laporan Penjualan"],
+        "summary": "Get laporan penjualan UMKM berdasarkan Partner ID (Admin only)",
+        "description": "Admin dapat melihat detail laporan penjualan UMKM spesifik berdasarkan partner_id.",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          { "in": "path", "name": "partnerId", "required": true, "schema": { "type": "integer" }, "description": "ID Partner UMKM", "example": 1 },
+          { "in": "query", "name": "bulan", "schema": { "type": "integer", "minimum": 1, "maximum": 12 }, "example": 9 },
+          { "in": "query", "name": "tahun", "schema": { "type": "integer" }, "example": 2025 }
+        ],
+        "responses": {
+          "200": { "description": "Detail laporan penjualan UMKM (dengan info partner dan user)" },
+          "400": { "description": "Partner belum terhubung dengan user UMKM" },
+          "403": { "description": "Hanya admin yang bisa mengakses" },
+          "404": { "description": "Partner tidak ditemukan" }
+        }
+      }
+    },
+    "/api/v1/penjualan/my-top-products": {
+      "get": {
+        "tags": ["Laporan Penjualan"],
+        "summary": "Get top products UMKM (UMKM only)",
+        "description": "UMKM dapat melihat daftar produk terlaris mereka berdasarkan jumlah terjual dengan filter periode dan limit.",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "bulan",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 12 },
+            "description": "Filter berdasarkan bulan (1-12)",
+            "example": 9
+          },
+          {
+            "in": "query",
+            "name": "tahun",
+            "schema": { "type": "integer" },
+            "description": "Filter berdasarkan tahun (YYYY)",
+            "example": 2025
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100 },
+            "description": "Jumlah produk yang ditampilkan (default: 10)",
+            "example": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Top products berhasil didapatkan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { 
+                      "type": "string", 
+                      "example": "Top products berhasil didapatkan!" 
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "partner": {
+                          "type": "object",
+                          "properties": {
+                            "id": { "type": "integer", "example": 1 },
+                            "nama": { "type": "string", "example": "UMKM Kopi Raisa" },
+                            "owner": { "type": "string", "example": "Pak Budi" }
+                          }
+                        },
+                        "periode": { 
+                          "type": "string", 
+                          "example": "September 2025" 
+                        },
+                        "limit": { 
+                          "type": "integer", 
+                          "example": 10,
+                          "description": "Jumlah produk yang diminta" 
+                        },
+                        "totalProducts": { 
+                          "type": "integer", 
+                          "example": 10,
+                          "description": "Jumlah produk yang dikembalikan" 
+                        },
+                        "products": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "ranking": { 
+                                "type": "integer", 
+                                "example": 1,
+                                "description": "Peringkat produk berdasarkan jumlah terjual" 
+                              },
+                              "productId": { 
+                                "type": "integer", 
+                                "example": 5 
+                              },
+                              "namaProduk": { 
+                                "type": "string", 
+                                "example": "Kopi Arabika Premium" 
+                              },
+                              "gambarProduk": { 
+                                "type": "string", 
+                                "example": "https://cloudinary.com/image.jpg" 
+                              },
+                              "jumlahTerjual": { 
+                                "type": "integer", 
+                                "example": 50,
+                                "description": "Total unit terjual" 
+                              },
+                              "totalPendapatan": { 
+                                "type": "string", 
+                                "example": "Rp 750.000" 
+                              },
+                              "totalPendapatanRaw": { 
+                                "type": "number", 
+                                "example": 750000 
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": { 
+            "description": "Akses ditolak! Endpoint ini hanya untuk UMKM." 
+          },
+          "404": { 
+            "description": "Profil partner tidak ditemukan" 
+          },
+          "500": { 
+            "description": "Terjadi kesalahan di server" 
+          }
+        }
+      }
+    },
+    "/api/v1/penjualan/admin/top-products": {
+      "get": {
+        "tags": ["Laporan Penjualan"],
+        "summary": "Get top products dari semua UMKM (Admin only)",
+        "description": "Admin dapat melihat daftar produk terlaris dari semua UMKM yang terdaftar, diurutkan berdasarkan jumlah terjual.",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "bulan",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 12 },
+            "description": "Filter berdasarkan bulan (1-12)",
+            "example": 9
+          },
+          {
+            "in": "query",
+            "name": "tahun",
+            "schema": { "type": "integer" },
+            "description": "Filter berdasarkan tahun (YYYY)",
+            "example": 2025
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100 },
+            "description": "Jumlah produk yang ditampilkan (default: 10)",
+            "example": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Top products semua UMKM berhasil didapatkan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { 
+                      "type": "string", 
+                      "example": "Top products semua UMKM berhasil didapatkan!" 
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "periode": { 
+                          "type": "string", 
+                          "example": "September 2025" 
+                        },
+                        "limit": { 
+                          "type": "integer", 
+                          "example": 10 
+                        },
+                        "totalProducts": { 
+                          "type": "integer", 
+                          "example": 10 
+                        },
+                        "products": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "ranking": { 
+                                "type": "integer", 
+                                "example": 1 
+                              },
+                              "productId": { 
+                                "type": "integer", 
+                                "example": 5 
+                              },
+                              "namaProduk": { 
+                                "type": "string", 
+                                "example": "Kopi Arabika Premium" 
+                              },
+                              "gambarProduk": { 
+                                "type": "string", 
+                                "example": "https://cloudinary.com/image.jpg" 
+                              },
+                              "namaUMKM": { 
+                                "type": "string", 
+                                "example": "UMKM Kopi Raisa",
+                                "description": "Nama UMKM pemilik produk" 
+                              },
+                              "partnerId": { 
+                                "type": "integer", 
+                                "example": 1,
+                                "description": "ID Partner UMKM" 
+                              },
+                              "jumlahTerjual": { 
+                                "type": "integer", 
+                                "example": 50 
+                              },
+                              "totalPendapatan": { 
+                                "type": "string", 
+                                "example": "Rp 750.000" 
+                              },
+                              "totalPendapatanRaw": { 
+                                "type": "number", 
+                                "example": 750000 
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": { 
+            "description": "Akses ditolak! Hanya admin yang bisa mengakses." 
+          },
+          "404": { 
+            "description": "Tidak ada data UMKM yang terdaftar" 
+          },
+          "500": { 
+            "description": "Terjadi kesalahan di server" 
+          }
         }
       }
     },

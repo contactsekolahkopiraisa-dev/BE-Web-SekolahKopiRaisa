@@ -94,7 +94,7 @@ router.get("/", async (req, res) => {
 });
 
 // GET product by ID - dengan validasi ownership untuk UMKM
-router.get("/:id", async (req, res) => {
+router.get("/:id", authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const product = await getProductById(id, req.user?.id, req.user?.admin);

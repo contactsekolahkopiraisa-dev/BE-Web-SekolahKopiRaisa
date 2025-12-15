@@ -52,31 +52,31 @@ const findPartnerById = async (partnerId) => {
   return partner;
 };
 
-// const findPartnerByUserId = async (userId) => {
-//   const partner = await prisma.partner.findUnique({
-//     where: {
-//       user_id: parseInt(userId),
-//     },
-//     include: {
-//       products: {
-//         select: {
-//           id: true,
-//           name: true,
-//           price: true,
-//           description: true,
-//           image: true,
-//           sold: true,
-//           inventory: {
-//             select: {
-//               stock: true,
-//             },
-//           },
-//         },
-//       },
-//     },
-//   });
-//   return partner;
-// };
+const findPartnerByUserId = async (userId) => {
+  const partner = await prisma.partner.findUnique({
+    where: {
+      user_id: parseInt(userId),
+    },
+    include: {
+      products: {
+        select: {
+          id: true,
+          name: true,
+          price: true,
+          description: true,
+          image: true,
+          sold: true,
+          inventory: {
+            select: {
+              stock: true,
+            },
+          },
+        },
+      },
+    },
+  });
+  return partner;
+};
 
 const insertNewPartner = async (newPartnerData) => {
   const partner = await prisma.partner.create({
@@ -113,7 +113,7 @@ const deletePartner = async (id) => {
 module.exports = {
   findPartner,
   findPartnerById,
-  // findPartnerByUserId,
+  findPartnerByUserId,
   insertNewPartner,
   deletePartner,
   editPartner,
