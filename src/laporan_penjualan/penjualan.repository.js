@@ -1,242 +1,324 @@
-// const prisma = require('../db');
+const prisma = require('../db');
 
-// /**
-//  * Get sales report by UMKM
-//  * Mengambil semua order yang berisi produk milik UMKM tertentu
-//  */
-// const getSalesReportByUMKM = async (umkmId, filters = {}) => {
-//   try {
-//     // 1. Build where condition
-//     const where = {
-//       status: 'DELIVERED', // Hanya order yang sudah selesai
-//       payment: {
-//         status: 'SUCCESS' // Hanya yang sudah dibayar
-//       },
-//       orderItems: {
-//         some: {
-//           partner: {
-//             id_umkm: Number(umkmId) // Filter produk milik UMKM ini
-//           }
-//         }
-//       }
-//     };
+const PAJAK_RATE = 0.10; // 10%
 
-//     // Filter by tanggal range
-//     if (filters.tanggal_dari || filters.tanggal_sampai) {
-//       where.created_at = {};
-//       if (filters.tanggal_dari) {
-//         where.created_at.gte = new Date(filters.tanggal_dari);
-//       }
-//       if (filters.tanggal_sampai) {
-//         where.created_at.lte = new Date(filters.tanggal_sampai);
-//       }
-//     }
+/**
+ * Build where condition untuk filter bulan/tahun
+ */
+const buildDateFilter = (filters) => {
+  const where = {};
 
-//     // Filter by bulan/tahun
-//     if (filters.bulan || filters.tahun) {
-//       if (filters.tahun) {
-//         const year = Number(filters.tahun);
-//         if (filters.bulan) {
-//           const month = Number(filters.bulan);
-//           const startDate = new Date(year, month - 1, 1);
-//           const endDate = new Date(year, month, 0, 23, 59, 59);
-//           where.created_at = {
-//             gte: startDate,
-//             lte: endDate
-//           };
-//         } else {
-//           const startDate = new Date(year, 0, 1);
-//           const endDate = new Date(year, 11, 31, 23, 59, 59);
-//           where.created_at = {
-//             gte: startDate,
-//             lte: endDate
-//           };
-//         }
-//       }
-//     }
+  if (filters.bulan && filters.tahun) {
+    const month = parseInt(filters.bulan);
+    const year = parseInt(filters.tahun);
+    
+    const startDate = new Date(year, month - 1, 1); // Awal bulan
+    const endDate = new Date(year, month, 0, 23, 59, 59, 999); // Akhir bulan
 
-//     // 2. Get orders dengan semua relasi yang dibutuhkan
-//     const orders = await prisma.order.findMany({
-//       where,
-//       include: {
-//         user: {
-//           select: {
-//             id: true,
-//             name: true,
-//             email: true
-//           }
-//         },
-//         payment: {
-//           select: {
-//             amount: true,
-//             status: true,
-//             method: true
-//           }
-//         },
-//         shippingAddress: {
-//           select: {
-//             address: true,
-//             destination_city: true,
-//             destination_district: true
-//           }
-//         },
-//         orderItems: {
-//           where: {
-//             partner: {
-//               id_umkm: Number(umkmId) // Hanya ambil item milik UMKM ini
-//             }
-//           },
-//           include: {
-//             product: {
-//               select: {
-//                 id: true,
-//                 name: true,
-//                 price: true,
-//                 image: true
-//               }
-//             },
-//             partner: {
-//               select: {
-//                 id: true,
-//                 name: true
-//               }
-//             }
-//           }
-//         }
-//       },
-//       orderBy: {
-//         created_at: 'desc'
-//       }
-//     });
+    where.created_at = {
+      gte: startDate,
+      lte: endDate,
+    };
+  } else if (filters.tahun) {
+    const year = parseInt(filters.tahun);
+    const startDate = new Date(year, 0, 1);
+    const endDate = new Date(year, 11, 31, 23, 59, 59, 999);
 
-//     return orders;
-//   } catch (error) {
-//     console.error('❌ Error in getSalesReportByUMKM:', error);
-//     throw error;
-//   }
-// };
+    where.created_at = {
+      gte: startDate,
+      lte: endDate,
+    };
+  }
 
-// /**
-//  * Get summary penjualan by UMKM
-//  */
-// const getSalesSummaryByUMKM = async (umkmId, filters = {}) => {
-//   try {
-//     const orders = await getSalesReportByUMKM(umkmId, filters);
+  return where;
+};
 
-//     // Hitung total revenue (hanya dari produk UMKM ini)
-//     const totalRevenue = orders.reduce((sum, order) => {
-//       const orderTotal = order.orderItems.reduce((itemSum, item) => 
-//         itemSum + (item.price * item.quantity), 0
-//       );
-//       return sum + orderTotal;
-//     }, 0);
+/**
+ * Get sales data by partner
+ * Hanya order DELIVERED dengan payment SUCCESS
+ */
+const getSalesDataByPartner = async (partnerId, filters = {}) => {
+  const dateFilter = buildDateFilter(filters);
 
-//     // Hitung total produk terjual
-//     const totalProductsSold = orders.reduce((sum, order) => {
-//       const orderQty = order.orderItems.reduce((itemSum, item) => 
-//         itemSum + item.quantity, 0
-//       );
-//       return sum + orderQty;
-//     }, 0);
+  const orders = await prisma.order.findMany({
+    where: {
+      status: 'DELIVERED', // Hanya order selesai
+      payment: {
+        status: 'SUCCESS', // Hanya yang sudah dibayar
+      },
+      orderItems: {
+        some: {
+          partner_id: partnerId, // Filter produk milik partner ini
+        },
+      },
+      ...dateFilter,
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+      payment: {
+        select: {
+          amount: true,
+          status: true,
+          method: true,
+        },
+      },
+      orderItems: {
+        where: {
+          partner_id: partnerId, // Hanya ambil item milik partner ini
+        },
+        include: {
+          product: {
+            select: {
+              id: true,
+              name: true,
+              price: true,
+              image: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      created_at: 'desc',
+    },
+  });
 
-//     // Hitung total orders
-//     const totalOrders = orders.length;
+  return orders;
+};
 
-//     // Product terlaris
-//     const productSales = {};
-//     orders.forEach(order => {
-//       order.orderItems.forEach(item => {
-//         if (!productSales[item.product.id]) {
-//           productSales[item.product.id] = {
-//             id: item.product.id,
-//             name: item.product.name,
-//             quantity: 0,
-//             revenue: 0
-//           };
-//         }
-//         productSales[item.product.id].quantity += item.quantity;
-//         productSales[item.product.id].revenue += item.price * item.quantity;
-//       });
-//     });
+/**
+ * Get chart data (penjualan per hari dalam bulan)
+ */
+const getSalesChartData = async (partnerId, filters = {}) => {
+  const dateFilter = buildDateFilter(filters);
 
-//     const topProducts = Object.values(productSales)
-//       .sort((a, b) => b.quantity - a.quantity)
-//       .slice(0, 5);
+  const orders = await prisma.order.findMany({
+    where: {
+      status: 'DELIVERED',
+      payment: {
+        status: 'SUCCESS',
+      },
+      orderItems: {
+        some: {
+          partner_id: partnerId,
+        },
+      },
+      ...dateFilter,
+    },
+    include: {
+      orderItems: {
+        where: {
+          partner_id: partnerId,
+        },
+      },
+    },
+    orderBy: {
+      created_at: 'asc',
+    },
+  });
 
-//     return {
-//       total_revenue: totalRevenue,
-//       total_orders: totalOrders,
-//       total_products_sold: totalProductsSold,
-//       top_products: topProducts
-//     };
-//   } catch (error) {
-//     console.error('❌ Error in getSalesSummaryByUMKM:', error);
-//     throw error;
-//   }
-// };
+  // Group by tanggal
+  const salesByDate = {};
 
-// /**
-//  * Get detail penjualan per produk
-//  */
-// const getProductSalesDetail = async (umkmId, productId, filters = {}) => {
-//   try {
-//     const where = {
-//       status: 'DELIVERED',
-//       payment: {
-//         status: 'SUCCESS'
-//       },
-//       orderItems: {
-//         some: {
-//           products_id: Number(productId),
-//           partner: {
-//             id_umkm: Number(umkmId)
-//           }
-//         }
-//       }
-//     };
+  orders.forEach(order => {
+    const date = new Date(order.created_at);
+    const day = date.getDate();
 
-//     // Filter tanggal
-//     if (filters.tanggal_dari || filters.tanggal_sampai) {
-//       where.created_at = {};
-//       if (filters.tanggal_dari) {
-//         where.created_at.gte = new Date(filters.tanggal_dari);
-//       }
-//       if (filters.tanggal_sampai) {
-//         where.created_at.lte = new Date(filters.tanggal_sampai);
-//       }
-//     }
+    if (!salesByDate[day]) {
+      salesByDate[day] = 0;
+    }
 
-//     const orders = await prisma.order.findMany({
-//       where,
-//       include: {
-//         user: {
-//           select: {
-//             id: true,
-//             name: true
-//           }
-//         },
-//         orderItems: {
-//           where: {
-//             products_id: Number(productId)
-//           },
-//           include: {
-//             product: true
-//           }
-//         }
-//       },
-//       orderBy: {
-//         created_at: 'desc'
-//       }
-//     });
+    order.orderItems.forEach(item => {
+      salesByDate[day] += item.price * item.quantity;
+    });
+  });
 
-//     return orders;
-//   } catch (error) {
-//     throw error;
-//   }
-// };
+  // Convert ke array untuk chart
+  const chartData = [];
+  
+  // Jika ada filter bulan, buat data untuk semua hari dalam bulan
+  if (filters.bulan && filters.tahun) {
+    const year = parseInt(filters.tahun);
+    const month = parseInt(filters.bulan);
+    const daysInMonth = new Date(year, month, 0).getDate();
 
-// module.exports = {
-//   getSalesReportByUMKM,
-//   getSalesSummaryByUMKM,
-//   getProductSalesDetail
-// };
+    for (let day = 1; day <= daysInMonth; day++) {
+      chartData.push({
+        tanggal: day,
+        totalPenjualan: salesByDate[day] || 0,
+      });
+    }
+  } else {
+    // Jika tidak ada filter, tampilkan hari yang ada data saja
+    Object.keys(salesByDate)
+      .sort((a, b) => parseInt(a) - parseInt(b))
+      .forEach(day => {
+        chartData.push({
+          tanggal: parseInt(day),
+          totalPenjualan: salesByDate[day],
+        });
+      });
+  }
+
+  return chartData;
+};
+
+/**
+ * Get top 5 products by revenue
+ */
+const getTopProductsByPartner = async (partnerId, filters = {}) => {
+  const dateFilter = buildDateFilter(filters);
+
+  const orders = await prisma.order.findMany({
+    where: {
+      status: 'DELIVERED',
+      payment: {
+        status: 'SUCCESS',
+      },
+      orderItems: {
+        some: {
+          partner_id: partnerId,
+        },
+      },
+      ...dateFilter,
+    },
+    include: {
+      orderItems: {
+        where: {
+          partner_id: partnerId,
+        },
+        include: {
+          product: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  // Aggregate produk
+  const productStats = {};
+
+  orders.forEach(order => {
+    order.orderItems.forEach(item => {
+      const productId = item.product.id;
+
+      if (!productStats[productId]) {
+        productStats[productId] = {
+          id: productId,
+          name: item.product.name,
+          image: item.product.image,
+          totalQuantity: 0,
+          totalRevenue: 0,
+        };
+      }
+
+      productStats[productId].totalQuantity += item.quantity;
+      productStats[productId].totalRevenue += item.price * item.quantity;
+    });
+  });
+
+  // Sort by quantity (jumlah terjual) dan ambil top 5
+  const topProducts = Object.values(productStats)
+    .sort((a, b) => b.totalQuantity - a.totalQuantity)
+    .slice(0, 5);
+
+  return topProducts;
+};
+
+/**
+ * Get sales data untuk semua UMKM (admin)
+ */
+const getAllUMKMSalesData = async (filters = {}) => {
+  const dateFilter = buildDateFilter(filters);
+
+  // Get semua partner yang punya user_id
+  const partners = await prisma.partner.findMany({
+    where: {
+      user_id: {
+        not: null,
+      },
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
+
+  // Get sales data untuk setiap partner
+  const allUMKMData = [];
+
+  for (const partner of partners) {
+    const orders = await prisma.order.findMany({
+      where: {
+        status: 'DELIVERED',
+        payment: {
+          status: 'SUCCESS',
+        },
+        orderItems: {
+          some: {
+            partner_id: partner.id,
+          },
+        },
+        ...dateFilter,
+      },
+      include: {
+        orderItems: {
+          where: {
+            partner_id: partner.id,
+          },
+        },
+      },
+    });
+
+    // Hitung summary untuk partner ini
+    let totalQuantity = 0;
+    let labaKotor = 0;
+
+    orders.forEach(order => {
+      order.orderItems.forEach(item => {
+        totalQuantity += item.quantity;
+        labaKotor += item.price * item.quantity;
+      });
+    });
+
+    const pajak = labaKotor * PAJAK_RATE;
+    const labaBersih = labaKotor - pajak;
+
+    allUMKMData.push({
+      partnerId: partner.id,
+      namaPartner: partner.name,
+      owner: partner.owner_name,
+      jumlahProdukTerjual: totalQuantity,
+      labaKotorRaw: labaKotor,
+      pajak,
+      labaBersih,
+    });
+  }
+
+  // Sort by laba bersih tertinggi
+  allUMKMData.sort((a, b) => b.labaBersih - a.labaBersih);
+
+  return allUMKMData;
+};
+
+module.exports = {
+  getSalesDataByPartner,
+  getSalesChartData,
+  getTopProductsByPartner,
+  getAllUMKMSalesData,
+};

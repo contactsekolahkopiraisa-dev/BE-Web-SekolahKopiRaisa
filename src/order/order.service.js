@@ -7,6 +7,7 @@ const { createMidtransSnapToken } = require("../utils/midtrans");
 const { deleteCartItems } = require("../cart/cart.repository");
 const rajaOngkirApi = require("../utils/rajaOngkir");
 const qs = require('qs');
+const prisma = require("../db");
 
 const {
     findAllOrders,
@@ -52,7 +53,9 @@ const getOrdersByUser = async (userId, status) => {
 
 const getOrdersByPartner = async (userId, status) => {
     // Cari partner berdasarkan user_id
-    const partner = await findPartnerByUserId(userId);
+    const partner = await prisma.partner.findUnique({
+        where: { user_id: userId }
+    });
     
     if (!partner) {
         throw new ApiError(404, "Profil partner tidak ditemukan! Silakan hubungi admin.");
@@ -274,7 +277,7 @@ const handleMidtransNotification = async (notification) => {
         fraud_status,
     } = notification;
 
-    console.log("📥 Midtrans Notification:", notification);
+    console.log("🔥 Midtrans Notification:", notification);
     if (!transaction_status || !payment_type || !order_id) {
         throw new ApiError(400, "Data tidak lengkap dari Midtrans");
     }
@@ -365,7 +368,10 @@ const getOrderDetailById = async (orderId, isAdmin, userId) => {
     }
 
     // UMKM hanya bisa akses order yang mengandung produk mereka
-    const partner = await findPartnerByUserId(userId);
+    const partner = await prisma.partner.findUnique({
+        where: { user_id: userId }
+    });
+    
     if (partner) {
         const hasPartnerProduct = order.orderItems.some(
             item => item.partner_id === partner.id
@@ -535,7 +541,9 @@ const updatedOrderStatus = async (orderId, newStatus, user) => {
             }
         } else {
             // Cek apakah user adalah UMKM partner
-            const partner = await findPartnerByUserId(user.id);
+            const partner = await prisma.partner.findUnique({
+                where: { user_id: user.id }
+            });
             
             if (!partner) {
                 throw new ApiError(403, "Akses ditolak: bukan pesanan Anda");
@@ -734,6 +742,249 @@ const getMyNotifikasi = async (userId) => {
     return myNotifikasi
 }
 
+// ==================== FUNGSI BARU UNTUK UMKM ====================
+
+// Get riwayat pesanan UMKM
+const getUMKMOrderHistory = async (userId, statusFilter) => {
+    const partner = await prisma.partner.findUnique({
+        where: { user_id: userId }
+    });
+    
+    if (!partner) {
+        throw new ApiError(404, "Profil partner tidak ditemukan! Silakan hubungi admin.");
+    }
+
+    const orders = await prisma.order.findMany({
+        where: {
+            orderItems: {
+                some: {
+                    partner_id: partner.id,
+                },
+            },
+            ...(statusFilter?.length > 0 && {
+                status: { in: statusFilter },
+            }),
+        },
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    phone_number: true,
+                },
+            },
+            orderItems: {
+                include: {
+                    product: true,
+                    partner: true,
+                },
+            },
+            shippingAddress: true,
+            payment: true,
+            OrderCancellation: true,
+        },
+        orderBy: {
+            created_at: "desc",
+        },
+    });
+
+    return orders.map(order => {
+        const partnerItems = order.orderItems.filter(item => item.partner_id === partner.id);
+        
+        return {
+            orderId: order.id,
+            statusOrder: order.status,
+            createdAt: order.created_at,
+            updatedAt: order.updated_at,
+            customerName: order.user?.name || "-",
+            customerPhone: order.user?.phone_number || "-",
+            items: partnerItems.map(item => ({
+                productId: item.product.id,
+                productImage: item.product.image,
+                name: item.product.name,
+                quantity: item.quantity,
+                price: item.price,
+                subtotal: item.quantity * item.price,
+                note: item.custom_note || "-",
+            })),
+            shippingAddress: order.shippingAddress?.address || "-",
+            payment: {
+                method: order.payment?.method,
+                status: order.payment?.status,
+                partnerAmount: partnerItems.reduce(
+                    (sum, item) => sum + (item.quantity * item.price), 
+                    0
+                ),
+            },
+            cancellation: order.OrderCancellation ? {
+                reason: order.OrderCancellation.reason,
+                canceledAt: order.OrderCancellation.created_at,
+            } : null,
+        };
+    });
+};
+
+// Update status order oleh UMKM
+const updateUMKMOrderStatus = async (orderId, newStatus, userId) => {
+    const order = await findOrdersById(orderId);
+    if (!order) {
+        throw new ApiError(404, "Pesanan tidak ditemukan!");
+    }
+
+    const partner = await prisma.partner.findUnique({
+        where: { user_id: userId }
+    });
+    
+    if (!partner) {
+        throw new ApiError(404, "Profil partner tidak ditemukan!");
+    }
+
+    const hasPartnerProduct = order.orderItems.some(
+        item => item.partner_id === partner.id
+    );
+
+    if (!hasPartnerProduct) {
+        throw new ApiError(403, "Akses ditolak: pesanan tidak mengandung produk Anda");
+    }
+
+    const allowedStatuses = [OrderStatus.PROCESSING, OrderStatus.SHIPPED];
+    if (!allowedStatuses.includes(newStatus)) {
+        throw new ApiError(403, "UMKM hanya bisa mengubah status ke: PROCESSING atau SHIPPED");
+    }
+
+    if (newStatus === OrderStatus.PROCESSING && order.status !== OrderStatus.PENDING) {
+        throw new ApiError(400, "Status hanya bisa diubah ke PROCESSING dari status PENDING");
+    }
+
+    if (newStatus === OrderStatus.SHIPPED && order.status !== OrderStatus.PROCESSING) {
+        throw new ApiError(400, "Status hanya bisa diubah ke SHIPPED dari status PROCESSING");
+    }
+
+    const updatedOrder = await updateStatusOrders(orderId, newStatus);
+
+    try {
+        await createNotificationForUMKMStatusChange(order, newStatus, partner.name);
+    } catch (notifError) {
+        console.error("⚠️ Gagal membuat notifikasi untuk order:", orderId, notifError);
+    }
+
+    return updatedOrder;
+};
+
+// Get daftar status yang bisa digunakan UMKM
+const getUMKMOrderStatuses = () => {
+    return [
+        {
+            value: OrderStatus.PROCESSING,
+            label: "Diproses",
+            description: "Pesanan sedang diproses oleh UMKM"
+        },
+        {
+            value: OrderStatus.SHIPPED,
+            label: "Dikirim",
+            description: "Pesanan dalam pengiriman"
+        }
+    ];
+};
+
+// Helper: create notification untuk perubahan status oleh UMKM
+const createNotificationForUMKMStatusChange = async (order, newStatus, partnerName) => {
+    let statusText = "";
+    let description = "";
+
+    switch(newStatus) {
+        case OrderStatus.PROCESSING:
+            statusText = "Diproses";
+            description = `Pesanan Anda #${order.id} sedang diproses oleh ${partnerName}.`;
+            break;
+        case OrderStatus.SHIPPED:
+            statusText = "Dikirim";
+            description = `Pesanan Anda #${order.id} telah dikirim oleh ${partnerName}.`;
+            break;
+        default:
+            statusText = newStatus;
+            description = `Status pesanan #${order.id} diubah menjadi ${newStatus}.`;
+    }
+
+    const notificationData = {
+        name: `Pesanan #${order.id} - ${statusText}`,
+        description: description,
+        user_id: order.user_id,
+        order_id: order.id,
+    };
+
+    await createNotification(notificationData);
+    console.log(`✅ Notifikasi perubahan status berhasil dibuat untuk order ID: ${order.id}`);
+};
+
+// Get UMKM order detail by ID
+const getUMKMOrderDetailById = async (orderId, userId) => {
+    const order = await findOrderDetailById(orderId);
+    
+    if (!order) {
+        throw new ApiError(404, "Pesanan tidak ditemukan");
+    }
+
+    const partner = await prisma.partner.findUnique({
+        where: { user_id: userId }
+    });
+    
+    if (!partner) {
+        throw new ApiError(404, "Profil partner tidak ditemukan!");
+    }
+
+    const hasPartnerProduct = order.orderItems.some(
+        item => item.partner_id === partner.id
+    );
+
+    if (!hasPartnerProduct) {
+        throw new ApiError(403, "Akses ditolak: pesanan tidak mengandung produk Anda");
+    }
+
+    // Filter hanya item milik partner ini
+    const partnerItems = order.orderItems.filter(
+        item => item.partner_id === partner.id
+    );
+
+    return {
+        orderId: order.id,
+        statusOrder: order.status,
+        createdAt: order.created_at,
+        updatedAt: order.updated_at,
+        customerName: order.user?.name || "-",
+        customerPhone: order.user?.phone_number || "-",
+        shippingAddress: {
+            address: order.shippingAddress?.address || "-",
+            province: order.shippingAddress?.destination_province || "-",
+            city: order.shippingAddress?.destination_city || "-",
+            district: order.shippingAddress?.destination_district || "-",
+            subdistrict: order.shippingAddress?.destination_subdistrict || "-",
+            zipCode: order.shippingAddress?.destination_zip_code || "-",
+        },
+        items: partnerItems.map(item => ({
+            productId: item.product.id,
+            productImage: item.product.image,
+            name: item.product.name,
+            quantity: item.quantity,
+            price: item.price,
+            subtotal: item.quantity * item.price,
+            note: item.custom_note || "-",
+        })),
+        payment: {
+            method: order.payment?.method,
+            status: order.payment?.status,
+            partnerAmount: partnerItems.reduce(
+                (sum, item) => sum + (item.quantity * item.price), 
+                0
+            ),
+        },
+        cancellation: order.OrderCancellation ? {
+            reason: order.OrderCancellation.reason,
+            canceledAt: order.OrderCancellation.created_at,
+        } : null,
+    };
+};
+
 module.exports = {
     getDomestic,
     getAllOrders,
@@ -757,4 +1008,9 @@ module.exports = {
     updatedOrderStatus,
     removeOrders,
     readNotification,
+    // FUNGSI BARU UNTUK UMKM
+    getUMKMOrderHistory,
+    getUMKMOrderDetailById,
+    updateUMKMOrderStatus,
+    getUMKMOrderStatuses,
 };

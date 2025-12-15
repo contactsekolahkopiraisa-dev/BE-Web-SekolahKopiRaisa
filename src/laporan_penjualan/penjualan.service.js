@@ -1,181 +1,433 @@
-// const {
-//   getSalesReportByUMKM,
-//   getSalesSummaryByUMKM,
-//   getProductSalesDetail
-// } = require('./penjualan.repository');
-// const prisma = require('../db');
-// const ApiError = require('../utils/apiError');
+const prisma = require('../db');
+const ApiError = require('../utils/apiError');
+const {
+  getSalesDataByPartner,
+  getSalesChartData,
+  getTopProductsByPartner,
+  getAllUMKMSalesData
+} = require('./penjualan.repository');
 
-// /**
-//  * Helper: Format periode
-//  */
-// const formatPeriode = (date) => {
-//   const d = new Date(date);
-//   const bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
-//                  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-//   return `${bulan[d.getMonth()]} ${d.getFullYear()}`;
-// };
+const PAJAK_RATE = 0.10; // 10%
 
-// /**
-//  * Get laporan penjualan untuk UMKM
-//  */
-// const getLaporanPenjualan = async (userId, filters, requestUser) => {
-//   try {
-//     // Validasi akses
-//     if (!requestUser.admin && requestUser.id !== Number(userId)) {
-//       throw new ApiError(403, 'Anda tidak memiliki akses ke data ini');
-//     }
+/**
+ * Format currency ke Rupiah
+ */
+const formatRupiah = (amount) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+  }).format(amount);
+};
 
-//     // 1. Cari UMKM dari user
-//     const umkm = await prisma.verifikasiUMKM.findFirst({
-//       where: { 
-//         id_user: Number(userId),
-//         status_verifikasi: 'Verified' // Hanya UMKM terverifikasi
-//       },
-//       select: {
-//         id_umkm: true,
-//         nama_umkm: true,
-//         status_verifikasi: true
-//       }
-//     });
+/**
+ * Format nama bulan
+ */
+const getNamaBulan = (bulan) => {
+  const namaBulan = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
+  return namaBulan[parseInt(bulan) - 1] || '';
+};
 
-//     if (!umkm) {
-//       throw new ApiError(404, 'Data UMKM tidak ditemukan atau belum terverifikasi');
-//     }
+/**
+ * Hitung summary penjualan
+ */
+const calculateSummary = (orders) => {
+  let totalQuantity = 0;
+  let labaKotor = 0;
 
-//     // 2. Get sales data
-//     const orders = await getSalesReportByUMKM(umkm.id_umkm, filters);
+  orders.forEach(order => {
+    order.orderItems.forEach(item => {
+      totalQuantity += item.quantity;
+      labaKotor += item.price * item.quantity;
+    });
+  });
 
-//     // 3. Transform data untuk response
-//     const salesData = orders.map(order => {
-//       // Hitung total hanya dari produk UMKM ini
-//       const orderTotal = order.orderItems.reduce((sum, item) => 
-//         sum + (item.price * item.quantity), 0
-//       );
+  const pajak = labaKotor * PAJAK_RATE;
+  const labaBersih = labaKotor - pajak;
 
-//       return {
-//         order_id: order.id,
-//         umkm: {
-//           id_umkm: umkm.id_umkm,
-//           nama_umkm: umkm.nama_umkm
-//         },
-//         customer: {
-//           id: order.user.id,
-//           name: order.user.name,
-//           email: order.user.email
-//         },
-//         shipping_address: order.shippingAddress ? {
-//           address: order.shippingAddress.address,
-//           city: order.shippingAddress.destination_city,
-//           district: order.shippingAddress.destination_district
-//         } : null,
-//         products: order.orderItems.map(item => ({
-//           id_product: item.product.id,
-//           nama_product: item.product.name,
-//           image: item.product.image,
-//           quantity: item.quantity,
-//           price: item.price,
-//           subtotal: item.price * item.quantity
-//         })),
-//         total_amount: orderTotal,
-//         tanggal: order.created_at,
-//         periode: formatPeriode(order.created_at),
-//         status: order.status,
-//         payment_status: order.payment?.status,
-//         payment_method: order.payment?.method
-//       };
-//     });
+  return {
+    jumlahProdukTerjual: totalQuantity,
+    labaKotor,
+    pajak,
+    labaBersih,
+  };
+};
 
-//     // 4. Get summary
-//     const summary = await getSalesSummaryByUMKM(umkm.id_umkm, filters);
+/**
+ * Get laporan penjualan untuk UMKM
+ */
+const getLaporanPenjualanUMKM = async (userId, filters) => {
+  // 1. Cari partner berdasarkan user_id langsung dengan Prisma
+  const partner = await prisma.partner.findUnique({
+    where: {
+      user_id: parseInt(userId),
+    },
+    include: {
+      products: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
 
-//     return {
-//       umkm: {
-//         id_umkm: umkm.id_umkm,
-//         nama_umkm: umkm.nama_umkm
-//       },
-//       periode: filters.bulan && filters.tahun 
-//         ? `${filters.bulan}/${filters.tahun}` 
-//         : 'Semua periode',
-//       data: salesData,
-//       summary: summary
-//     };
-//   } catch (error) {
-//     throw error;
-//   }
-// };
+  if (!partner) {
+    throw new ApiError(404, 'Profil partner tidak ditemukan! Silakan hubungi admin.');
+  }
 
-// /**
-//  * Get summary penjualan saja
-//  */
-// const getSummaryPenjualan = async (userId, filters, requestUser) => {
-//   try {
-//     if (!requestUser.admin && requestUser.id !== Number(userId)) {
-//       throw new ApiError(403, 'Anda tidak memiliki akses ke data ini');
-//     }
+  // 2. Get sales data
+  const orders = await getSalesDataByPartner(partner.id, filters);
 
-//     const umkm = await prisma.verifikasiUMKM.findFirst({
-//       where: { 
-//         id_user: Number(userId),
-//         status_verifikasi: 'Verified'
-//       },
-//       select: {
-//         id_umkm: true,
-//         nama_umkm: true
-//       }
-//     });
+  // 3. Hitung summary
+  const summary = calculateSummary(orders);
 
-//     if (!umkm) {
-//       throw new ApiError(404, 'Data UMKM tidak ditemukan atau belum terverifikasi');
-//     }
+  // 4. Get chart data (penjualan per hari dalam bulan)
+  const chartData = await getSalesChartData(partner.id, filters);
 
-//     const summary = await getSalesSummaryByUMKM(umkm.id_umkm, filters);
+  // 5. Get top 5 products (berdasarkan jumlah terjual)
+  const topProducts = await getTopProductsByPartner(partner.id, filters);
 
-//     return {
-//       umkm: {
-//         id_umkm: umkm.id_umkm,
-//         nama_umkm: umkm.nama_umkm
-//       },
-//       periode: filters.bulan && filters.tahun 
-//         ? `${filters.bulan}/${filters.tahun}` 
-//         : 'Semua periode',
-//       summary: summary
-//     };
-//   } catch (error) {
-//     throw error;
-//   }
-// };
+  // 6. Format periode
+  const periode = filters.bulan && filters.tahun
+    ? `${getNamaBulan(filters.bulan)} ${filters.tahun}`
+    : 'Semua Periode';
 
-// /**
-//  * Get detail penjualan per produk
-//  */
-// const getDetailPenjualanProduk = async (userId, productId, filters, requestUser) => {
-//   try {
-//     if (!requestUser.admin && requestUser.id !== Number(userId)) {
-//       throw new ApiError(403, 'Anda tidak memiliki akses ke data ini');
-//     }
+  return {
+    partner: {
+      id: partner.id,
+      nama: partner.name,
+      owner: partner.owner_name,
+    },
+    periode,
+    summary: {
+      jumlahProdukTerjual: summary.jumlahProdukTerjual,
+      labaBersih: formatRupiah(summary.labaBersih),
+      labaBersihRaw: summary.labaBersih,
+      labaKotor: formatRupiah(summary.labaKotor),
+      labaKotorRaw: summary.labaKotor,
+      pajak: formatRupiah(summary.pajak),
+      pajakRaw: summary.pajak,
+      persentasePajak: '10%',
+    },
+    chart: chartData,
+    topProducts: topProducts.map((product, index) => ({
+      ranking: index + 1,
+      namaProduk: product.name,
+      jumlahTerjual: product.totalQuantity,
+      totalPendapatan: formatRupiah(product.totalRevenue),
+      totalPendapatanRaw: product.totalRevenue,
+    })),
+  };
+};
 
-//     const umkm = await prisma.verifikasiUMKM.findFirst({
-//       where: { 
-//         id_user: Number(userId),
-//         status_verifikasi: 'Verified'
-//       }
-//     });
+/**
+ * Get laporan penjualan semua UMKM (admin)
+ */
+const getLaporanPenjualanAdmin = async (filters) => {
+  // 1. Get semua partner yang punya user_id langsung dengan Prisma
+  const partners = await prisma.partner.findMany({
+    where: {
+      user_id: {
+        not: null,
+      },
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+    },
+  });
 
-//     if (!umkm) {
-//       throw new ApiError(404, 'Data UMKM tidak ditemukan');
-//     }
+  if (!partners || partners.length === 0) {
+    throw new ApiError(404, 'Tidak ada data UMKM yang terdaftar.');
+  }
 
-//     const orders = await getProductSalesDetail(umkm.id_umkm, productId, filters);
+  // 2. Get sales data untuk semua UMKM
+  const allUMKMData = await getAllUMKMSalesData(filters);
 
-//     return orders;
-//   } catch (error) {
-//     throw error;
-//   }
-// };
+  // 3. Hitung total keseluruhan
+  let totalJumlahProduk = 0;
+  let totalLabaKotor = 0;
 
-// module.exports = {
-//   getLaporanPenjualan,
-//   getSummaryPenjualan,
-//   getDetailPenjualanProduk
-// };
+  allUMKMData.forEach(umkm => {
+    totalJumlahProduk += umkm.jumlahProdukTerjual;
+    totalLabaKotor += umkm.labaKotorRaw;
+  });
+
+  const totalPajak = totalLabaKotor * PAJAK_RATE;
+  const totalLabaBersih = totalLabaKotor - totalPajak;
+
+  // 4. Format periode
+  const periode = filters.bulan && filters.tahun
+    ? `${getNamaBulan(filters.bulan)} ${filters.tahun}`
+    : 'Semua Periode';
+
+  return {
+    periode,
+    totalSummary: {
+      totalJumlahProdukTerjual: totalJumlahProduk,
+      totalLabaBersih: formatRupiah(totalLabaBersih),
+      totalLabaBersihRaw: totalLabaBersih,
+      totalLabaKotor: formatRupiah(totalLabaKotor),
+      totalLabaKotorRaw: totalLabaKotor,
+      totalPajak: formatRupiah(totalPajak),
+      totalPajakRaw: totalPajak,
+    },
+    umkmList: allUMKMData.map(umkm => ({
+      partnerId: umkm.partnerId,
+      namaUMKM: umkm.namaPartner,
+      owner: umkm.owner,
+      jumlahProdukTerjual: umkm.jumlahProdukTerjual,
+      labaBersih: formatRupiah(umkm.labaBersih),
+      labaBersihRaw: umkm.labaBersih,
+      labaKotor: formatRupiah(umkm.labaKotorRaw),
+      labaKotorRaw: umkm.labaKotorRaw,
+    })),
+  };
+};
+
+/**
+ * Get laporan penjualan berdasarkan partner_id (admin)
+ */
+const getLaporanPenjualanByPartnerId = async (partnerId, filters) => {
+  // 1. Cari partner berdasarkan partner_id langsung dengan Prisma
+  const partner = await prisma.partner.findUnique({
+    where: { id: parseInt(partnerId) },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
+
+  if (!partner) {
+    throw new ApiError(404, 'Partner tidak ditemukan!');
+  }
+
+  // Pastikan partner punya user_id (berarti UMKM verified)
+  if (!partner.user_id) {
+    throw new ApiError(400, 'Partner ini belum terhubung dengan user UMKM.');
+  }
+
+  // 2. Get sales data
+  const orders = await getSalesDataByPartner(partner.id, filters);
+
+  // 3. Hitung summary
+  const summary = calculateSummary(orders);
+
+  // 4. Get chart data
+  const chartData = await getSalesChartData(partner.id, filters);
+
+  // 5. Get top 5 products
+  const topProducts = await getTopProductsByPartner(partner.id, filters);
+
+  // 6. Format periode
+  const periode = filters.bulan && filters.tahun
+    ? `${getNamaBulan(filters.bulan)} ${filters.tahun}`
+    : 'Semua Periode';
+
+  return {
+    partner: {
+      id: partner.id,
+      nama: partner.name,
+      owner: partner.owner_name,
+      user: {
+        id: partner.user.id,
+        name: partner.user.name,
+      },
+    },
+    periode,
+    summary: {
+      jumlahProdukTerjual: summary.jumlahProdukTerjual,
+      labaBersih: formatRupiah(summary.labaBersih),
+      labaBersihRaw: summary.labaBersih,
+      labaKotor: formatRupiah(summary.labaKotor),
+      labaKotorRaw: summary.labaKotor,
+      pajak: formatRupiah(summary.pajak),
+      pajakRaw: summary.pajak,
+      persentasePajak: '10%',
+    },
+    chart: chartData,
+    topProducts: topProducts.map((product, index) => ({
+      ranking: index + 1,
+      namaProduk: product.name,
+      jumlahTerjual: product.totalQuantity,
+      totalPendapatan: formatRupiah(product.totalRevenue),
+      totalPendapatanRaw: product.totalRevenue,
+    })),
+  };
+};
+
+/**
+ * Get top products untuk UMKM
+ */
+const getTopProductsUMKM = async (userId, filters) => {
+  // 1. Cari partner
+  const partner = await prisma.partner.findUnique({
+    where: { user_id: parseInt(userId) },
+  });
+
+  if (!partner) {
+    throw new ApiError(404, 'Profil partner tidak ditemukan! Silakan hubungi admin.');
+  }
+
+  // 2. Get top products
+  const limit = filters.limit || 10;
+  const topProducts = await getTopProductsByPartner(partner.id, filters);
+
+  // 3. Format periode
+  const periode = filters.bulan && filters.tahun
+    ? `${getNamaBulan(filters.bulan)} ${filters.tahun}`
+    : 'Semua Periode';
+
+  return {
+    partner: {
+      id: partner.id,
+      nama: partner.name,
+      owner: partner.owner_name,
+    },
+    periode,
+    limit,
+    totalProducts: topProducts.length,
+    products: topProducts.slice(0, limit).map((product, index) => ({
+      ranking: index + 1,
+      productId: product.id,
+      namaProduk: product.name,
+      gambarProduk: product.image,
+      jumlahTerjual: product.totalQuantity,
+      totalPendapatan: formatRupiah(product.totalRevenue),
+      totalPendapatanRaw: product.totalRevenue,
+    })),
+  };
+};
+
+/**
+ * Get top products dari semua UMKM (untuk admin)
+ */
+const getTopProductsAllUMKM = async (filters) => {
+  const dateFilter = buildDateFilter(filters);
+  const limit = filters.limit || 10;
+
+  // Get semua partner yang punya user_id
+  const partners = await prisma.partner.findMany({
+    where: {
+      user_id: {
+        not: null,
+      },
+    },
+  });
+
+  if (!partners || partners.length === 0) {
+    throw new ApiError(404, 'Tidak ada data UMKM yang terdaftar.');
+  }
+
+  const partnerIds = partners.map(p => p.id);
+
+  // Get all orders dengan produk dari semua partner
+  const orders = await prisma.order.findMany({
+    where: {
+      status: 'DELIVERED',
+      payment: {
+        status: 'SUCCESS',
+      },
+      orderItems: {
+        some: {
+          partner_id: { in: partnerIds },
+        },
+      },
+      ...dateFilter,
+    },
+    include: {
+      orderItems: {
+        where: {
+          partner_id: { in: partnerIds },
+        },
+        include: {
+          product: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+            },
+          },
+          partner: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  // Aggregate produk dari semua UMKM
+  const productStats = {};
+
+  orders.forEach(order => {
+    order.orderItems.forEach(item => {
+      const productId = item.product.id;
+
+      if (!productStats[productId]) {
+        productStats[productId] = {
+          id: productId,
+          name: item.product.name,
+          image: item.product.image,
+          partnerName: item.partner.name,
+          partnerId: item.partner.id,
+          totalQuantity: 0,
+          totalRevenue: 0,
+        };
+      }
+
+      productStats[productId].totalQuantity += item.quantity;
+      productStats[productId].totalRevenue += item.price * item.quantity;
+    });
+  });
+
+  // Sort by quantity dan ambil top N
+  const topProducts = Object.values(productStats)
+    .sort((a, b) => b.totalQuantity - a.totalQuantity)
+    .slice(0, limit);
+
+  // Format periode
+  const periode = filters.bulan && filters.tahun
+    ? `${getNamaBulan(filters.bulan)} ${filters.tahun}`
+    : 'Semua Periode';
+
+  return {
+    periode,
+    limit,
+    totalProducts: topProducts.length,
+    products: topProducts.map((product, index) => ({
+      ranking: index + 1,
+      productId: product.id,
+      namaProduk: product.name,
+      gambarProduk: product.image,
+      namaUMKM: product.partnerName,
+      partnerId: product.partnerId,
+      jumlahTerjual: product.totalQuantity,
+      totalPendapatan: formatRupiah(product.totalRevenue),
+      totalPendapatanRaw: product.totalRevenue,
+    })),
+  };
+};
+
+module.exports = {
+  getLaporanPenjualanUMKM,
+  getLaporanPenjualanAdmin,
+  getLaporanPenjualanByPartnerId,
+  getTopProductsUMKM,
+  getTopProductsAllUMKM,
+};
