@@ -20,6 +20,7 @@ const {
     getCompleteOrderByRole,
     getCost,
     getOrderDetailById,
+    getUMKMOrderDetailById,
     getOrderStatuses,
     getOrderHistoryByRole,
     getPaymentMethod,
@@ -33,7 +34,11 @@ const {
     readNotification,
     contactPartner,
     cancelOrder,
-    removeOrders
+    removeOrders,
+    // UMKM functions
+    getUMKMOrderHistory,
+    updateUMKMOrderStatus,
+    getUMKMOrderStatuses
 } = require("./order.service");
 const { order } = require("../db");
 
@@ -101,6 +106,139 @@ router.get("/partner-orders", authMiddleware, async (req, res) => {
         });
     }
 });
+
+// ==================== NEW: UMKM ENDPOINTS ====================
+
+// Get UMKM order history - UMKM only
+router.get("/umkm/history", authMiddleware, async (req, res) => {
+    try {
+        if (req.user.admin) {
+            return res.status(403).json({
+                message: "Akses ditolak! Endpoint ini hanya untuk UMKM.",
+            });
+        }
+
+        const userId = req.user.id;
+        let { status } = req.query;
+
+        // Convert status to array if needed
+        if (status && !Array.isArray(status)) {
+            status = [status];
+        }
+
+        const orders = await getUMKMOrderHistory(userId, status);
+
+        res.status(200).json({
+            message: "Riwayat pesanan UMKM berhasil diambil!",
+            data: orders,
+        });
+    } catch (error) {
+        if (error instanceof ApiError) {
+            console.error("ApiError:", error);
+            return res.status(error.statusCode).json({
+                message: error.message,
+            });
+        }
+
+        console.error("Error getting UMKM order history:", error);
+        return res.status(500).json({
+            message: "Terjadi kesalahan di server!",
+            error: error.message,
+        });
+    }
+});
+
+// Get UMKM order detail - UMKM only
+router.get("/umkm/:id/detail", authMiddleware, async (req, res) => {
+    try {
+        if (req.user.admin) {
+            return res.status(403).json({ message: "Akses ditolak! Endpoint ini hanya untuk UMKM." });
+        }
+
+        const orderId = req.params.id;
+        const userId = req.user.id;
+
+        const data = await getUMKMOrderDetailById(orderId, userId);
+
+        res.status(200).json({
+            message: "Detail pesanan UMKM berhasil diambil!",
+            data,
+        });
+    } catch (error) {
+        if (error instanceof ApiError) {
+            console.error("ApiError:", error);
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        console.error("Error getting UMKM order detail:", error);
+        return res.status(500).json({ message: "Terjadi kesalahan di server!", error: error.message });
+    }
+});
+
+// Update order status - UMKM only
+router.put("/umkm/:id/update-status", authMiddleware, async (req, res) => {
+    try {
+        if (req.user.admin) {
+            return res.status(403).json({
+                message: "Akses ditolak! Endpoint ini hanya untuk UMKM.",
+            });
+        }
+
+        const orderId = req.params.id;
+        const { status } = req.body;
+        const userId = req.user.id;
+
+        if (!status) {
+            return res.status(400).json({
+                message: "Status harus diisi!",
+            });
+        }
+
+        const updatedOrder = await updateUMKMOrderStatus(orderId, status, userId);
+
+        res.status(200).json({
+            message: "Status order berhasil diperbarui!",
+            data: updatedOrder,
+        });
+    } catch (error) {
+        if (error instanceof ApiError) {
+            console.error("ApiError:", error);
+            return res.status(error.statusCode).json({
+                message: error.message,
+            });
+        }
+
+        console.error("Error updating UMKM order status:", error);
+        return res.status(500).json({
+            message: "Terjadi kesalahan di server!",
+            error: error.message,
+        });
+    }
+});
+
+// Get available statuses for UMKM
+router.get("/umkm/order-statuses", authMiddleware, (req, res) => {
+    try {
+        if (req.user.admin) {
+            return res.status(403).json({
+                message: "Akses ditolak! Endpoint ini hanya untuk UMKM.",
+            });
+        }
+
+        const statuses = getUMKMOrderStatuses();
+        res.status(200).json({
+            message: "Daftar status order UMKM berhasil diambil",
+            data: statuses,
+        });
+    } catch (error) {
+        console.error("Error getting UMKM order statuses:", error);
+        res.status(500).json({
+            message: "Terjadi kesalahan saat mengambil status order",
+            error: error.message,
+        });
+    }
+});
+
+// ==================== END: UMKM ENDPOINTS ====================
 
 // Get order detail - admin, customer owner, or UMKM partner
 router.get("/:id/detail", authMiddleware, async (req, res) => {

@@ -28,7 +28,8 @@
     { "name": "Partners" },
     { "name": "Cart" },
     { "name": "Orders" },
-    { "name": "Company" }
+    { "name": "Company" },
+    { "name": "Order UMKM" }
   ],
 
   "components": {
@@ -809,6 +810,262 @@
         "responses": {
           "201": {
             "description": "Order created successfully"
+          }
+        }
+      }
+    },
+    "/api/v1/order/umkm/history": {
+      "get": {
+        "tags": ["Order UMKM"],
+        "summary": "Get riwayat pesanan UMKM (UMKM only)",
+        "description": "UMKM dapat melihat riwayat semua pesanan yang mengandung produk mereka dengan filter status opsional.",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["PENDING", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELED"]
+              }
+            },
+            "description": "Filter berdasarkan status pesanan (bisa multiple)",
+            "example": ["PROCESSING", "SHIPPED"]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Riwayat pesanan UMKM berhasil diambil"
+          },
+          "403": {
+            "description": "Akses ditolak! Endpoint ini hanya untuk UMKM."
+          },
+          "404": {
+            "description": "Profil partner tidak ditemukan"
+          },
+          "500": {
+            "description": "Terjadi kesalahan di server"
+          }
+        }
+      }
+    },
+    "/api/v1/order/umkm/{id}/detail": {
+      "get": {
+        "tags": ["Order UMKM"],
+        "summary": "Get detail pesanan UMKM by ID (UMKM only)",
+        "description": "UMKM dapat melihat detail pesanan spesifik yang mengandung produk mereka berdasarkan ID pesanan.",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID pesanan"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detail pesanan UMKM berhasil diambil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Detail pesanan UMKM berhasil diambil!"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "orderId": { "type": "integer", "example": 123 },
+                        "statusOrder": { "type": "string", "example": "PROCESSING" },
+                        "createdAt": { "type": "string", "format": "date-time" },
+                        "updatedAt": { "type": "string", "format": "date-time" },
+                        "customerName": { "type": "string", "example": "John Doe" },
+                        "customerPhone": { "type": "string", "example": "081234567890" },
+                        "shippingAddress": {
+                          "type": "object",
+                          "properties": {
+                            "address": { "type": "string" },
+                            "province": { "type": "string" },
+                            "city": { "type": "string" },
+                            "district": { "type": "string" },
+                            "subdistrict": { "type": "string" },
+                            "zipCode": { "type": "string" }
+                          }
+                        },
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "productId": { "type": "integer" },
+                              "productImage": { "type": "string" },
+                              "name": { "type": "string" },
+                              "quantity": { "type": "integer" },
+                              "price": { "type": "number" },
+                              "subtotal": { "type": "number" },
+                              "note": { "type": "string" }
+                            }
+                          }
+                        },
+                        "payment": {
+                          "type": "object",
+                          "properties": {
+                            "method": { "type": "string" },
+                            "status": { "type": "string" },
+                            "partnerAmount": { 
+                              "type": "number", 
+                              "description": "Total hanya untuk produk UMKM ini" 
+                            }
+                          }
+                        },
+                        "cancellation": {
+                          "type": "object",
+                          "nullable": true,
+                          "properties": {
+                            "reason": { "type": "string" },
+                            "canceledAt": { "type": "string", "format": "date-time" }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Akses ditolak! Endpoint ini hanya untuk UMKM atau pesanan tidak mengandung produk Anda."
+          },
+          "404": {
+            "description": "Pesanan tidak ditemukan atau profil partner tidak ditemukan"
+          },
+          "500": {
+            "description": "Terjadi kesalahan di server"
+          }
+        }
+      }
+    },
+    "/api/v1/order/umkm/{id}/update-status": {
+      "put": {
+        "tags": ["Order UMKM"],
+        "summary": "Update status pesanan (UMKM only)",
+        "description": "UMKM dapat mengubah status pesanan yang mengandung produk mereka. Hanya bisa mengubah ke status PROCESSING atau SHIPPED dengan validasi transisi yang benar.",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID pesanan"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["status"],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": ["PROCESSING", "SHIPPED"],
+                    "description": "Status baru pesanan",
+                    "example": "PROCESSING"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Status order berhasil diperbarui"
+          },
+          "400": {
+            "description": "Validasi transisi status gagal"
+          },
+          "403": {
+            "description": "Akses ditolak atau status tidak diizinkan"
+          },
+          "404": {
+            "description": "Pesanan atau profil partner tidak ditemukan"
+          },
+          "500": {
+            "description": "Terjadi kesalahan di server"
+          }
+        }
+      }
+    },
+    "/api/v1/order/umkm/order-statuses": {
+      "get": {
+        "tags": ["Order UMKM"],
+        "summary": "Get daftar status yang tersedia untuk UMKM",
+        "description": "Menampilkan daftar status pesanan yang bisa digunakan oleh UMKM (PROCESSING dan SHIPPED).",
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Daftar status berhasil diambil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Daftar status order UMKM berhasil diambil"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "string",
+                            "enum": ["PROCESSING", "SHIPPED"]
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "example": [
+                        {
+                          "value": "PROCESSING",
+                          "label": "Diproses",
+                          "description": "Pesanan sedang diproses oleh UMKM"
+                        },
+                        {
+                          "value": "SHIPPED",
+                          "label": "Dikirim",
+                          "description": "Pesanan dalam pengiriman"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Akses ditolak! Endpoint ini hanya untuk UMKM."
+          },
+          "500": {
+            "description": "Terjadi kesalahan saat mengambil status order"
           }
         }
       }
