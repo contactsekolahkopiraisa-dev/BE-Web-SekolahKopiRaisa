@@ -241,9 +241,10 @@ const insertNewOrders = async (
         shipping_code,
         shipping_service,
         parsedCost,
-    }, midtransCallback
+    }
 ) => {
-    return await prisma.$transaction(async (tx) => {
+    // Transaksi HANYA untuk database operations
+    const newOrder = await prisma.$transaction(async (tx) => {
         for (const item of items) {
             await tx.inventory.update({
                 where: {
@@ -257,7 +258,7 @@ const insertNewOrders = async (
             });
         }
         
-        const newOrder = await tx.order.create({
+        return await tx.order.create({
             data: {
                 user: { connect: { id: userId } },
                 status: "PENDING",
@@ -313,21 +314,28 @@ const insertNewOrders = async (
                 payment: true,
             },
         });
-        
-        if (paymentMethod !== "COD") {
-            const midtransResult = await midtransCallback(newOrder);
-
-            await tx.payment.update({
-                where: { id: newOrder.payment.id },
-                data: {
-                    snap_token: midtransResult?.snapToken || null,
-                    snap_redirect_url: midtransResult?.snapRedirectUrl || null,
-                },
-            });
-            return { ...newOrder, midtransResult };
-        }
-        return { ...newOrder, midtransResult: null };
+    }, {
+        maxWait: 5000,
+        timeout: 10000, // Tingkatkan timeout jadi 10 detik
     });
+    
+    // Panggil Midtrans API SETELAH transaksi selesai
+    let midtransResult = null;
+    if (paymentMethod !== "COD") {
+        const { createMidtransSnapToken } = require("../utils/midtrans");
+        midtransResult = await createMidtransSnapToken(newOrder);
+
+        // Update payment dengan snap token
+        await prisma.payment.update({
+            where: { id: newOrder.payment.id },
+            data: {
+                snap_token: midtransResult?.snapToken || null,
+                snap_redirect_url: midtransResult?.snapRedirectUrl || null,
+            },
+        });
+    }
+    
+    return { ...newOrder, midtransResult };
 };
 
 const updatePaymentSnapToken = async (orderId, snapToken, snapRedirectUrl) => {
