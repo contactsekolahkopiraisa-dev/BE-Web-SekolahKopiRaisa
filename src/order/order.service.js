@@ -273,6 +273,66 @@ const createOrders = async (userId, orderData) => {
     };
 };
 
+// ============================================
+// HANDLE MIDTRANS NOTIFICATION (WEBHOOK)
+// ============================================
+const handleMidtransNotification = async (notification) => {
+    const {
+        transaction_status,
+        payment_type,
+        order_id,
+        fraud_status,
+    } = notification;
+
+    console.log("📢 Midtrans Notification Received:", notification);
+    
+    // Validasi data dari Midtrans
+    if (!transaction_status || !payment_type || !order_id) {
+        throw new ApiError(400, "Data tidak lengkap dari Midtrans");
+    }
+
+    // Extract order ID dari format: ORDER-123-1234567890
+    const idMatch = order_id?.match(/ORDER-(\d+)-/);
+    const orderId = idMatch ? parseInt(idMatch[1], 10) : null;
+
+    if (!orderId) {
+        throw new Error(`order_id tidak valid: ${order_id}`);
+    }
+
+    // Map Midtrans status ke internal status
+    const internalStatus = mapTransactionStatus(transaction_status, payment_type, fraud_status);
+    const paymentMethod = mapPaymentMethod(payment_type);
+
+    if (!paymentMethod) {
+        throw new Error(`Payment method '${payment_type}' tidak dikenali`);
+    }
+
+    console.log("✅ Parsed Order ID:", orderId);
+    console.log("🔍 Mapped Status:", internalStatus);
+    console.log("💳 Mapped Payment Method:", paymentMethod);
+
+    // Update payment status di database
+    const { order, updatedPayment } = await updateOrderPaymentStatus(orderId, {
+        payment_status: internalStatus,
+        payment_method: paymentMethod,
+    });
+
+    // Kirim notifikasi ke user jika pembayaran berhasil
+    if (internalStatus === 'SUCCESS') {
+        try {
+            await createNotificationForPaymentSuccess(order, updatedPayment);
+        } catch (notificationError) {
+            console.error(
+                "⚠️ Gagal membuat notifikasi pembayaran untuk order:",
+                orderId,
+                notificationError
+            );
+        }
+    }
+
+    return updatedPayment;
+};
+
 const mapTransactionStatus = (status, type, fraud) => {
     switch (status) {
         case "capture":
