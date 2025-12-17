@@ -133,8 +133,8 @@ const createOrders = async (userId, orderData) => {
         shipping_service,
         cost
     } = orderData;
+    console.log("Items:", items);
 
-    // Validasi dan parsing data
     const parsedCost = parseInt(cost);
     if (isNaN(parsedCost)) {
         throw new ApiError(400, "Biaya pengiriman (cost) tidak valid!");
@@ -157,9 +157,13 @@ const createOrders = async (userId, orderData) => {
         throw new ApiError(404, "Alamat dan metode pembayaran wajib diisi");
     }
 
-    // Get product details
     const productIds = items.map((item) => item.products_id);
+    productIds.forEach((id, index) => {
+        console.log(`Tipe data productId di index ${index}:`, id, "-", typeof id);
+    });
+
     const products = await getProductsByIds(productIds);
+    console.log("Products_id yang ditemukan:", products);
 
     if (products.length !== items.length) {
         throw new ApiError(404, "Beberapa produk tidak ditemukan di database");
@@ -169,7 +173,6 @@ const createOrders = async (userId, orderData) => {
         products.map(product => [product.id, product])
     );
 
-    // Hitung total dan validasi stock
     let totalProductPrice = 0;
     const itemsWithPrice = items.map((item) => {
         const product = productMap[item.products_id];
@@ -206,9 +209,6 @@ const createOrders = async (userId, orderData) => {
 
     const itemsToSave = itemsWithPrice.map(({ fromCart, ...rest }) => rest);
 
-    // ============================================
-    // PANGGIL insertNewOrders (SUDAH TIDAK PAKAI CALLBACK)
-    // ============================================
     const orders = await insertNewOrders(userId, {
         items: itemsToSave,
         address,
@@ -224,45 +224,41 @@ const createOrders = async (userId, orderData) => {
         shipping_code,
         shipping_service,
         parsedCost,
+    }, async (order) => {
+        return await createMidtransSnapToken(order);
     });
 
     if (!orders) {
         throw new ApiError(500, "Gagal membuat order!")
-    }
+    };
 
-    // ============================================
-    // FORMAT PAYMENT INFO UNTUK RESPONSE
-    // ============================================
     let paymentInfo;
-    
     if (orders.payment.method === "COD") {
         paymentInfo = {
             type: "cod",
             snapToken: null,
             snapRedirectUrl: null,
-        };
+        }
     } else {
         const midtransResult = orders.midtransResult;
         let snapToken = null;
         let snapRedirectUrl = null;
 
         if (midtransResult) {
-            if (midtransResult.type === "qris") {
+            if (orders.payment.method === "QRIS") {
                 snapRedirectUrl = midtransResult.qrUrl;
             } else {
                 snapToken = midtransResult.snapToken;
                 snapRedirectUrl = midtransResult.snapRedirectUrl;
             }
         }
-        
         paymentInfo = {
             type: orders.payment.method === "QRIS" ? "qris" : "snap",
             snapToken,
             snapRedirectUrl,
-        };
+        }
     }
 
-    // Hapus item dari cart jika dari cart
     if (fromCartProductId.length > 0) {
         await deleteProductCartItems(userId, fromCartProductId);
     }
@@ -271,6 +267,57 @@ const createOrders = async (userId, orderData) => {
         updatedOrder: orders,
         paymentInfo,
     };
+};
+
+const handleMidtransNotification = async (notification) => {
+    const {
+        transaction_status,
+        payment_type,
+        order_id,
+        fraud_status,
+    } = notification;
+
+    console.log("🔥 Midtrans Notification:", notification);
+    if (!transaction_status || !payment_type || !order_id) {
+        throw new ApiError(400, "Data tidak lengkap dari Midtrans");
+    }
+
+    const idMatch = order_id?.match(/ORDER-(\d+)-/);
+    const orderId = idMatch ? parseInt(idMatch[1], 10) : null;
+
+    if (!orderId) {
+        throw new Error(`order_id tidak valid: ${order_id}`);
+    }
+
+    const internalStatus = mapTransactionStatus(transaction_status, payment_type, fraud_status);
+    const paymentMethod = mapPaymentMethod(payment_type);
+
+    if (!paymentMethod) {
+        throw new Error(`Payment method '${payment_type}' tidak dikenali`);
+    }
+
+    console.log("✅ Parsed Order ID:", orderId);
+    console.log("🔍 Mapped Status:", internalStatus);
+    console.log("💳 Mapped Payment Method:", paymentMethod);
+
+    const { order, updatedPayment } = await updateOrderPaymentStatus(orderId, {
+        payment_status: internalStatus,
+        payment_method: paymentMethod,
+    });
+
+    if (internalStatus === 'SUCCESS') {
+        try {
+            await createNotificationForPaymentSuccess(order, updatedPayment);
+        } catch (notificationError) {
+            console.error(
+                "⚠️ Gagal membuat notifikasi pembayaran untuk order:",
+                orderId,
+                notificationError
+            );
+        }
+    }
+
+    return updatedPayment;
 };
 
 const mapTransactionStatus = (status, type, fraud) => {
