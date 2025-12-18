@@ -34,6 +34,7 @@ const findOrdersByUser = async (userId, statusFilter) => {
             }),
         },
         include: {
+            user: true,
             orderItems: {
                 include: {
                     product: true,
@@ -208,6 +209,7 @@ const findUserComplietedOrders = async (userId) => {
             status: "DELIVERED",
         },
         include: {
+            user: true,
             orderItems: {
                 include: {
                     product: {

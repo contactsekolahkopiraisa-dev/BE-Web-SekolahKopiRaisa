@@ -98,14 +98,48 @@ const getOrdersByPartner = async (userId, status) => {
 };
 
 const getOrderHistoryByRole = async (userId, role, statusFilter) => {
+    let orders;
+    
     if (role === "admin") {
-        return await findAllOrders(statusFilter);
+        orders = await findAllOrders(statusFilter);
     } else {
-        // Untuk user biasa dan UMKM, tampilkan berdasarkan userId
-        return await findOrdersByUser(userId, statusFilter);
+        orders = await findOrdersByUser(userId, statusFilter);
     }
-};
 
+    // ✅ Format response dengan customer info
+    return orders.map(order => ({
+        orderId: order.id,
+        statusOrder: order.status,
+        createdAt: order.created_at,
+        updatedAt: order.updated_at,
+        // ✅ TAMBAH: Customer info
+        customerName: order.user?.name || "-",
+        customerPhone: order.user?.phone_number || "-",
+        items: order.orderItems.map(item => ({
+            productId: item.product?.id,
+            productImage: item.product?.image,
+            name: item.product?.name || "-",
+            quantity: item.quantity,
+            price: item.price,
+            subtotal: item.quantity * item.price,
+            partner: {
+                id: item.partner?.id,
+                name: item.partner?.name || "Mitra"
+            },
+            note: item.custom_note || "-",
+        })),
+        shippingAddress: order.shippingAddress?.address || "-",
+        payment: {
+            method: order.payment?.method,
+            status: order.payment?.status,
+            amount: order.payment?.amount,
+        },
+        cancellation: order.OrderCancellation ? {
+            reason: order.OrderCancellation.reason,
+            canceledAt: order.OrderCancellation.created_at,
+        } : null,
+    }));
+};
 const getCompleteOrderByRole = async (userId, role) => {
     if (role === "admin") {
         return await findAllComplietedOrders();

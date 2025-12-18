@@ -123,32 +123,230 @@
         "summary": "Update UMKM (owner atau admin)",
         "security": [{ "cookieAuth": [] }],
         "parameters": [
-          { "name": "idUmkm", "in": "path", "required": true, "schema": { "type": "integer" } }
+          { "name": "idUmkm",
+            "in": "path", 
+            "required": true, 
+            "schema": { "type": "integer" },
+            "description": "ID UMKM yang akan diupdate",
+            "example": 1
+          }
         ],
         "requestBody": {
-          "required": true,
+          "required": false,
           "content": {
             "multipart/form-data": {
               "schema": {
                 "type": "object",
                 "properties": {
-                  "namaUmkm": { "type": "string" },
-                  "ktp": { "type": "string" },
+                  "name": { 
+                    "type": "string",
+                    "description": "Nama pemilik UMKM (update data user)",
+                    "example": "Budi Santoso"
+                  },
+                  "email": { 
+                    "type": "string",
+                    "format": "email",
+                    "description": "Email pemilik UMKM (update data user)",
+                    "example": "budi.santoso@gmail.com"
+                  },
+                  "phone_number": { 
+                    "type": "string",
+                    "description": "Nomor HP pemilik UMKM (update data user)",
+                    "example": "081234567890"
+                  },
+                  "password": { 
+                    "type": "string",
+                    "description": "Password baru (opsional, akan di-hash otomatis). Minimal 6 karakter.",
+                    "example": "newpassword123"
+                  },
+                  "namaUmkm": { 
+                    "type": "string",
+                    "description": "Nama UMKM",
+                    "example": "Kopi Raisa Jaya"
+                  },
+                  "ktp": { 
+                    "type": "string",
+                    "description": "Nomor KTP pemilik (16 digit)",
+                    "example": "3506012345678901"
+                  },
                   "addresses": {
                     "type": "string",
-                    "description": "UPDATE dengan JSON Array format baru menggunakan id_desa (integer) + kode_pos.",
-                    "example": "[\n  {\n    \"id_desa\": 9211002,\n    \"alamat\": \"Jl. PB Sudirman No.10\",\n    \"kode_pos\": \"68124\"\n  }\n]"
+                    "description": "JSON Array alamat dengan format baru menggunakan id_desa. Alamat lama akan dihapus dan diganti dengan yang baru.",
+                    "example": "[\n  {\n    \"id_desa\": 9211002,\n    \"alamat\": \"Jl. PB Sudirman No.10 Updated\",\n    \"kode_pos\": \"68124\"\n  },\n  {\n    \"id_desa\": 9211001,\n    \"alamat\": \"Jl. Alternatif No.5\",\n    \"kode_pos\": \"68121\"\n  }\n]"
                   },
-                  "sertifikatHalal": { "type": "string", "format": "binary" }
+                  "sertifikatHalal": { 
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    },
+                    "description": "Upload file sertifikat halal baru (bisa multiple files). File lama akan dihapus dari Cloudinary dan diganti dengan yang baru."
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Update UMKM berhasil" },
-          "400": { "description": "Validasi gagal" },
-          "403": { "description": "Akses ditolak" }
+          "200": { 
+            "description": "Update UMKM berhasil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Update UMKM berhasil"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id_umkm": { "type": "integer", "example": 1 },
+                        "id_user": { "type": "integer", "example": 5 },
+                        "nama_umkm": { "type": "string", "example": "Kopi Raisa Jaya" },
+                        "ktp": { "type": "string", "example": "3506012345678901" },
+                        "sertifikat_halal": {
+                          "type": "array",
+                          "items": { "type": "string" },
+                          "example": [
+                            "https://res.cloudinary.com/xxx/sertifikat1.jpg",
+                            "https://res.cloudinary.com/xxx/sertifikat2.pdf"
+                          ]
+                        },
+                        "status_verifikasi": {
+                          "type": "string",
+                          "enum": ["Pending", "Verified", "Rejected"],
+                          "example": "Verified"
+                        },
+                        "User": {
+                          "type": "object",
+                          "properties": {
+                            "id": { "type": "integer", "example": 5 },
+                            "name": { "type": "string", "example": "Budi Santoso" },
+                            "email": { "type": "string", "example": "budi.santoso@gmail.com" },
+                            "phone_number": { "type": "string", "example": "081234567890" },
+                            "role": { "type": "string", "example": "UMKM" }
+                          }
+                        },
+                        "addresses": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id_alamat": { "type": "integer", "example": 1 },
+                              "alamat": { "type": "string", "example": "Jl. PB Sudirman No.10 Updated" },
+                              "kode_pos": { "type": "string", "example": "68124" },
+                              "desa": {
+                                "type": "object",
+                                "properties": {
+                                  "id_desa": { "type": "integer", "example": 9211002 },
+                                  "nama_desa": { "type": "string", "example": "Antirogo" },
+                                  "kecamatan": {
+                                    "type": "object",
+                                    "properties": {
+                                      "id_kecamatan": { "type": "integer", "example": 921100 },
+                                      "nama_kecamatan": { "type": "string", "example": "Sumbersari" },
+                                      "kabupaten": {
+                                        "type": "object",
+                                        "properties": {
+                                          "id_kabupaten": { "type": "integer", "example": 9211 },
+                                          "nama_kabupaten": { "type": "string", "example": "Kabupaten Jember" },
+                                          "provinsi": {
+                                            "type": "object",
+                                            "properties": {
+                                              "id_provinsi": { "type": "integer", "example": 92 },
+                                              "nama_provinsi": { "type": "string", "example": "Jawa Timur" }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { 
+            "description": "Validasi gagal atau ID Desa tidak valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Validasi gagal!"
+                    },
+                    "errors": {
+                      "type": "object",
+                      "example": {
+                        "email": "Email tidak valid",
+                        "password": "Password minimal 6 karakter",
+                        "ktp": "KTP harus 16 digit"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": { 
+            "description": "Akses ditolak - hanya owner atau admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Access denied. Hanya pemilik atau admin yang boleh mengubah data ini."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Data UMKM tidak ditemukan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Data UMKM tidak ditemukan"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Kesalahan server",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Terjadi kesalahan di server"
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
