@@ -128,7 +128,8 @@ const updateUMKM = async (idUmkm, updateData) => {
     }
   }
 
-  const payload = {
+  // Prepare payload untuk update UMKM
+  const umkmPayload = {
     nama_umkm: updateData.namaUmkm || existing.nama_umkm,
     ktp: updateData.ktp || existing.ktp
   };
@@ -147,15 +148,75 @@ const updateUMKM = async (idUmkm, updateData) => {
       uploadToCloudinary(f.buffer, f.originalname)
     );
     const results = await Promise.all(uploadPromises);
-    payload.sertifikat_halal = results.map(r => r.url);
+    umkmPayload.sertifikat_halal = results.map(r => r.url);
   }
 
   // Include addresses dalam payload jika ada
   if (updateData.addresses) {
-    payload.addresses = updateData.addresses;
+    umkmPayload.addresses = updateData.addresses;
   }
 
-  const updated = await updateUMKMById(idUmkm, payload);
+  // ============================================
+  // TRANSACTION: Update UMKM + User Data
+  // ============================================
+  const updated = await prisma.$transaction(async (tx) => {
+    // 1. Update data UMKM
+    const updatedUMKM = await tx.verifikasiUMKM.update({
+      where: { id_umkm: Number(idUmkm) },
+      data: umkmPayload,
+      include: { 
+        addresses: {
+          include: {
+            desa: {
+              include: {
+                kecamatan: {
+                  include: {
+                    kabupaten: {
+                      include: {
+                        provinsi: true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }, 
+        User: true 
+      }
+    });
+
+    // 2. Update data User jika ada
+    if (updateData.userData && Object.keys(updateData.userData).length > 0) {
+      await tx.user.update({
+        where: { id: Number(existing.id_user) },
+        data: updateData.userData
+      });
+
+      // Refresh data User setelah update
+      const refreshedUser = await tx.user.findUnique({
+        where: { id: Number(existing.id_user) }
+      });
+      updatedUMKM.User = refreshedUser;
+    }
+
+    // 3. Update Partner name jika nama UMKM berubah
+    if (updateData.namaUmkm && updateData.namaUmkm !== existing.nama_umkm) {
+      try {
+        await tx.partner.updateMany({
+          where: { user_id: Number(existing.id_user) },
+          data: { name: updateData.namaUmkm }
+        });
+        console.log(`✅ Partner name updated to: ${updateData.namaUmkm}`);
+      } catch (e) {
+        console.warn('⚠️ Gagal update partner name:', e.message);
+        // Don't throw, partner update is optional
+      }
+    }
+
+    return updatedUMKM;
+  });
+
   return updated;
 };
 
