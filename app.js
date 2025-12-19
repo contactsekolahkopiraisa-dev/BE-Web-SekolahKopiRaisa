@@ -61,6 +61,15 @@ const corsOptions = {
     }
   },
   credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "Accept",
+  ],
+  exposedHeaders: ["Content-Range", "X-Content-Range"],
+  optionsSuccessStatus: 200,
 };
 
 // === Middleware ===
@@ -68,6 +77,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options("*", cors(corsOptions));
 
 // === Session Middleware ===
 app.use(
@@ -102,10 +114,11 @@ const productRoutes = require("./src/product/product.controller");
 const cartRoutes = require("./src/cart/cart.controller");
 const orderRoutes = require("./src/order/order.controller");
 const companyRoutes = require("./src/company/company.controller");
-const wilayahRoutes = require('./src/utils/wilayah.controller');
+const wilayahRoutes = require("./src/utils/wilayah.controller");
 
 // === LAPORAN
 const umkmRoutes = require("./src/auth/umkm.controller");
+const keuanganRoutes = require("./src/laporan_keuangan/keuangan.controller");
 const keuanganRoutes = require('./src/laporan_keuangan/keuangan.controller');
 const penjualanRoutes  = require("./src/laporan_penjualan/penjualan.controller");
 
@@ -118,9 +131,10 @@ const {
 } = require("./src/layanan/C_Layanan.routes");
 const { modulRoutes } = require("./src/modul/C_Modul.routes");
 const { mouRoutes } = require("./src/mou/C_Mou.routes");
-const { laporanLayananRoutes } = require("./src/laporan_layanan/C_LaporanLayanan.routes");
+const {
+  laporanLayananRoutes,
+} = require("./src/laporan_layanan/C_LaporanLayanan.routes");
 const { sertifikatRoutes } = require("./src/sertifikat/C_Sertifikat.routes");
-
 
 app.use(express.json());
 
@@ -140,6 +154,8 @@ app.use("/api/v1/company", companyRoutes);
 
 // === LAPORAN
 app.use("/api/v1/auth/umkm", umkmRoutes);
+app.use("/api/v1/laporan-keuangan", keuanganRoutes);
+app.use("/api/v1/wilayah", wilayahRoutes);
 app.use('/api/v1/laporan-keuangan', keuanganRoutes);
 app.use('/api/v1/wilayah', wilayahRoutes);
 app.use("/api/v1/penjualan", penjualanRoutes);
@@ -232,7 +248,14 @@ app.use((err, req, res, next) => {
     message,
   });
 
-  console.error("❌ Error: [", statusCode, "] ", message, "\nstack: ", err.stack);
+  console.error(
+    "❌ Error: [",
+    statusCode,
+    "] ",
+    message,
+    "\nstack: ",
+    err.stack
+  );
 });
 
 // === Start Server (Lokal Only) ===
