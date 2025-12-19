@@ -119,9 +119,7 @@ const wilayahRoutes = require("./src/utils/wilayah.controller");
 // === LAPORAN
 const umkmRoutes = require("./src/auth/umkm.controller");
 const keuanganRoutes = require("./src/laporan_keuangan/keuangan.controller");
-const keuanganRoutes = require('./src/laporan_keuangan/keuangan.controller');
-const penjualanRoutes  = require("./src/laporan_penjualan/penjualan.controller");
-
+const penjualanRoutes = require("./src/laporan_penjualan/penjualan.controller");
 
 // === LAYANAN
 const {
@@ -135,8 +133,6 @@ const {
   laporanLayananRoutes,
 } = require("./src/laporan_layanan/C_LaporanLayanan.routes");
 const { sertifikatRoutes } = require("./src/sertifikat/C_Sertifikat.routes");
-
-app.use(express.json());
 
 // Default Endpoint
 app.get("/", (req, res) => {
@@ -156,10 +152,7 @@ app.use("/api/v1/company", companyRoutes);
 app.use("/api/v1/auth/umkm", umkmRoutes);
 app.use("/api/v1/laporan-keuangan", keuanganRoutes);
 app.use("/api/v1/wilayah", wilayahRoutes);
-app.use('/api/v1/laporan-keuangan', keuanganRoutes);
-app.use('/api/v1/wilayah', wilayahRoutes);
 app.use("/api/v1/penjualan", penjualanRoutes);
-
 
 // === LAYANAN
 app.use("/api/v1/layanan", layananRoutes);
