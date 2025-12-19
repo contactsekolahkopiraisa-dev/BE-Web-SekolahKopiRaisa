@@ -9,6 +9,7 @@ const {
   createProduct,
   updateProduct,
   removeProductById,
+  getProductsByPartner,
 } = require("./product.service");
 const {
   authMiddleware,
@@ -23,9 +24,35 @@ const handleValidationResultFinal = require("../middleware/handleValidationResul
 
 const router = express.Router();
 
+// Middleware untuk cek akses Admin atau UMKM
+const checkAdminOrUMKMAccess = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({
+      message: "Unauthorized! Silakan login terlebih dahulu.",
+    });
+  }
+  
+  if (!req.user.admin && req.user.role !== 'UMKM') {
+    return res.status(403).json({
+      message: "Akses ditolak! Hanya admin dan UMKM yang bisa mengakses.",
+    });
+  }
+  
+  next();
+};
+
+// GET all products - Public access atau filtered untuk UMKM
 router.get("/", async (req, res) => {
   try {
-    const products = await getAllProducts();
+    let products;
+    
+    // Jika user adalah UMKM, hanya tampilkan produk mereka
+    if (req.user && req.user.role === 'UMKM' && !req.user.admin) {
+      products = await getProductsByPartner(req.user.id);
+    } else {
+      // Admin atau public bisa lihat semua produk
+      products = await getAllProducts();
+    }
 
     const formatedProducts = products.map((product) => ({
       idProduct: product.id,
@@ -44,6 +71,7 @@ router.get("/", async (req, res) => {
         addressPartner: product.partner.address,
       },
     }));
+    
     console.log("data :", products);
     res.status(200).json({
       message: "Data produk berhasil didapatkan!",
@@ -65,10 +93,11 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get("/:id", async (req, res) => {
+// GET product by ID - dengan validasi ownership untuk UMKM
+router.get("/:id", authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
-    const product = await getProductById(id);
+    const product = await getProductById(id, req.user?.id, req.user?.admin);
 
     const formatedProductId = {
       idProduct: product.id,
@@ -84,7 +113,6 @@ router.get("/:id", async (req, res) => {
         namePartner: product.partner.name,
         ownerPartner: product.partner.owner_name,
         phoneNumberPartner: product.partner.phone_number,
-        // addressPartner: product.partner.address
       },
     };
 
@@ -109,9 +137,11 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// POST - Create product
 router.post(
   "/",
   authMiddleware,
+  checkAdminOrUMKMAccess,
   upload.single("productFile"),
   multerErrorHandler,
   validateProductMedia,
@@ -135,6 +165,7 @@ router.post(
           errors: errorObject,
         });
       }
+      
       if (
         req.mediaValidationErrors &&
         Object.keys(req.mediaValidationErrors).length > 0
@@ -145,16 +176,11 @@ router.post(
         });
       }
 
-      if (!req.user.admin) {
-        return res
-          .status(403)
-          .json({ message: "Akses ditolak! Hanya admin yang bisa mengakses." });
-      }
       const { name, weight, price, stock, description, partner_id } = req.body;
       const file = req.file;
 
-      // Sanitize HTML untuk disimpan
-      const cleanHtml = DOMPurify.sanitize(description || "");
+      // Sanitize HTML untuk disimpan (jika menggunakan DOMPurify)
+      // const cleanHtml = DOMPurify.sanitize(description || "");
 
       // Bersihkan konten dari tag HTML
       const plainDescription = description
@@ -174,9 +200,11 @@ router.post(
         price,
         weight: parseInt(weight),
         stock,
-        description: cleanHtml,
+        description: description, // atau cleanHtml jika pakai DOMPurify
         partner_id,
         image: file,
+        user_id: req.user.id,
+        is_admin: req.user.admin,
       });
 
       console.log("data product:", product);
@@ -186,7 +214,6 @@ router.post(
       });
     } catch (error) {
       if (error instanceof ApiError) {
-        // console.error('ApiError:', error);
         return res.status(error.statusCode).json({
           message: error.message,
         });
@@ -200,9 +227,11 @@ router.post(
   }
 );
 
+// PUT - Update product
 router.put(
   "/:id",
   authMiddleware,
+  checkAdminOrUMKMAccess,
   upload.single("productFile"),
   multerErrorHandler,
   productValidator,
@@ -228,13 +257,6 @@ router.put(
           errors: errorObject,
         });
       }
-      if (!req.user.admin) {
-        return res
-          .status(403)
-          .json({
-            message: "Akses ditolak! Hanya admin yang bisa mengedit produk.",
-          });
-      }
 
       const { id } = req.params;
       const dataProduct = req.body;
@@ -245,7 +267,12 @@ router.put(
       };
 
       console.log("editedProductData:", editedProductData);
-      const product = await updateProduct(parseInt(id), editedProductData);
+      const product = await updateProduct(
+        parseInt(id),
+        editedProductData,
+        req.user.id,
+        req.user.admin
+      );
 
       console.log(product);
       res.status(200).json({
@@ -269,19 +296,16 @@ router.put(
   }
 );
 
-router.delete("/:idProduct", authMiddleware, async (req, res) => {
+// DELETE product
+router.delete("/:idProduct", authMiddleware, checkAdminOrUMKMAccess, async (req, res) => {
   try {
     const { idProduct } = req.params;
 
-    if (!req.user.admin) {
-      return res
-        .status(403)
-        .json({
-          message: "Akses ditolak! Hanya admin yang bisa menghapus produk.",
-        });
-    }
-
-    const product = await removeProductById(idProduct);
+    const product = await removeProductById(
+      idProduct,
+      req.user.id,
+      req.user.admin
+    );
 
     console.log(product);
     res.status(200).json({

@@ -45,12 +45,19 @@
       "name": "Company"
     },
     {
+      "name": "Order UMKM"
+    },
+    {
       "name": "UMKM",
       "description": "Endpoint untuk pendaftaran, pengelolaan dan verifikasi UMKM"
     },
     {
       "name": "Laporan Keuangan",
-      "description": "Endpoint untuk pengelolaan laporan keuangan UMKM dan admin"
+      "description": "Endpoint untuk pengelolaan laporan keuangan Admin dan UMKM"
+    },
+    {
+      "name": "Laporan Penjualan",
+      "description": "Endpoint untuk laporan penjualan UMKM (summary, chart, top products)"
     },
     {
       "name": "Wilayah",
@@ -1141,6 +1148,356 @@
         }
       }
     },
+    "/api/v1/order/umkm/history": {
+      "get": {
+        "tags": [
+          "Order UMKM"
+        ],
+        "summary": "Get riwayat pesanan UMKM (UMKM only)",
+        "description": "UMKM dapat melihat riwayat semua pesanan yang mengandung produk mereka dengan filter status opsional.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "PENDING",
+                  "PROCESSING",
+                  "SHIPPED",
+                  "DELIVERED",
+                  "CANCELED"
+                ]
+              }
+            },
+            "description": "Filter berdasarkan status pesanan (bisa multiple)",
+            "example": [
+              "PROCESSING",
+              "SHIPPED"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Riwayat pesanan UMKM berhasil diambil"
+          },
+          "403": {
+            "description": "Akses ditolak! Endpoint ini hanya untuk UMKM."
+          },
+          "404": {
+            "description": "Profil partner tidak ditemukan"
+          },
+          "500": {
+            "description": "Terjadi kesalahan di server"
+          }
+        }
+      }
+    },
+    "/api/v1/order/umkm/{id}/detail": {
+      "get": {
+        "tags": [
+          "Order UMKM"
+        ],
+        "summary": "Get detail pesanan UMKM by ID (UMKM only)",
+        "description": "UMKM dapat melihat detail pesanan spesifik yang mengandung produk mereka berdasarkan ID pesanan.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID pesanan"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detail pesanan UMKM berhasil diambil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Detail pesanan UMKM berhasil diambil!"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "orderId": {
+                          "type": "integer",
+                          "example": 123
+                        },
+                        "statusOrder": {
+                          "type": "string",
+                          "example": "PROCESSING"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "customerName": {
+                          "type": "string",
+                          "example": "John Doe"
+                        },
+                        "customerPhone": {
+                          "type": "string",
+                          "example": "081234567890"
+                        },
+                        "shippingAddress": {
+                          "type": "object",
+                          "properties": {
+                            "address": {
+                              "type": "string"
+                            },
+                            "province": {
+                              "type": "string"
+                            },
+                            "city": {
+                              "type": "string"
+                            },
+                            "district": {
+                              "type": "string"
+                            },
+                            "subdistrict": {
+                              "type": "string"
+                            },
+                            "zipCode": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "productId": {
+                                "type": "integer"
+                              },
+                              "productImage": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "quantity": {
+                                "type": "integer"
+                              },
+                              "price": {
+                                "type": "number"
+                              },
+                              "subtotal": {
+                                "type": "number"
+                              },
+                              "note": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "payment": {
+                          "type": "object",
+                          "properties": {
+                            "method": {
+                              "type": "string"
+                            },
+                            "status": {
+                              "type": "string"
+                            },
+                            "partnerAmount": {
+                              "type": "number",
+                              "description": "Total hanya untuk produk UMKM ini"
+                            }
+                          }
+                        },
+                        "cancellation": {
+                          "type": "object",
+                          "nullable": true,
+                          "properties": {
+                            "reason": {
+                              "type": "string"
+                            },
+                            "canceledAt": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Akses ditolak! Endpoint ini hanya untuk UMKM atau pesanan tidak mengandung produk Anda."
+          },
+          "404": {
+            "description": "Pesanan tidak ditemukan atau profil partner tidak ditemukan"
+          },
+          "500": {
+            "description": "Terjadi kesalahan di server"
+          }
+        }
+      }
+    },
+    "/api/v1/order/umkm/{id}/update-status": {
+      "put": {
+        "tags": [
+          "Order UMKM"
+        ],
+        "summary": "Update status pesanan (UMKM only)",
+        "description": "UMKM dapat mengubah status pesanan yang mengandung produk mereka. Hanya bisa mengubah ke status PROCESSING atau SHIPPED dengan validasi transisi yang benar.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID pesanan"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "PROCESSING",
+                      "SHIPPED"
+                    ],
+                    "description": "Status baru pesanan",
+                    "example": "PROCESSING"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Status order berhasil diperbarui"
+          },
+          "400": {
+            "description": "Validasi transisi status gagal"
+          },
+          "403": {
+            "description": "Akses ditolak atau status tidak diizinkan"
+          },
+          "404": {
+            "description": "Pesanan atau profil partner tidak ditemukan"
+          },
+          "500": {
+            "description": "Terjadi kesalahan di server"
+          }
+        }
+      }
+    },
+    "/api/v1/order/umkm/order-statuses": {
+      "get": {
+        "tags": [
+          "Order UMKM"
+        ],
+        "summary": "Get daftar status yang tersedia untuk UMKM",
+        "description": "Menampilkan daftar status pesanan yang bisa digunakan oleh UMKM (PROCESSING dan SHIPPED).",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daftar status berhasil diambil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Daftar status order UMKM berhasil diambil"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "string",
+                            "enum": [
+                              "PROCESSING",
+                              "SHIPPED"
+                            ]
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "example": [
+                        {
+                          "value": "PROCESSING",
+                          "label": "Diproses",
+                          "description": "Pesanan sedang diproses oleh UMKM"
+                        },
+                        {
+                          "value": "SHIPPED",
+                          "label": "Dikirim",
+                          "description": "Pesanan dalam pengiriman"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Akses ditolak! Endpoint ini hanya untuk UMKM."
+          },
+          "500": {
+            "description": "Terjadi kesalahan saat mengambil status order"
+          }
+        }
+      }
+    },
     "/api/v1/order/{id}/detail": {
       "get": {
         "tags": [
@@ -1839,30 +2196,61 @@
             "required": true,
             "schema": {
               "type": "integer"
-            }
+            },
+            "description": "ID UMKM yang akan diupdate",
+            "example": 1
           }
         ],
         "requestBody": {
-          "required": true,
+          "required": false,
           "content": {
             "multipart/form-data": {
               "schema": {
                 "type": "object",
                 "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Nama pemilik UMKM (update data user)",
+                    "example": "Budi Santoso"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Email pemilik UMKM (update data user)",
+                    "example": "budi.santoso@gmail.com"
+                  },
+                  "phone_number": {
+                    "type": "string",
+                    "description": "Nomor HP pemilik UMKM (update data user)",
+                    "example": "081234567890"
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "Password baru (opsional, akan di-hash otomatis). Minimal 6 karakter.",
+                    "example": "newpassword123"
+                  },
                   "namaUmkm": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Nama UMKM",
+                    "example": "Kopi Raisa Jaya"
                   },
                   "ktp": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Nomor KTP pemilik (16 digit)",
+                    "example": "3506012345678901"
                   },
                   "addresses": {
                     "type": "string",
-                    "description": "UPDATE dengan JSON Array format baru menggunakan id_desa (integer) + kode_pos.",
-                    "example": "[\n  {\n    \"id_desa\": 9211002,\n    \"alamat\": \"Jl. PB Sudirman No.10\",\n    \"kode_pos\": \"68124\"\n  }\n]"
+                    "description": "JSON Array alamat dengan format baru menggunakan id_desa. Alamat lama akan dihapus dan diganti dengan yang baru.",
+                    "example": "[\n  {\n    \"id_desa\": 9211002,\n    \"alamat\": \"Jl. PB Sudirman No.10 Updated\",\n    \"kode_pos\": \"68124\"\n  },\n  {\n    \"id_desa\": 9211001,\n    \"alamat\": \"Jl. Alternatif No.5\",\n    \"kode_pos\": \"68121\"\n  }\n]"
                   },
                   "sertifikatHalal": {
-                    "type": "string",
-                    "format": "binary"
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    },
+                    "description": "Upload file sertifikat halal baru (bisa multiple files). File lama akan dihapus dari Cloudinary dan diganti dengan yang baru."
                   }
                 }
               }
@@ -1871,13 +2259,229 @@
         },
         "responses": {
           "200": {
-            "description": "Update UMKM berhasil"
+            "description": "Update UMKM berhasil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Update UMKM berhasil"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id_umkm": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "id_user": {
+                          "type": "integer",
+                          "example": 5
+                        },
+                        "nama_umkm": {
+                          "type": "string",
+                          "example": "Kopi Raisa Jaya"
+                        },
+                        "ktp": {
+                          "type": "string",
+                          "example": "3506012345678901"
+                        },
+                        "sertifikat_halal": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "example": [
+                            "https://res.cloudinary.com/xxx/sertifikat1.jpg",
+                            "https://res.cloudinary.com/xxx/sertifikat2.pdf"
+                          ]
+                        },
+                        "status_verifikasi": {
+                          "type": "string",
+                          "enum": [
+                            "Pending",
+                            "Verified",
+                            "Rejected"
+                          ],
+                          "example": "Verified"
+                        },
+                        "User": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer",
+                              "example": 5
+                            },
+                            "name": {
+                              "type": "string",
+                              "example": "Budi Santoso"
+                            },
+                            "email": {
+                              "type": "string",
+                              "example": "budi.santoso@gmail.com"
+                            },
+                            "phone_number": {
+                              "type": "string",
+                              "example": "081234567890"
+                            },
+                            "role": {
+                              "type": "string",
+                              "example": "UMKM"
+                            }
+                          }
+                        },
+                        "addresses": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id_alamat": {
+                                "type": "integer",
+                                "example": 1
+                              },
+                              "alamat": {
+                                "type": "string",
+                                "example": "Jl. PB Sudirman No.10 Updated"
+                              },
+                              "kode_pos": {
+                                "type": "string",
+                                "example": "68124"
+                              },
+                              "desa": {
+                                "type": "object",
+                                "properties": {
+                                  "id_desa": {
+                                    "type": "integer",
+                                    "example": 9211002
+                                  },
+                                  "nama_desa": {
+                                    "type": "string",
+                                    "example": "Antirogo"
+                                  },
+                                  "kecamatan": {
+                                    "type": "object",
+                                    "properties": {
+                                      "id_kecamatan": {
+                                        "type": "integer",
+                                        "example": 921100
+                                      },
+                                      "nama_kecamatan": {
+                                        "type": "string",
+                                        "example": "Sumbersari"
+                                      },
+                                      "kabupaten": {
+                                        "type": "object",
+                                        "properties": {
+                                          "id_kabupaten": {
+                                            "type": "integer",
+                                            "example": 9211
+                                          },
+                                          "nama_kabupaten": {
+                                            "type": "string",
+                                            "example": "Kabupaten Jember"
+                                          },
+                                          "provinsi": {
+                                            "type": "object",
+                                            "properties": {
+                                              "id_provinsi": {
+                                                "type": "integer",
+                                                "example": 92
+                                              },
+                                              "nama_provinsi": {
+                                                "type": "string",
+                                                "example": "Jawa Timur"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
-            "description": "Validasi gagal"
+            "description": "Validasi gagal atau ID Desa tidak valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Validasi gagal!"
+                    },
+                    "errors": {
+                      "type": "object",
+                      "example": {
+                        "email": "Email tidak valid",
+                        "password": "Password minimal 6 karakter",
+                        "ktp": "KTP harus 16 digit"
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "403": {
-            "description": "Akses ditolak"
+            "description": "Akses ditolak - hanya owner atau admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Access denied. Hanya pemilik atau admin yang boleh mengubah data ini."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Data UMKM tidak ditemukan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Data UMKM tidak ditemukan"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Kesalahan server",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Terjadi kesalahan di server"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -1943,7 +2547,7 @@
           "Laporan Keuangan"
         ],
         "summary": "Create laporan keuangan baru (Admin only)",
-        "description": "Hanya admin yang boleh membuat laporan keuangan.",
+        "description": "Hanya admin yang boleh membuat laporan keuangan manual.",
         "security": [
           {
             "cookieAuth": []
@@ -1966,28 +2570,38 @@
                   },
                   "report_date": {
                     "type": "string",
-                    "format": "date"
+                    "format": "date",
+                    "example": "2025-01-15"
                   },
                   "description": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Laporan keuangan bulan Januari"
                   },
                   "income": {
-                    "type": "number"
+                    "type": "number",
+                    "example": 5000000
                   },
                   "pengeluarans": {
                     "type": "array",
                     "items": {
                       "type": "object",
+                      "required": [
+                        "tanggal",
+                        "jumlah_pengeluaran"
+                      ],
                       "properties": {
                         "tanggal": {
                           "type": "string",
-                          "format": "date"
+                          "format": "date",
+                          "example": "2025-01-10"
                         },
                         "jumlah_pengeluaran": {
-                          "type": "number"
+                          "type": "number",
+                          "example": 500000
                         },
                         "keterangan": {
-                          "type": "string"
+                          "type": "string",
+                          "example": "Pembelian bahan baku kopi"
                         }
                       }
                     }
@@ -1999,30 +2613,33 @@
         },
         "responses": {
           "201": {
-            "description": "Laporan berhasil dibuat"
-          },
-          "400": {
-            "description": "Validasi gagal"
-          },
-          "403": {
-            "description": "Akses ditolak — hanya admin yang diperbolehkan",
+            "description": "Laporan berhasil dibuat",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": false
+                    "status": {
+                      "type": "string",
+                      "example": "success"
                     },
                     "message": {
                       "type": "string",
-                      "example": "Akses ditolak — hanya admin yang diperbolehkan"
+                      "example": "Laporan keuangan berhasil dibuat"
+                    },
+                    "data": {
+                      "type": "object"
                     }
                   }
                 }
               }
             }
+          },
+          "400": {
+            "description": "Validasi gagal"
+          },
+          "403": {
+            "description": "Hanya admin yang bisa membuat laporan keuangan"
           }
         }
       },
@@ -2030,8 +2647,8 @@
         "tags": [
           "Laporan Keuangan"
         ],
-        "summary": "Get all laporan keuangan (Admin only)",
-        "description": "Hanya admin yang boleh melihat semua laporan keuangan.",
+        "summary": "Get all laporan keuangan",
+        "description": "Admin dapat melihat semua laporan, UMKM hanya melihat laporan miliknya sendiri (laporan manual + pemasukan dari payment produk Tsarisma Coffee).",
         "security": [
           {
             "cookieAuth": []
@@ -2040,35 +2657,140 @@
         "parameters": [
           {
             "in": "query",
-            "name": "periode (opsional)",
+            "name": "periode",
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "Filter berdasarkan periode (opsional)"
+          },
+          {
+            "in": "query",
+            "name": "bulan",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 12
+            },
+            "description": "Filter berdasarkan bulan 1-12 (opsional)"
+          },
+          {
+            "in": "query",
+            "name": "tahun",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Filter berdasarkan tahun (opsional)",
+            "example": 2025
+          },
+          {
+            "in": "query",
+            "name": "tanggal_dari",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Filter tanggal awal (opsional)"
+          },
+          {
+            "in": "query",
+            "name": "tanggal_sampai",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Filter tanggal akhir (opsional)"
           }
         ],
         "responses": {
           "200": {
-            "description": "List laporan dengan summary"
-          },
-          "403": {
-            "description": "Akses ditolak — hanya admin yang diperbolehkan",
+            "description": "List laporan dengan summary",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": false
-                    },
-                    "message": {
+                    "status": {
                       "type": "string",
-                      "example": "Akses ditolak — hanya admin yang diperbolehkan"
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "source": {
+                            "type": "string",
+                            "enum": [
+                              "manual",
+                              "payment"
+                            ]
+                          },
+                          "id": {
+                            "type": "integer"
+                          },
+                          "periode": {
+                            "type": "string"
+                          },
+                          "tanggal": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "pemasukan": {
+                            "type": "number"
+                          },
+                          "pengeluaran": {
+                            "type": "number"
+                          },
+                          "saldo": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    },
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "total_income": {
+                          "type": "number"
+                        },
+                        "total_expenses": {
+                          "type": "number"
+                        },
+                        "saldo": {
+                          "type": "number"
+                        },
+                        "jumlah_transaksi": {
+                          "type": "integer"
+                        },
+                        "detail": {
+                          "type": "object",
+                          "properties": {
+                            "jumlah_laporan_manual": {
+                              "type": "integer"
+                            },
+                            "jumlah_payment": {
+                              "type": "integer"
+                            },
+                            "income_manual": {
+                              "type": "number"
+                            },
+                            "income_payment": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      }
                     }
                   }
                 }
               }
             }
+          },
+          "403": {
+            "description": "Akses ditolak"
           }
         }
       }
@@ -2078,8 +2800,8 @@
         "tags": [
           "Laporan Keuangan"
         ],
-        "summary": "Get laporan keuangan by ID (Admin only)",
-        "description": "Hanya admin yang boleh mengakses detail laporan keuangan.",
+        "summary": "Get laporan keuangan by ID",
+        "description": "Admin dapat melihat semua laporan, UMKM hanya dapat melihat laporan miliknya sendiri.",
         "security": [
           {
             "cookieAuth": []
@@ -2097,27 +2819,53 @@
         ],
         "responses": {
           "200": {
-            "description": "Detail laporan keuangan"
-          },
-          "403": {
-            "description": "Akses ditolak — hanya admin yang diperbolehkan",
+            "description": "Detail laporan keuangan",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": false
-                    },
-                    "message": {
+                    "status": {
                       "type": "string",
-                      "example": "Akses ditolak — hanya admin yang diperbolehkan"
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id_financialreport": {
+                          "type": "integer"
+                        },
+                        "periode": {
+                          "type": "string"
+                        },
+                        "report_date": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "income": {
+                          "type": "number"
+                        },
+                        "expenses": {
+                          "type": "number"
+                        },
+                        "User": {
+                          "type": "object"
+                        },
+                        "pengeluaran": {
+                          "type": "array"
+                        }
+                      }
                     }
                   }
                 }
               }
             }
+          },
+          "403": {
+            "description": "Anda tidak memiliki akses ke laporan ini"
           },
           "404": {
             "description": "Laporan tidak ditemukan"
@@ -2158,6 +2906,9 @@
                     "type": "string",
                     "format": "date"
                   },
+                  "description": {
+                    "type": "string"
+                  },
                   "income": {
                     "type": "number"
                   },
@@ -2189,24 +2940,10 @@
             "description": "Laporan berhasil diupdate"
           },
           "403": {
-            "description": "Akses ditolak — hanya admin yang diperbolehkan",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": false
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Akses ditolak — hanya admin yang diperbolehkan"
-                    }
-                  }
-                }
-              }
-            }
+            "description": "Hanya admin yang bisa mengubah laporan"
+          },
+          "404": {
+            "description": "Laporan tidak ditemukan"
           }
         }
       },
@@ -2233,27 +2970,690 @@
         ],
         "responses": {
           "200": {
-            "description": "Laporan berhasil dihapus"
-          },
-          "403": {
-            "description": "Akses ditolak — hanya admin yang diperbolehkan",
+            "description": "Laporan berhasil dihapus",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": false
+                    "status": {
+                      "type": "string",
+                      "example": "success"
                     },
                     "message": {
                       "type": "string",
-                      "example": "Akses ditolak — hanya admin yang diperbolehkan"
+                      "example": "Laporan keuangan berhasil dihapus"
                     }
                   }
                 }
               }
             }
+          },
+          "403": {
+            "description": "Hanya admin yang bisa menghapus laporan"
+          },
+          "404": {
+            "description": "Laporan tidak ditemukan"
+          }
+        }
+      }
+    },
+    "/api/v1/penjualan/my-report": {
+      "get": {
+        "tags": [
+          "Laporan Penjualan"
+        ],
+        "summary": "Get laporan penjualan UMKM (UMKM only)",
+        "description": "UMKM dapat melihat laporan penjualan produk mereka sendiri dengan summary (jumlah produk terjual, laba kotor, pajak 10%, laba bersih), chart penjualan per hari, dan top 5 products berdasarkan jumlah terjual.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "bulan",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 12
+            },
+            "description": "Filter berdasarkan bulan (1-12)",
+            "example": 9
+          },
+          {
+            "in": "query",
+            "name": "tahun",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Filter berdasarkan tahun (YYYY)",
+            "example": 2025
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Laporan penjualan berhasil didapatkan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Laporan penjualan berhasil didapatkan!"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "partner": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer",
+                              "example": 1
+                            },
+                            "nama": {
+                              "type": "string",
+                              "example": "UMKM Kopi Raisa"
+                            },
+                            "owner": {
+                              "type": "string",
+                              "example": "Pak Budi"
+                            }
+                          }
+                        },
+                        "periode": {
+                          "type": "string",
+                          "example": "September 2025"
+                        },
+                        "summary": {
+                          "type": "object",
+                          "properties": {
+                            "jumlahProdukTerjual": {
+                              "type": "integer",
+                              "example": 20
+                            },
+                            "labaBersih": {
+                              "type": "string",
+                              "example": "Rp 225.000"
+                            },
+                            "labaBersihRaw": {
+                              "type": "number",
+                              "example": 225000
+                            },
+                            "labaKotor": {
+                              "type": "string",
+                              "example": "Rp 250.000"
+                            },
+                            "labaKotorRaw": {
+                              "type": "number",
+                              "example": 250000
+                            },
+                            "pajak": {
+                              "type": "string",
+                              "example": "Rp 25.000"
+                            },
+                            "pajakRaw": {
+                              "type": "number",
+                              "example": 25000
+                            },
+                            "persentasePajak": {
+                              "type": "string",
+                              "example": "10%"
+                            }
+                          }
+                        },
+                        "chart": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "tanggal": {
+                                "type": "integer",
+                                "example": 1
+                              },
+                              "totalPenjualan": {
+                                "type": "number",
+                                "example": 50000
+                              }
+                            }
+                          },
+                          "description": "Data penjualan per hari dalam bulan (tanggal 1-31)"
+                        },
+                        "topProducts": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "ranking": {
+                                "type": "integer",
+                                "example": 1
+                              },
+                              "namaProduk": {
+                                "type": "string",
+                                "example": "Kopi Arabika Premium"
+                              },
+                              "jumlahTerjual": {
+                                "type": "integer",
+                                "example": 10
+                              },
+                              "totalPendapatan": {
+                                "type": "string",
+                                "example": "Rp 150.000"
+                              },
+                              "totalPendapatanRaw": {
+                                "type": "number",
+                                "example": 150000
+                              }
+                            }
+                          },
+                          "description": "Top 5 produk berdasarkan jumlah terjual"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Akses ditolak! Endpoint ini hanya untuk UMKM."
+          },
+          "404": {
+            "description": "Profil partner tidak ditemukan"
+          },
+          "500": {
+            "description": "Terjadi kesalahan di server"
+          }
+        }
+      }
+    },
+    "/api/v1/penjualan/admin/report": {
+      "get": {
+        "tags": [
+          "Laporan Penjualan"
+        ],
+        "summary": "Get laporan penjualan semua UMKM (Admin only)",
+        "description": "Admin dapat melihat laporan penjualan dari semua UMKM dengan summary total dan list per UMKM.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "bulan",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 12
+            },
+            "description": "Filter berdasarkan bulan (1-12)",
+            "example": 9
+          },
+          {
+            "in": "query",
+            "name": "tahun",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Filter berdasarkan tahun (YYYY)",
+            "example": 2025
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Laporan penjualan semua UMKM berhasil didapatkan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Laporan penjualan semua UMKM berhasil didapatkan!"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "periode": {
+                          "type": "string",
+                          "example": "September 2025"
+                        },
+                        "totalSummary": {
+                          "type": "object",
+                          "properties": {
+                            "totalJumlahProdukTerjual": {
+                              "type": "integer",
+                              "example": 100
+                            },
+                            "totalLabaBersih": {
+                              "type": "string",
+                              "example": "Rp 4.500.000"
+                            },
+                            "totalLabaBersihRaw": {
+                              "type": "number",
+                              "example": 4500000
+                            },
+                            "totalLabaKotor": {
+                              "type": "string",
+                              "example": "Rp 5.000.000"
+                            },
+                            "totalLabaKotorRaw": {
+                              "type": "number",
+                              "example": 5000000
+                            },
+                            "totalPajak": {
+                              "type": "string",
+                              "example": "Rp 500.000"
+                            },
+                            "totalPajakRaw": {
+                              "type": "number",
+                              "example": 500000
+                            }
+                          }
+                        },
+                        "umkmList": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "partnerId": {
+                                "type": "integer",
+                                "example": 1
+                              },
+                              "namaUMKM": {
+                                "type": "string",
+                                "example": "UMKM Kopi Raisa"
+                              },
+                              "owner": {
+                                "type": "string",
+                                "example": "Pak Budi"
+                              },
+                              "jumlahProdukTerjual": {
+                                "type": "integer",
+                                "example": 50
+                              },
+                              "labaBersih": {
+                                "type": "string",
+                                "example": "Rp 2.250.000"
+                              },
+                              "labaBersihRaw": {
+                                "type": "number",
+                                "example": 2250000
+                              },
+                              "labaKotor": {
+                                "type": "string",
+                                "example": "Rp 2.500.000"
+                              },
+                              "labaKotorRaw": {
+                                "type": "number",
+                                "example": 2500000
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Akses ditolak! Hanya admin yang bisa mengakses."
+          },
+          "404": {
+            "description": "Tidak ada data UMKM yang terdaftar"
+          },
+          "500": {
+            "description": "Terjadi kesalahan di server"
+          }
+        }
+      }
+    },
+    "/api/v1/penjualan/admin/partner/{partnerId}": {
+      "get": {
+        "tags": [
+          "Laporan Penjualan"
+        ],
+        "summary": "Get laporan penjualan UMKM berdasarkan Partner ID (Admin only)",
+        "description": "Admin dapat melihat detail laporan penjualan UMKM spesifik berdasarkan partner_id.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "partnerId",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID Partner UMKM",
+            "example": 1
+          },
+          {
+            "in": "query",
+            "name": "bulan",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 12
+            },
+            "example": 9
+          },
+          {
+            "in": "query",
+            "name": "tahun",
+            "schema": {
+              "type": "integer"
+            },
+            "example": 2025
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detail laporan penjualan UMKM (dengan info partner dan user)"
+          },
+          "400": {
+            "description": "Partner belum terhubung dengan user UMKM"
+          },
+          "403": {
+            "description": "Hanya admin yang bisa mengakses"
+          },
+          "404": {
+            "description": "Partner tidak ditemukan"
+          }
+        }
+      }
+    },
+    "/api/v1/penjualan/my-top-products": {
+      "get": {
+        "tags": [
+          "Laporan Penjualan"
+        ],
+        "summary": "Get top products UMKM (UMKM only)",
+        "description": "UMKM dapat melihat daftar produk terlaris mereka berdasarkan jumlah terjual dengan filter periode dan limit.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "bulan",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 12
+            },
+            "description": "Filter berdasarkan bulan (1-12)",
+            "example": 9
+          },
+          {
+            "in": "query",
+            "name": "tahun",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Filter berdasarkan tahun (YYYY)",
+            "example": 2025
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "description": "Jumlah produk yang ditampilkan (default: 10)",
+            "example": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Top products berhasil didapatkan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Top products berhasil didapatkan!"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "partner": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer",
+                              "example": 1
+                            },
+                            "nama": {
+                              "type": "string",
+                              "example": "UMKM Kopi Raisa"
+                            },
+                            "owner": {
+                              "type": "string",
+                              "example": "Pak Budi"
+                            }
+                          }
+                        },
+                        "periode": {
+                          "type": "string",
+                          "example": "September 2025"
+                        },
+                        "limit": {
+                          "type": "integer",
+                          "example": 10,
+                          "description": "Jumlah produk yang diminta"
+                        },
+                        "totalProducts": {
+                          "type": "integer",
+                          "example": 10,
+                          "description": "Jumlah produk yang dikembalikan"
+                        },
+                        "products": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "ranking": {
+                                "type": "integer",
+                                "example": 1,
+                                "description": "Peringkat produk berdasarkan jumlah terjual"
+                              },
+                              "productId": {
+                                "type": "integer",
+                                "example": 5
+                              },
+                              "namaProduk": {
+                                "type": "string",
+                                "example": "Kopi Arabika Premium"
+                              },
+                              "gambarProduk": {
+                                "type": "string",
+                                "example": "https://cloudinary.com/image.jpg"
+                              },
+                              "jumlahTerjual": {
+                                "type": "integer",
+                                "example": 50,
+                                "description": "Total unit terjual"
+                              },
+                              "totalPendapatan": {
+                                "type": "string",
+                                "example": "Rp 750.000"
+                              },
+                              "totalPendapatanRaw": {
+                                "type": "number",
+                                "example": 750000
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Akses ditolak! Endpoint ini hanya untuk UMKM."
+          },
+          "404": {
+            "description": "Profil partner tidak ditemukan"
+          },
+          "500": {
+            "description": "Terjadi kesalahan di server"
+          }
+        }
+      }
+    },
+    "/api/v1/penjualan/admin/top-products": {
+      "get": {
+        "tags": [
+          "Laporan Penjualan"
+        ],
+        "summary": "Get top products dari semua UMKM (Admin only)",
+        "description": "Admin dapat melihat daftar produk terlaris dari semua UMKM yang terdaftar, diurutkan berdasarkan jumlah terjual.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "bulan",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 12
+            },
+            "description": "Filter berdasarkan bulan (1-12)",
+            "example": 9
+          },
+          {
+            "in": "query",
+            "name": "tahun",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Filter berdasarkan tahun (YYYY)",
+            "example": 2025
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "description": "Jumlah produk yang ditampilkan (default: 10)",
+            "example": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Top products semua UMKM berhasil didapatkan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Top products semua UMKM berhasil didapatkan!"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "periode": {
+                          "type": "string",
+                          "example": "September 2025"
+                        },
+                        "limit": {
+                          "type": "integer",
+                          "example": 10
+                        },
+                        "totalProducts": {
+                          "type": "integer",
+                          "example": 10
+                        },
+                        "products": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "ranking": {
+                                "type": "integer",
+                                "example": 1
+                              },
+                              "productId": {
+                                "type": "integer",
+                                "example": 5
+                              },
+                              "namaProduk": {
+                                "type": "string",
+                                "example": "Kopi Arabika Premium"
+                              },
+                              "gambarProduk": {
+                                "type": "string",
+                                "example": "https://cloudinary.com/image.jpg"
+                              },
+                              "namaUMKM": {
+                                "type": "string",
+                                "example": "UMKM Kopi Raisa",
+                                "description": "Nama UMKM pemilik produk"
+                              },
+                              "partnerId": {
+                                "type": "integer",
+                                "example": 1,
+                                "description": "ID Partner UMKM"
+                              },
+                              "jumlahTerjual": {
+                                "type": "integer",
+                                "example": 50
+                              },
+                              "totalPendapatan": {
+                                "type": "string",
+                                "example": "Rp 750.000"
+                              },
+                              "totalPendapatanRaw": {
+                                "type": "number",
+                                "example": 750000
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Akses ditolak! Hanya admin yang bisa mengakses."
+          },
+          "404": {
+            "description": "Tidak ada data UMKM yang terdaftar"
+          },
+          "500": {
+            "description": "Terjadi kesalahan di server"
           }
         }
       }

@@ -1,5 +1,5 @@
 const express = require('express');
-const { upload } = require('../middleware/multer'); // memory storage multer
+const { uploadUMKM } = require('../middleware/multer'); // memory storage multer for umkm
 const { multerErrorHandler, authMiddleware } = require('../middleware/middleware');
 const ApiError = require('../utils/apiError');
 const nodemailer = require('nodemailer');
@@ -51,7 +51,7 @@ async function sendEmail({ to, subject, html, text }) {
 router.post(
   '/',
   // do NOT require authMiddleware here so frontend can register user+umkm in one request
-  upload.array('sertifikatHalal'), // bisa upload unlimited
+  uploadUMKM.array('sertifikatHalal'), // bisa upload unlimited dengan uploadUMKM dari multer.js
   multerErrorHandler,
   validateCreateUMKM,
   async (req, res) => {
@@ -240,9 +240,9 @@ router.get('/:idUmkm', authMiddleware, async (req, res) => {
 router.put(
   '/:idUmkm',
   authMiddleware,
-  validateUpdateUMKM,
-  upload.array('sertifikatHalal'), // bisa upload unlimited
+  uploadUMKM.array('sertifikatHalal'),
   multerErrorHandler,
+  validateUpdateUMKM,
   async (req, res) => {
     try {
       const errors = validationResult(req);
@@ -260,20 +260,36 @@ router.put(
       const idUmkm = Number(req.params.idUmkm);
       if (!idUmkm) return res.status(400).json({ message: 'idUmkm dibutuhkan' });
 
-      // fetch existing to check ownership
+      // Fetch existing to check ownership
       const existing = await getUMKMById(idUmkm);
       if (!existing) return res.status(404).json({ message: 'Data UMKM tidak ditemukan' });
 
-      if (!currentUser.admin && currentUser.id !== existing.idUser) {
+      if (!currentUser.admin && currentUser.id !== existing.id_user) {
         return res.status(403).json({ message: 'Access denied. Hanya pemilik atau admin yang boleh mengubah data ini.' });
       }
 
+      // Prepare update payload
       const updatePayload = {
+        // Data UMKM
         namaUmkm: req.body.namaUmkm,
         ktp: req.body.ktp,
         addresses: req.body.addresses ? (Array.isArray(req.body.addresses) ? req.body.addresses : JSON.parse(req.body.addresses)) : undefined,
         files: req.files || [],
+        
+        // Data User (optional)
+        userData: {}
       };
+
+      // Jika ada update untuk data user
+      if (req.body.name) updatePayload.userData.name = String(req.body.name).trim();
+      if (req.body.email) updatePayload.userData.email = String(req.body.email).trim();
+      if (req.body.phone_number) updatePayload.userData.phone_number = String(req.body.phone_number).trim();
+      
+      // Hash password jika ada
+      if (req.body.password && req.body.password.trim() !== '') {
+        const bcrypt = require('bcryptjs');
+        updatePayload.userData.password = await bcrypt.hash(String(req.body.password), 10);
+      }
 
       const updated = await updateUMKM(idUmkm, updatePayload);
 

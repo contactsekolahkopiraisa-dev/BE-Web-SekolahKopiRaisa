@@ -4,6 +4,7 @@ const prisma = require("../db");
 const {
   getAllPartners,
   getPartnerById,
+  getMyPartnerProfile,
   createPartner,
   updatePartner,
   removePartner,
@@ -15,13 +16,9 @@ const { validationResult } = require("express-validator");
 
 const router = express.Router();
 
+// Get all partners - bisa diakses admin dan UMKM
 router.get("/", authMiddleware, async (req, res) => {
   try {
-    if (!req.user.admin) {
-      return res
-        .status(403)
-        .json({ message: "Akses ditolak! Hanya admin yang bisa mengakses." });
-    }
     const partners = await getAllPartners();
 
     const formatedPartner = partners.map((partner) => ({
@@ -43,8 +40,7 @@ router.get("/", authMiddleware, async (req, res) => {
 
     res.status(200).json({
       message: "Data partner berhasil didapatkan!",
-      // data: formatedPartner,
-      data: partners,
+      data: formatedPartner,
     });
   } catch (error) {
     if (error instanceof ApiError) {
@@ -62,9 +58,43 @@ router.get("/", authMiddleware, async (req, res) => {
   }
 });
 
+// Get my partner profile - UMKM only
+router.get("/my-profile", authMiddleware, async (req, res) => {
+  try {
+    if (req.user.admin) {
+      return res
+        .status(403)
+        .json({ message: "Akses ditolak! Endpoint ini hanya untuk UMKM." });
+    }
+
+    const userId = req.user.id;
+    const partnerProfile = await getMyPartnerProfile(userId);
+
+    res.status(200).json({
+      message: "Data profil partner berhasil didapatkan!",
+      data: partnerProfile,
+    });
+  } catch (error) {
+    if (error instanceof ApiError) {
+      console.error("ApiError:", error);
+      return res.status(error.statusCode).json({
+        message: error.message,
+      });
+    }
+
+    console.error("Error getting partner profile:", error);
+    return res.status(500).json({
+      message: "Terjadi kesalahan di server!",
+      error: error.message,
+    });
+  }
+});
+
+// Get partner by ID - bisa diakses admin dan UMKM
 router.get("/:id", authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
+
     const partner = await getPartnerById(id);
 
     const formatedPartnerId = {
@@ -105,6 +135,7 @@ router.get("/:id", authMiddleware, async (req, res) => {
   }
 });
 
+// Create partner - admin only
 router.post("/", authMiddleware, partnerValidator, async (req, res) => {
   try {
     console.log("BODY CLIENT:", req.body);
@@ -153,6 +184,7 @@ router.post("/", authMiddleware, partnerValidator, async (req, res) => {
   }
 });
 
+// Update partner - bisa diakses admin dan UMKM
 router.put("/:id", authMiddleware, partnerValidator, async (req, res) => {
   try {
     console.log("BODY CLIENT:", req.body);
@@ -171,20 +203,22 @@ router.put("/:id", authMiddleware, partnerValidator, async (req, res) => {
         errors: errorObject,
       });
     }
+    
     const { id } = req.params;
     const { name, owner_name, phone_number } = req.body;
+    const userId = req.user.id;
+    const isAdmin = req.user.admin;
 
-    if (!req.user.admin) {
-      return res
-        .status(403)
-        .json({ message: "Akses ditolak! Hanya admin yang bisa mengakses." });
-    }
-
-    const updatedPartner = await updatePartner(id, {
-      name,
-      owner_name,
-      phone_number,
-    });
+    const updatedPartner = await updatePartner(
+      id,
+      {
+        name,
+        owner_name,
+        phone_number,
+      },
+      userId,
+      isAdmin
+    );
 
     console.log("data", updatedPartner);
     res.status(200).json({
@@ -207,6 +241,7 @@ router.put("/:id", authMiddleware, partnerValidator, async (req, res) => {
   }
 });
 
+// Delete partner - admin only
 router.delete("/:id", authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
