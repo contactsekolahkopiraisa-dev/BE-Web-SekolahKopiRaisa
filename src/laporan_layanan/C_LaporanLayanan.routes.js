@@ -9,11 +9,6 @@ const laporanLayananRoutes = express.Router();
 const { laporanLayananController } = require("./C_LaporanLayanan.js");
 const { createSchema } = require("./C_LaporanLayanan.validate.js");
 
-// Handle preflight OPTIONS request
-laporanLayananRoutes.options("/", (req, res) => {
-  res.sendStatus(200);
-});
-
 // LAPORAN LAYANAN ROUTES
 laporanLayananRoutes.post(
   "/",
