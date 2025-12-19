@@ -239,6 +239,16 @@ app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
   const message = err.message || "Terjadi kesalahan pada server.";
 
+  // Ensure CORS headers are always set for error responses
+  const origin = req.headers.origin;
+  if (
+    origin &&
+    (allowedOrigins.includes(origin) || origin.includes("localhost"))
+  ) {
+    res.header("Access-Control-Allow-Origin", origin);
+    res.header("Access-Control-Allow-Credentials", "true");
+  }
+
   res.status(statusCode).json({
     success: false,
     message,
