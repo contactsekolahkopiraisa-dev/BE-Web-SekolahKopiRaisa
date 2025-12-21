@@ -3,10 +3,8 @@ const prismaImport = require('../db');
 const { PrismaClient } = require('@prisma/client');
 const { sendEmail } = require('../utils/email');
 
-// fallback prisma instance
 const prisma = (prismaImport && (prismaImport.prisma || prismaImport)) || new PrismaClient();
 
-// helper untuk ambil model VerifikasiUMKM (prefer explicit)
 function verifikasiModel() {
   const model = prisma.verifikasiUMKM || prisma.verifikasiUmkm || prisma.VerifikasiUMKM;
   if (!model) {
@@ -15,7 +13,6 @@ function verifikasiModel() {
   return model;
 }
 
-// helper truncate / sanitize sesuai schema column sizes
 const _truncate = (v, max) => {
   if (v === null || v === undefined) return null;
   const s = String(v);
@@ -24,15 +21,7 @@ const _truncate = (v, max) => {
 
 /**
  * Insert data UMKM baru
- * newUmkmData: {
- *   id_user,
- *   nama_umkm,
- *   ktp,
- *   sertifikat_halal,
- *   addresses: [{ alamat, desa, kecamatan, ... }, ...]   // optional
- * }
  */
-// Update fungsi insertUMKM untuk handle id_desa
 const insertUMKM = async (newUmkmData) => {
   const model = verifikasiModel();
 
@@ -43,7 +32,6 @@ const insertUMKM = async (newUmkmData) => {
     sertifikat_halal: newUmkmData.sertifikat_halal || newUmkmData.sertifikatHalal || null,
   };
 
-  // Build addresses dengan id_desa
   if (Array.isArray(newUmkmData.addresses) && newUmkmData.addresses.length > 0) {
     const addressesCreate = newUmkmData.addresses.map(addr => ({
       id_desa: parseInt(addr.id_desa),
@@ -89,8 +77,9 @@ const insertUMKM = async (newUmkmData) => {
   }
 };
 
-
-// Cek apakah user sudah punya data UMKM
+/**
+ * Cek apakah user sudah punya data UMKM
+ */
 const isUMKMRegistered = async (idUser) => {
   const model = verifikasiModel();
   const umkm = await model.findFirst({
@@ -99,8 +88,9 @@ const isUMKMRegistered = async (idUser) => {
   return !!umkm;
 };
 
-// Cari UMKM berdasarkan ID UMKM
-// Update fungsi findUMKMById
+/**
+ * Cari UMKM berdasarkan ID UMKM
+ */
 const findUMKMById = async (idUmkm) => {
   const model = verifikasiModel();
   const umkm = await model.findUnique({
@@ -129,18 +119,40 @@ const findUMKMById = async (idUmkm) => {
   return umkm;
 };
 
-// Cari UMKM berdasarkan user ID
-// const findUMKMByUserId = async (idUser) => {
-//   const model = verifikasiModel();
-//   const umkm = await model.findFirst({
-//     where: { id_user: Number(idUser) },
-//     include: { addresses: true, User: true }
-//   });
-//   return umkm;
-// };
+/**
+ * ✅ Cari UMKM berdasarkan user ID
+ */
+const findUMKMByUserId = async (idUser) => {
+  const model = verifikasiModel();
+  const umkm = await model.findFirst({
+    where: { id_user: Number(idUser) },
+    include: { 
+      addresses: {
+        include: {
+          desa: {
+            include: {
+              kecamatan: {
+                include: {
+                  kabupaten: {
+                    include: {
+                      provinsi: true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }, 
+      User: true 
+    }
+  });
+  return umkm;
+};
 
-// Update data UMKM (partial update)
-// Update fungsi updateUMKMById
+/**
+ * Update data UMKM (partial update)
+ */
 const updateUMKMById = async (idUmkm, updateData) => {
   const model = verifikasiModel();
 
@@ -150,10 +162,8 @@ const updateUMKMById = async (idUmkm, updateData) => {
   if (data.sertifikatHalal) { data.sertifikat_halal = data.sertifikatHalal; delete data.sertifikatHalal; }
   
   if (data.addresses) {
-    // Delete old addresses
     await prisma.address.deleteMany({ where: { id_umkm: Number(idUmkm) } });
     
-    // Create new addresses dengan id_desa
     const addressesCreate = data.addresses.map(addr => ({
       id_desa: parseInt(addr.id_desa),
       alamat: _truncate(addr.alamat || '', 255),
@@ -218,16 +228,10 @@ const updateUMKMById = async (idUmkm, updateData) => {
   return umkm;
 };
 
-// Hapus data UMKM (beserta alamatnya)
-// const deleteUMKMById = async (idUmkm) => {
-//   await prisma.address.deleteMany({ where: { id_umkm: Number(idUmkm) } });
-//   const model = verifikasiModel();
-//   return await model.delete({ where: { id_umkm: Number(idUmkm) } });
-// };
-
-// helper: update status verifikasi
+/**
+ * helper: update status verifikasi
+ */
 const updateVerificationStatus = async (idUmkm, { status, reason }) => {
-  // normalize status to enum values used in schema (Pending|Verified|Rejected)
   const normalized = (status && String(status).toLowerCase() === 'verified') ? 'Verified'
     : (status && String(status).toLowerCase() === 'rejected') ? 'Rejected'
     : status;
@@ -244,18 +248,18 @@ const updateVerificationStatus = async (idUmkm, { status, reason }) => {
   return updated;
 };
 
-// Verifikasi UMKM oleh admin (kirim email)
+/**
+ * Verifikasi UMKM oleh admin (kirim email)
+ */
 const verifyUMKM = async (idUmkm, { approved, reason, adminId }) => {
   const existing = await findUMKMById(idUmkm);
   if (!existing) {
     throw new Error('Data UMKM tidak ditemukan!');
   }
 
-  // map approved -> Verified, else -> Rejected
   const status = approved ? 'Verified' : 'Rejected';
   const updated = await updateVerificationStatus(idUmkm, { status, reason });
 
-  // kirim email ke user pemilik (jika ada)
   const userEmail = updated.User && updated.User.email ? updated.User.email : null;
   if (userEmail) {
     if (approved) {
@@ -285,9 +289,8 @@ module.exports = {
   insertUMKM,
   isUMKMRegistered,
   findUMKMById,
-  // findUMKMByUserId,
+  findUMKMByUserId,  // ✅ Export fungsi ini
   updateUMKMById,
-  // deleteUMKMById,
   updateVerificationStatus,
   verifyUMKM
 };
