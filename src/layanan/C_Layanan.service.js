@@ -35,6 +35,7 @@ const {
 } = require("../utils/calculateDurationMonth.js");
 const { mouService } = require("../mou/C_Mou.service.js");
 const { Console } = require("console");
+const { findUserByRole } = require("../auth/user.repository.js");
 
 const statusKodeService = {
   // GET ALL KODE STATUS
@@ -413,8 +414,10 @@ const layananService = {
     created.peserta = pesertaAdded;
 
     // TODO : HARUSNYA MAILER DIBUAT AUTOSERVICE TERSENDIRI
-    const adminEmail = process.env.EMAIL_USER;
-    await sendNotifikasiAdminLayanan(adminEmail, created);
+    // const adminEmail = process.env.EMAIL_USER;
+    const adminEmails = await findUserByRole('admin');
+    console.log(adminEmails);
+    await sendNotifikasiAdminLayanan(adminEmails, created);
     // 2. Kirim ke Pengusul / User
     await sendNotifikasiPengusulLayanan(created.user.email, created);
 
