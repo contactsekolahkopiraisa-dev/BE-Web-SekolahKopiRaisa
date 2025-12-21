@@ -87,10 +87,8 @@ router.post("/login", validateLogin, async (req, res) => {
     // Simpan token dalam cookie HTTP-Only
     res.cookie("token", user.token, {
       httpOnly: true,
-      secure: true,
-      // secure: false,
-      sameSite: "None",
-      // sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "lax",
       maxAge: 1 * 24 * 60 * 60 * 1000,
     });
 
@@ -253,7 +251,7 @@ router.post("/save-token", (req, res) => {
   res.cookie("token", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "None",
+    sameSite: process.env.NODE_ENV === "production" ? "None" : "lax",
     maxAge: 1 * 24 * 60 * 60 * 1000,
   });
 

@@ -23,11 +23,10 @@ const formatLayanan = (l) => ({
   jenis_layanan: l.jenisLayanan,
   pemohon: l.user,
   peserta: l.pesertas,
-  pengajuan: injectStatus(
-    l.pengajuan,
-    STATUS.MENUNGGU_PERSETUJUAN.nama_status_kode
-  ),
+  // ✅ FIX: Use direct field access to get actual DB status instead of default
+  pengajuan: l.statusKodePengajuan,
   pelaksanaan: l.statusKodePelaksanaan,
+  // ✅ Keep injectStatus for optional relations (MOU, Sertifikat, Laporan)
   mou: injectStatus(l.mou, STATUS.BELUM_TERLAKSANA.nama_status_kode),
   sertifikat: injectStatus(
     l.sertifikat,

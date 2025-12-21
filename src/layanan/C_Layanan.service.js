@@ -448,7 +448,7 @@ const layananService = {
     if (existingLayanan.pengajuan.id == STATUS.MENUNGGU_PERSETUJUAN.id) {
       console.log("updating pengajuan...");
 
-      // ✅ FIX: Update status pengajuan dengan idStatus yang diterima
+      // Update status pengajuan dengan idStatus yang diterima
       payload.id_status_pengajuan = idStatus;
 
       // kalau pengajuan ditolak maka tolak juga pelaksanaan
@@ -522,6 +522,7 @@ const layananService = {
       }
     }
 
+    // return await layananService.getById(idLayanan, user);
     return updated;
   },
   async uploadLogbook(id_layanan, link, user) {

@@ -289,8 +289,8 @@ const layananRepository = {
       },
     });
   },
-  update: async (idLayanan, data) => {
-    return prisma.Layanan.update({
+  update: async (idLayanan, data, tx = prisma) => {
+    return tx.Layanan.update({
       where: {
         id: Number(idLayanan),
       },

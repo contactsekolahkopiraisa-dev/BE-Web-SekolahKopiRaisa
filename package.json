@@ -7,9 +7,15 @@
     "start": "node app.js",
     "dev": "npm run swagger:merge && nodemon app.js",
     "postinstall": "prisma generate --schema=src/prisma/schema.prisma",
-    "swagger:merge": "node src/document/swagger-merge.js"
+    "swagger:merge": "node src/document/swagger-merge.js",
+    "test:unit": "jest --testMatch \"**/*.service.test.js\"",
+    "test:api": "jest --testMatch \"**/*.test.js\" --testPathIgnorePatterns \"service\\.test\\.js\""
   },
-  "keywords": [],
+  "keywords": [
+    "express",
+    "prisma",
+    "rest-api"
+  ],
   "author": "",
   "license": "ISC",
   "description": "",
@@ -45,7 +51,7 @@
   "devDependencies": {
     "jest": "^29.7.0",
     "nodemon": "^3.1.9",
-    "supertest": "^7.1.1"
+    "supertest": "^7.1.4"
   },
   "prisma": {
     "schema": "src/prisma/schema.prisma",
