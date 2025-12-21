@@ -8,26 +8,18 @@ const authMiddleware = async (req, res, next) => {
   const authHeader = req.cookies.token;
   try {
     console.log("Cookies:", req.cookies); // <--- ini penting
-
     if (!authHeader) {
-      const error = new Error("*Access Denied / Tidak dapat mengakses");
+      const error = new Error("*Access Denied /Tidak dapat mengakses");
       error.statusCode = 401;
       return next(error);
     }
-
     const verify = jwt.verify(authHeader, process.env.JWT_SECRET);
-
-    const user = await prisma.user.findUnique({
-      where: { id: verify.id },
-    });
-
+    const user = await prisma.user.findUnique({ where: { id: verify.id } });
     if (!user) {
       const error = new Error("*User tidak ditemukan!");
       error.statusCode = 404;
       return next(error);
-    }
-
-    // PENGECEKAN ROLE
+    } // PENGECEKAN ROLE
     if (!user.role) {
       if (user.admin == true) {
         user.role = "admin";
@@ -35,7 +27,6 @@ const authMiddleware = async (req, res, next) => {
         user.role = "customer";
       }
     }
-
     req.user = user;
     next();
   } catch (error) {
@@ -44,7 +35,6 @@ const authMiddleware = async (req, res, next) => {
     return next(err);
   }
 };
-
 const roleMiddleware = (...allowedRoles) => {
   return (req, res, next) => {
     console.log(">>> Allowed Roles:", allowedRoles);
@@ -428,37 +418,48 @@ const companyMulterErrorHandler = (err, req, res, next) => {
 };
 
 const normalizeUmkmFiles = (req, res, next) => {
-    // Normalize files for UMKM routes: accept variations and convert all to 'sertifikatHalal'
-    const allowedNames = ['sertifikatHalal', 'sertifikasiHalal'];
+  // Normalize files for UMKM routes: accept variations and convert all to 'sertifikatHalal'
+  const allowedNames = ["sertifikatHalal", "sertifikasiHalal"];
 
-    if (Array.isArray(req.files)) {
-        const hadAlternate = req.files.some(f => f.fieldname && f.fieldname !== 'sertifikatHalal');
-        req.files = req.files.filter(f => allowedNames.includes(f.fieldname));
-        req.files.forEach(f => { f.fieldname = 'sertifikatHalal'; });
-        if (hadAlternate) console.warn('[normalizeUmkmFiles] Normalized non-standard field(s) to "sertifikatHalal"');
-        return next();
-    }
+  if (Array.isArray(req.files)) {
+    const hadAlternate = req.files.some(
+      (f) => f.fieldname && f.fieldname !== "sertifikatHalal"
+    );
+    req.files = req.files.filter((f) => allowedNames.includes(f.fieldname));
+    req.files.forEach((f) => {
+      f.fieldname = "sertifikatHalal";
+    });
+    if (hadAlternate)
+      console.warn(
+        '[normalizeUmkmFiles] Normalized non-standard field(s) to "sertifikatHalal"'
+      );
+    return next();
+  }
 
-    if (req.files && typeof req.files === 'object') {
-        const hadAlternate = ['sertifikasiHalal'].some(n => req.files[n] && req.files[n].length > 0);
-        const filesArr = [
-            ...(req.files['sertifikatHalal'] || []),
-            ...(req.files['sertifikasiHalal'] || []),
-        ];
-        filesArr.forEach(f => { f.fieldname = 'sertifikatHalal'; });
-        if (hadAlternate) console.warn('[normalizeUmkmFiles] Normalized non-standard field(s) to "sertifikatHalal"');
-        req.files = filesArr;
-        return next();
-    }
+  if (req.files && typeof req.files === "object") {
+    const hadAlternate = ["sertifikasiHalal"].some(
+      (n) => req.files[n] && req.files[n].length > 0
+    );
+    const filesArr = [
+      ...(req.files["sertifikatHalal"] || []),
+      ...(req.files["sertifikasiHalal"] || []),
+    ];
+    filesArr.forEach((f) => {
+      f.fieldname = "sertifikatHalal";
+    });
+    if (hadAlternate)
+      console.warn(
+        '[normalizeUmkmFiles] Normalized non-standard field(s) to "sertifikatHalal"'
+      );
+    req.files = filesArr;
+    return next();
+  }
 
-    req.files = [];
-    next();
+  req.files = [];
+  next();
 };
 
 module.exports = {
-    authMiddleware, roleMiddleware, validateUpdateNewsMedia, validateInsertNewsMedia, multerErrorHandler, validateProfilMedia,
-    validateProductMedia, validateProductUpdate, validateAboutCompanyMedia, companyMulterErrorHandler, validateUpdateCompanyMedia, normalizeUmkmFiles
-};
   authMiddleware,
   roleMiddleware,
   validateUpdateNewsMedia,
@@ -470,4 +471,15 @@ module.exports = {
   validateAboutCompanyMedia,
   companyMulterErrorHandler,
   validateUpdateCompanyMedia,
+  normalizeUmkmFiles,
+
+  // validateUpdateNewsMedia,
+  // validateInsertNewsMedia,
+  // multerErrorHandler,
+  // validateProfilMedia,
+  // validateProductMedia,
+  // validateProductUpdate,
+  // validateAboutCompanyMedia,
+  // companyMulterErrorHandler,
+  // validateUpdateCompanyMedia,
 };
