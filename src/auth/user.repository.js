@@ -1,12 +1,13 @@
 const prisma = require('../db');
+const ApiError = require('../utils/apiError');
 
 function normalizePhone(phone) {
-  if (!phone) return null;
-  const digits = String(phone).replace(/\D/g, '');
-  if (!digits) return null;
-  if (digits.startsWith('62')) return '0' + digits.slice(2);
-  if (digits.startsWith('0')) return digits;
-  return digits;
+    if (!phone) return null;
+    const digits = String(phone).replace(/\D/g, '');
+    if (!digits) return null;
+    if (digits.startsWith('62')) return '0' + digits.slice(2);
+    if (digits.startsWith('0')) return digits;
+    return digits;
 }
 
 const insertUser = async (newUserData) => {
@@ -94,7 +95,7 @@ const updatePasswordByID = async ({ password, userId }) => {
 };
 
 // g ada di aldi
-const findUserNumber = async (phoneNumber,userIdToExclude) => { 
+const findUserNumber = async (phoneNumber, userIdToExclude) => {
     const user = await prisma.User.findFirst({
         where: {
             phone_number: phoneNumber,
@@ -107,4 +108,39 @@ const findUserNumber = async (phoneNumber,userIdToExclude) => {
     return user;
 }
 
-module.exports = { insertUser, isPhoneNumberTaken, isEmailTaken, findUserByIdentifier, updateByID, findUserByEmail, findUserByID, updatePasswordByID, findUserNumber };
+const findUserByRole = async (role) => {
+    if (role == "admin") {
+        return prisma.User.findMany({
+            where: {
+                admin: true
+            },
+            select: {
+                email: true
+            }
+        })
+    } else if (role == "customer") {
+        return prisma.User.findMany({
+            where: {
+                admin: false,
+                role: null
+            },
+            select: {
+                email: true
+            }
+        })
+    } else if (role == "umkm") {
+        return prisma.User.findMany({
+            where: {
+                admin: false,
+                role: 'UMKM'
+            },
+            select: {
+                email: true
+            }
+        })
+    } else {
+        throw ApiError(500, 'Role tidak ditemukan!')
+    }
+}
+
+module.exports = { insertUser, isPhoneNumberTaken, isEmailTaken, findUserByIdentifier, updateByID, findUserByEmail, findUserByID, updatePasswordByID, findUserNumber, findUserByRole };

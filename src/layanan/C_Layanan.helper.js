@@ -136,53 +136,57 @@ const formatRangkumanKegiatan = (detailKonfigurasis) => {
     })
     .join("\n");
 };
-const sendNotifikasiAdminLayanan = async (emailAdmin, layanan) => {
-  if (!emailAdmin) throw new Error("Email admin wajib.");
+const sendNotifikasiAdminLayanan = async (emailAdmins, layanan) => {
+  if (!emailAdmins) throw new Error("Email admin wajib.");
 
   const kegiatanList = formatRangkumanKegiatan(
     layanan.konfigurasiLayanan.detailKonfigurasis
   );
 
-  const mail = {
-    from: `"Sistem Layanan RAISA" <${
-      process.env.EMAIL_USER || process.env.SMTP_USER
-    }>`,
-    to: emailAdmin,
-    subject: `Pengajuan Layanan Baru - ${layanan.jenisLayanan.nama_jenis_layanan}`,
-    text: `Telah masuk pengajuan layanan baru.
+  for (const admin of emailAdmins) {
+    const mail = {
+      from: `"Sistem Layanan RAISA" <${
+        process.env.EMAIL_USER || process.env.SMTP_USER
+      }>`,
+      to: admin.email,
+      subject: `PEMBERITAHUAN LAYANAN - ${layanan.jenisLayanan.nama_jenis_layanan}`,
+      text: `Telah masuk pengajuan layanan baru.
+  
+  === IDENTITAS PEMOHON ===
+  Nama     : ${layanan.user.name}
+  Email    : ${layanan.user.email}
+  No HP    : ${layanan.user.phone_number}
+  Instansi : ${layanan.instansi_asal}
+  
+  === DETAIL LAYANAN ===
+  ID Layanan          : ${layanan.id}
+  Jenis Layanan       : ${layanan.jenisLayanan.nama_jenis_layanan}
+  Tanggal Mulai       : ${layanan.tanggal_mulai}
+  Tanggal Selesai     : ${layanan.tanggal_selesai}
+  Jumlah Peserta      : ${layanan.jumlah_peserta}
+  
+  === FILE PERSYARATAN ===
+  Proposal            : ${layanan.file_proposal || "-"}
+  Surat Permohonan    : ${layanan.file_surat_permohonan || "-"}
+  Surat Pengantar     : ${layanan.file_surat_pengantar || "-"}
+  Surat Undangan      : ${layanan.file_surat_undangan || "-"}
+  
+  === KEGIATAN SESUAI KONFIGURASI ===
+  ${kegiatanList}
+  
+  === PESERTA (Jika Ada) ===
+  ${layanan.peserta
+    .map((p) => `- ${p.nama_peserta} (${p.nim || "NIM tidak ada"})`)
+    .join("\n")}
+  
+  Pengajuan ini mohon untuk dapat anda lakukan tindak lanjut
+  `,
+    };
+    
+    await sendEmail(mail);
+  }
 
-=== IDENTITAS PEMOHON ===
-Nama     : ${layanan.user.name}
-Email    : ${layanan.user.email}
-No HP    : ${layanan.user.phone_number}
-Instansi : ${layanan.instansi_asal}
 
-=== DETAIL LAYANAN ===
-ID Layanan          : ${layanan.id}
-Jenis Layanan       : ${layanan.jenisLayanan.nama_jenis_layanan}
-Tanggal Mulai       : ${layanan.tanggal_mulai}
-Tanggal Selesai     : ${layanan.tanggal_selesai}
-Jumlah Peserta      : ${layanan.jumlah_peserta}
-
-=== FILE PERSYARATAN ===
-Proposal            : ${layanan.file_proposal || "-"}
-Surat Permohonan    : ${layanan.file_surat_permohonan || "-"}
-Surat Pengantar     : ${layanan.file_surat_pengantar || "-"}
-Surat Undangan      : ${layanan.file_surat_undangan || "-"}
-
-=== KEGIATAN SESUAI KONFIGURASI ===
-${kegiatanList}
-
-=== PESERTA (Jika Ada) ===
-${layanan.peserta
-  .map((p) => `- ${p.nama_peserta} (${p.nim || "NIM tidak ada"})`)
-  .join("\n")}
-
-Pengajuan ini sedang menunggu proses persetujuan.
-`,
-  };
-
-  await sendEmail(mail);
 };
 
 const sendNotifikasiPengusulLayanan = async (emailPemohon, layanan) => {
