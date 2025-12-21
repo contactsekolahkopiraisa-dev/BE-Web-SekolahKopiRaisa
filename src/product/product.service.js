@@ -1,5 +1,3 @@
-// Description: This file contains the product service which is responsible for handling business logic related to products.
-
 const ApiError = require('../utils/apiError');
 
 const { 
@@ -64,15 +62,15 @@ const getAllProducts = async () => {
 }
 
 // Get products by partner (untuk UMKM)
-const getProductsByPartner = async (userId) => {
-    const partner = await getPartnerByUserId(userId);
-    const products = await findProductsByPartnerId(partner.id);
+// const getProductsByPartner = async (userId) => {
+//     const partner = await getPartnerByUserId(userId);
+//     const products = await findProductsByPartnerId(partner.id);
     
-    if (!products || products.length === 0) {
-        return []; // Return empty array jika belum ada produk
-    }
-    return products;
-}
+//     if (!products || products.length === 0) {
+//         return []; // Return empty array jika belum ada produk
+//     }
+//     return products;
+// }
 
 // Get product by ID dengan validasi ownership untuk UMKM
 const getProductById = async (productId, userId, isAdmin) => {
@@ -122,31 +120,11 @@ const removeProductById = async (idProduct, userId, isAdmin) => {
 // Create new product
 const createProduct = async (newProductData) => {
     try {
-        const { image, stock, partner_id, user_id, is_admin, ...rest } = newProductData
+        const { image, stock, user_id, is_admin, ...rest } = newProductData
 
-        let finalPartnerId;
-
-        // Jika admin: gunakan partner_id dari body
-        if (is_admin) {
-            if (
-                partner_id === null ||
-                partner_id === undefined ||
-                isNaN(parseInt(partner_id))
-            ) {
-                throw new ApiError(400, 'Partner ID tidak valid atau tidak boleh kosong!');
-            }
-            finalPartnerId = parseInt(partner_id);
-            
-            const partnerExists = await findPartnerById(finalPartnerId);
-            if (!partnerExists) {
-                throw new ApiError(404, 'Partner tidak ditemukan!');
-            }
-        } 
-        // Jika UMKM: ambil partner_id dari user_id
-        else {
-            const partner = await getPartnerByUserId(user_id);
-            finalPartnerId = partner.id;
-        }
+        // Otomatis ambil partner_id dari user yang login
+        const partner = await getPartnerByUserId(user_id);
+        const finalPartnerId = partner.id;
 
         const cleanProductData = {
             ...rest,
@@ -208,20 +186,11 @@ const updateProduct = async (id, updatedProductData, userId, isAdmin) => {
             ...rest,
             ...(rest.weight !== undefined && {weight: parseInt(rest.weight)}),
             ...(rest.price !== undefined && {price: parseInt(rest.price)}),
-            ...(rest.partner_id !== undefined && {partner_id: parseInt(rest.partner_id)}),
         };
 
-        // Admin bisa update partner_id, UMKM tidak bisa
-        if (!isAdmin && cleanProductData.partner_id) {
-            delete cleanProductData.partner_id;
-        }
-
-        if (cleanProductData.partner_id) {
-            const partnerExists = await findPartnerById(cleanProductData.partner_id);
-            if (!partnerExists) {
-                throw new ApiError(404, 'Partner tidak ditemukan!');
-            }
-        }
+        // UMKM tidak bisa mengubah partner_id (selalu milik mereka sendiri)
+        // Hapus partner_id dari data yang akan diupdate
+        delete cleanProductData.partner_id;
 
         if (productFile && productFile.buffer && productFile.originalname) {
             if (product.image) {
@@ -263,7 +232,7 @@ const updateProduct = async (id, updatedProductData, userId, isAdmin) => {
 
 module.exports = { 
   getAllProducts, 
-  getProductsByPartner,
+//   getProductsByPartner,
   createProduct, 
   updateProduct, 
   getProductById, 

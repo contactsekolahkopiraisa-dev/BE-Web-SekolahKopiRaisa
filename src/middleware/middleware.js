@@ -427,7 +427,38 @@ const companyMulterErrorHandler = (err, req, res, next) => {
   next();
 };
 
+const normalizeUmkmFiles = (req, res, next) => {
+    // Normalize files for UMKM routes: accept variations and convert all to 'sertifikatHalal'
+    const allowedNames = ['sertifikatHalal', 'sertifikasiHalal'];
+
+    if (Array.isArray(req.files)) {
+        const hadAlternate = req.files.some(f => f.fieldname && f.fieldname !== 'sertifikatHalal');
+        req.files = req.files.filter(f => allowedNames.includes(f.fieldname));
+        req.files.forEach(f => { f.fieldname = 'sertifikatHalal'; });
+        if (hadAlternate) console.warn('[normalizeUmkmFiles] Normalized non-standard field(s) to "sertifikatHalal"');
+        return next();
+    }
+
+    if (req.files && typeof req.files === 'object') {
+        const hadAlternate = ['sertifikasiHalal'].some(n => req.files[n] && req.files[n].length > 0);
+        const filesArr = [
+            ...(req.files['sertifikatHalal'] || []),
+            ...(req.files['sertifikasiHalal'] || []),
+        ];
+        filesArr.forEach(f => { f.fieldname = 'sertifikatHalal'; });
+        if (hadAlternate) console.warn('[normalizeUmkmFiles] Normalized non-standard field(s) to "sertifikatHalal"');
+        req.files = filesArr;
+        return next();
+    }
+
+    req.files = [];
+    next();
+};
+
 module.exports = {
+    authMiddleware, roleMiddleware, validateUpdateNewsMedia, validateInsertNewsMedia, multerErrorHandler, validateProfilMedia,
+    validateProductMedia, validateProductUpdate, validateAboutCompanyMedia, companyMulterErrorHandler, validateUpdateCompanyMedia, normalizeUmkmFiles
+};
   authMiddleware,
   roleMiddleware,
   validateUpdateNewsMedia,

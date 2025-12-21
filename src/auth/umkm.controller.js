@@ -1,23 +1,23 @@
 const express = require('express');
-const { uploadUMKM } = require('../middleware/multer'); // memory storage multer for umkm
-const { multerErrorHandler, authMiddleware } = require('../middleware/middleware');
+const { uploadUMKM } = require('../middleware/multer');
+const { multerErrorHandler, authMiddleware, normalizeUmkmFiles } = require('../middleware/middleware');
 const ApiError = require('../utils/apiError');
 const nodemailer = require('nodemailer');
 const dotenv = require('dotenv');
 dotenv.config();
 const bcrypt = require('bcryptjs');
-const { createUser } = require('./user.service'); // [`createUser`](src/auth/user.service.js)
+const { createUser } = require('./user.service');
 const {
   createUMKM,
   getUMKMByUserId,
   getUMKMById,
   updateUMKM,
   verifyUMKM
-} = require('./umkm.service'); // [`createUMKM`](src/auth/umkm.service.js)
+} = require('./umkm.service');
 
 const { validateCreateUMKM, validateUpdateUMKM, validateLogin, validateVerifyUMKM } = require('../validation/validation');
-const { loginUser } = require('./user.service'); // [`loginUser`](src/auth/user.service.js)
-const { findUMKMByUserId } = require('./umkm.repository'); // [`findUMKMByUserId`](src/auth/umkm.repository.js)
+const { loginUser } = require('./user.service');
+const { findUMKMByUserId } = require('./umkm.repository');
 const { validationResult } = require('express-validator');
 
 const router = express.Router();
@@ -25,7 +25,7 @@ const router = express.Router();
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
   port: process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 587,
-  secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+  secure: process.env.SMTP_SECURE === 'true',
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
@@ -46,13 +46,15 @@ async function sendEmail({ to, subject, html, text }) {
 /**
  * POST /umkm
  * Create UMKM (if not logged in, create user first)
- * file: sertifikatHalal (optional)
  */
 router.post(
   '/',
-  // do NOT require authMiddleware here so frontend can register user+umkm in one request
-  uploadUMKM.array('sertifikatHalal'), // bisa upload unlimited dengan uploadUMKM dari multer.js
+  uploadUMKM.fields([
+    { name: 'sertifikatHalal', maxCount: 20 },
+    { name: 'sertifikasiHalal', maxCount: 20 },
+  ]),
   multerErrorHandler,
+  normalizeUmkmFiles,
   validateCreateUMKM,
   async (req, res) => {
     try {
@@ -68,23 +70,17 @@ router.post(
       }
 
       let userId;
-      // if user already authenticated, use that user
       if (req.user && req.user.id) {
         userId = Number(req.user.id);
       } else {
-        // create new user from provided fields
         const { name, email, password, phone_number } = req.body;
-
-        // hash password before creating (consistent with /daftar)
         const hashed = await bcrypt.hash(String(password), 10);
-
         const newUser = await createUser({
           name: String(name).trim(),
           email: String(email).trim(),
           password: hashed,
           phone_number: String(phone_number).trim()
-        }); // [`createUser`](src/auth/user.service.js)
-
+        });
         userId = newUser.id;
       }
 
@@ -96,7 +92,7 @@ router.post(
         files: req.files || [],
       };
 
-      const created = await createUMKM(payload); // [`createUMKM`](src/auth/umkm.service.js)
+      const created = await createUMKM(payload);
 
       return res.status(201).json({
         message: 'Registrasi UMKM berhasil',
@@ -111,8 +107,7 @@ router.post(
 );
 
 /**
- * POST /umkm/login — autentikasi sebagai UMKM (email/password)
- * menerima { emailOrPhone, password } sesuai validateLogin
+ * POST /umkm/login – autentikasi sebagai UMKM
  */
 router.post('/login', validateLogin, async (req, res) => {
   try {
@@ -123,19 +118,16 @@ router.post('/login', validateLogin, async (req, res) => {
 
     const { emailOrPhone, password } = req.body;
 
-    // Reuse existing login helper
-    const { loginUser } = require('./user.service'); // [`loginUser`](src/auth/user.service.js)
+    const { loginUser } = require('./user.service');
     const loginResult = await loginUser({ emailOrPhone, password });
     const user = loginResult.user;
 
-    // Periksa role UMKM dulu, fallback cek record VerifikasiUMKM
     const isUmkmRole = user.role && String(user.role).toUpperCase() === 'UMKM';
-    const umkmRecord = await findUMKMByUserId(user.id); // [`findUMKMByUserId`](src/auth/umkm.repository.js)
+    const umkmRecord = await findUMKMByUserId(user.id);
     if (!isUmkmRole && !umkmRecord) {
-      return res.status(403).json({ message: 'Akses ditolak — akun ini bukan UMKM.' });
+      return res.status(403).json({ message: 'Akses ditolak – akun ini bukan UMKM.' });
     }
 
-    // set cookie/token sama seperti login biasa
     res.cookie('token', loginResult.token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -143,7 +135,10 @@ router.post('/login', validateLogin, async (req, res) => {
       maxAge: 24 * 60 * 60 * 1000,
     });
 
-    return res.status(200).json({ message: 'Login UMKM berhasil', data: { user, umkm: umkmRecord || null, token: loginResult.token } });
+    return res.status(200).json({ 
+      message: 'Login UMKM berhasil', 
+      data: { user, umkm: umkmRecord || null, token: loginResult.token } 
+    });
   } catch (error) {
     console.error('Error UMKM login:', error);
     const status = error instanceof ApiError ? error.statusCode : 500;
@@ -162,16 +157,10 @@ router.get('/', authMiddleware, async (req, res) => {
       return res.status(403).json({ message: 'Access denied. Hanya admin yang boleh mengakses daftar UMKM.' });
     }
 
-    // Reuse service: get all by admin - if service doesn't have a "getAll", we can call repository directly,
-    // but assume service exposes a method or we can fetch via getUMKMByUserId for each user.
-    // Here we'll call getUMKMByUserId for all users isn't feasible; prefer service exposes getAll.
-    // To be safe, call prisma directly only if needed — but per instruksi, keep controller only.
-    // So expect service to support getAll (if not, add getAllUMKM in service/repo).
     if (typeof require('./umkm.service').getAllUMKM === 'function') {
       const all = await require('./umkm.service').getAllUMKM();
       return res.status(200).json({ data: all });
     } else {
-      // graceful fallback: return error to indicate service missing
       return res.status(500).json({ message: 'Service belum menyediakan method getAllUMKM. Tambahkan getAllUMKM di umkm.service.' });
     }
   } catch (error) {
@@ -183,7 +172,7 @@ router.get('/', authMiddleware, async (req, res) => {
 
 /**
  * GET /umkm/user/:userId
- * Get UMKM by userId --- accessible to owner (same user) or admin
+ * Get UMKM by userId - accessible to owner or admin
  */
 router.get('/user/:userId', authMiddleware, async (req, res) => {
   try {
@@ -191,7 +180,6 @@ router.get('/user/:userId', authMiddleware, async (req, res) => {
     const userId = Number(req.params.userId || req.query.userId);
     if (!userId) return res.status(400).json({ message: 'userId dibutuhkan' });
 
-    // owner or admin?
     if (!currentUser.admin && currentUser.id !== userId) {
       return res.status(403).json({ message: 'Access denied. Hanya pemilik atau admin yang boleh mengakses data ini.' });
     }
@@ -209,7 +197,7 @@ router.get('/user/:userId', authMiddleware, async (req, res) => {
 
 /**
  * GET /umkm/:idUmkm
- * Get UMKM by id - accessible to owner or admin
+ * Get UMKM by id - accessible to owner (UMKM) or admin
  */
 router.get('/:idUmkm', authMiddleware, async (req, res) => {
   try {
@@ -220,9 +208,12 @@ router.get('/:idUmkm', authMiddleware, async (req, res) => {
     const data = await getUMKMById(idUmkm);
     if (!data) return res.status(404).json({ message: 'Data UMKM tidak ditemukan' });
 
-    // check ownership: data.idUser is owner
-    if (!currentUser.admin && currentUser.id !== data.idUser) {
-      return res.status(403).json({ message: 'Access denied. Hanya pemilik atau admin yang boleh mengakses data ini.' });
+    // ✅ IZINKAN: admin ATAU pemilik UMKM (data.id_user === currentUser.id)
+    const isOwner = currentUser.id === data.id_user;
+    if (!currentUser.admin && !isOwner) {
+      return res.status(403).json({ 
+        message: 'Access denied. Hanya pemilik atau admin yang boleh mengakses data ini.' 
+      });
     }
 
     return res.status(200).json({ data });
@@ -235,13 +226,17 @@ router.get('/:idUmkm', authMiddleware, async (req, res) => {
 
 /**
  * PUT /umkm/:idUmkm
- * Update UMKM (owner or admin)
+ * Update UMKM - accessible to owner (UMKM) or admin
  */
 router.put(
   '/:idUmkm',
   authMiddleware,
-  uploadUMKM.array('sertifikatHalal'),
+  uploadUMKM.fields([
+    { name: 'sertifikatHalal', maxCount: 20 },
+    { name: 'sertifikasiHalal', maxCount: 20 },
+  ]),
   multerErrorHandler,
+  normalizeUmkmFiles,
   validateUpdateUMKM,
   async (req, res) => {
     try {
@@ -260,32 +255,29 @@ router.put(
       const idUmkm = Number(req.params.idUmkm);
       if (!idUmkm) return res.status(400).json({ message: 'idUmkm dibutuhkan' });
 
-      // Fetch existing to check ownership
       const existing = await getUMKMById(idUmkm);
       if (!existing) return res.status(404).json({ message: 'Data UMKM tidak ditemukan' });
 
-      if (!currentUser.admin && currentUser.id !== existing.id_user) {
-        return res.status(403).json({ message: 'Access denied. Hanya pemilik atau admin yang boleh mengubah data ini.' });
+      // ✅ IZINKAN: admin ATAU pemilik UMKM (existing.id_user === currentUser.id)
+      const isOwner = currentUser.id === existing.id_user;
+      if (!currentUser.admin && !isOwner) {
+        return res.status(403).json({ 
+          message: 'Access denied. Hanya pemilik atau admin yang boleh mengubah data ini.' 
+        });
       }
 
-      // Prepare update payload
       const updatePayload = {
-        // Data UMKM
         namaUmkm: req.body.namaUmkm,
         ktp: req.body.ktp,
         addresses: req.body.addresses ? (Array.isArray(req.body.addresses) ? req.body.addresses : JSON.parse(req.body.addresses)) : undefined,
         files: req.files || [],
-        
-        // Data User (optional)
         userData: {}
       };
 
-      // Jika ada update untuk data user
       if (req.body.name) updatePayload.userData.name = String(req.body.name).trim();
       if (req.body.email) updatePayload.userData.email = String(req.body.email).trim();
       if (req.body.phone_number) updatePayload.userData.phone_number = String(req.body.phone_number).trim();
       
-      // Hash password jika ada
       if (req.body.password && req.body.password.trim() !== '') {
         const bcrypt = require('bcryptjs');
         updatePayload.userData.password = await bcrypt.hash(String(req.body.password), 10);
@@ -308,7 +300,6 @@ router.put(
 /**
  * POST /umkm/:idUmkm/verify
  * Admin-only: approve/reject UMKM verification
- * body: { approved: boolean, reason?: string }
  */
 router.post('/:idUmkm/verify', authMiddleware, validateVerifyUMKM, async (req, res) => {
   try {
@@ -330,7 +321,6 @@ router.post('/:idUmkm/verify', authMiddleware, validateVerifyUMKM, async (req, r
     const idUmkm = Number(req.params.idUmkm);
     if (!idUmkm) return res.status(400).json({ message: 'idUmkm dibutuhkan' });
 
-    // coerce approved to boolean if front-end sends "true"/"false" strings
     const rawApproved = req.body.approved;
     const approved = (rawApproved === true) || (rawApproved === 'true') || (String(rawApproved).toLowerCase() === '1');
 

@@ -454,7 +454,6 @@
                   "price": { "type": "number" },
                   "stock": { "type": "integer" },
                   "productFile": { "type": "string", "format": "binary" },
-                  "partner_id": { "type": "integer" },
                   "weight": { "type": "number" }
                 }
               }
