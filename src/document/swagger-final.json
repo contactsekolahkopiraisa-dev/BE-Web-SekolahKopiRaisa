@@ -102,7 +102,9 @@
     },
     "/api/v1/auth/daftar": {
       "post": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Register new user",
         "requestBody": {
           "required": true,
@@ -110,7 +112,12 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["name", "email", "password", "phone_number"],
+                "required": [
+                  "name",
+                  "email",
+                  "password",
+                  "phone_number"
+                ],
                 "properties": {
                   "name": {
                     "type": "string",
@@ -151,7 +158,9 @@
     },
     "/api/v1/auth/login": {
       "post": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Login user",
         "requestBody": {
           "required": true,
@@ -159,7 +168,10 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["emailOrPhone", "password"],
+                "required": [
+                  "emailOrPhone",
+                  "password"
+                ],
                 "properties": {
                   "emailOrPhone": {
                     "type": "string",
@@ -185,7 +197,9 @@
     },
     "/api/v1/auth/user": {
       "get": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Get current user profile",
         "security": [
           {
@@ -199,7 +213,9 @@
         }
       },
       "put": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Update user profile",
         "security": [
           {
@@ -212,7 +228,10 @@
             "multipart/form-data": {
               "schema": {
                 "type": "object",
-                "required": ["name", "phone_number"],
+                "required": [
+                  "name",
+                  "phone_number"
+                ],
                 "properties": {
                   "name": {
                     "type": "string",
@@ -252,7 +271,9 @@
     },
     "/api/v1/auth/reset-password-request": {
       "post": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Request password reset",
         "requestBody": {
           "required": true,
@@ -260,7 +281,9 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["email"],
+                "required": [
+                  "email"
+                ],
                 "properties": {
                   "email": {
                     "type": "string",
@@ -285,7 +308,9 @@
     },
     "/api/v1/auth/reset-password": {
       "put": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Reset password",
         "requestBody": {
           "required": true,
@@ -293,7 +318,10 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["token", "newPassword"],
+                "required": [
+                  "token",
+                  "newPassword"
+                ],
                 "properties": {
                   "token": {
                     "type": "string",
@@ -323,7 +351,9 @@
     },
     "/api/v1/auth/google": {
       "get": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Google OAuth login",
         "responses": {
           "302": {
@@ -334,7 +364,9 @@
     },
     "/api/v1/auth/google/callback": {
       "get": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Google OAuth callback",
         "responses": {
           "302": {
@@ -345,7 +377,9 @@
     },
     "/api/v1/auth/save-token": {
       "post": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Save authentication token",
         "responses": {
           "200": {
@@ -356,7 +390,9 @@
     },
     "/api/v1/news": {
       "get": {
-        "tags": ["News"],
+        "tags": [
+          "News"
+        ],
         "summary": "Get all news",
         "responses": {
           "200": {
@@ -365,7 +401,9 @@
         }
       },
       "post": {
-        "tags": ["News"],
+        "tags": [
+          "News"
+        ],
         "summary": "Create new news",
         "security": [
           {
@@ -378,7 +416,10 @@
             "multipart/form-data": {
               "schema": {
                 "type": "object",
-                "required": ["title", "content"],
+                "required": [
+                  "title",
+                  "content"
+                ],
                 "properties": {
                   "title": {
                     "type": "string",
@@ -419,7 +460,9 @@
     },
     "/api/v1/news/{id}": {
       "get": {
-        "tags": ["News"],
+        "tags": [
+          "News"
+        ],
         "summary": "Get news by ID",
         "parameters": [
           {
@@ -438,7 +481,9 @@
         }
       },
       "put": {
-        "tags": ["News"],
+        "tags": [
+          "News"
+        ],
         "summary": "Update news",
         "security": [
           {
@@ -491,7 +536,9 @@
         }
       },
       "delete": {
-        "tags": ["News"],
+        "tags": [
+          "News"
+        ],
         "summary": "Delete news",
         "security": [
           {
@@ -517,7 +564,9 @@
     },
     "/api/v1/product": {
       "get": {
-        "tags": ["Products"],
+        "tags": [
+          "Products"
+        ],
         "summary": "Get all products",
         "responses": {
           "200": {
@@ -526,7 +575,9 @@
         }
       },
       "post": {
-        "tags": ["Products"],
+        "tags": [
+          "Products"
+        ],
         "summary": "Create new product",
         "security": [
           {
@@ -573,7 +624,9 @@
     },
     "/api/v1/product/{id}": {
       "get": {
-        "tags": ["Products"],
+        "tags": [
+          "Products"
+        ],
         "summary": "Get product by ID",
         "parameters": [
           {
@@ -592,7 +645,9 @@
         }
       },
       "put": {
-        "tags": ["Products"],
+        "tags": [
+          "Products"
+        ],
         "summary": "Update product",
         "security": [
           {
@@ -652,7 +707,9 @@
     },
     "/api/v1/product/{idProduct}": {
       "delete": {
-        "tags": ["Products"],
+        "tags": [
+          "Products"
+        ],
         "summary": "Delete product",
         "security": [
           {
@@ -678,7 +735,9 @@
     },
     "/api/v1/partner": {
       "get": {
-        "tags": ["Partners"],
+        "tags": [
+          "Partners"
+        ],
         "summary": "Get all partners",
         "security": [
           {
@@ -692,7 +751,9 @@
         }
       },
       "post": {
-        "tags": ["Partners"],
+        "tags": [
+          "Partners"
+        ],
         "summary": "Create new partner",
         "security": [
           {
@@ -705,7 +766,11 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["name", "owner_name", "phone_number"],
+                "required": [
+                  "name",
+                  "owner_name",
+                  "phone_number"
+                ],
                 "properties": {
                   "name": {
                     "type": "string",
@@ -741,7 +806,9 @@
     },
     "/api/v1/partner/{id}": {
       "get": {
-        "tags": ["Partners"],
+        "tags": [
+          "Partners"
+        ],
         "summary": "Get partner by ID",
         "security": [
           {
@@ -765,7 +832,9 @@
         }
       },
       "put": {
-        "tags": ["Partners"],
+        "tags": [
+          "Partners"
+        ],
         "summary": "Update partner",
         "security": [
           {
@@ -810,7 +879,9 @@
         }
       },
       "delete": {
-        "tags": ["Partners"],
+        "tags": [
+          "Partners"
+        ],
         "summary": "Delete partner",
         "security": [
           {
@@ -836,7 +907,9 @@
     },
     "/api/v1/cart": {
       "get": {
-        "tags": ["Cart"],
+        "tags": [
+          "Cart"
+        ],
         "summary": "Get user cart",
         "security": [
           {
@@ -850,7 +923,9 @@
         }
       },
       "post": {
-        "tags": ["Cart"],
+        "tags": [
+          "Cart"
+        ],
         "summary": "Add item to cart",
         "security": [
           {
@@ -884,7 +959,9 @@
     },
     "/api/v1/cart/{id}": {
       "put": {
-        "tags": ["Cart"],
+        "tags": [
+          "Cart"
+        ],
         "summary": "Update cart item",
         "security": [
           {
@@ -923,7 +1000,9 @@
         }
       },
       "delete": {
-        "tags": ["Cart"],
+        "tags": [
+          "Cart"
+        ],
         "summary": "Remove item from cart",
         "security": [
           {
@@ -949,7 +1028,9 @@
     },
     "/api/v1/order": {
       "get": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Get all orders (admin)",
         "security": [
           {
@@ -963,7 +1044,9 @@
         }
       },
       "post": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Create new order",
         "security": [
           {
@@ -1064,7 +1147,9 @@
     },
     "/api/v1/order/umkm/history": {
       "get": {
-        "tags": ["Order UMKM"],
+        "tags": [
+          "Order UMKM"
+        ],
         "summary": "Get riwayat pesanan UMKM (UMKM only)",
         "description": "UMKM dapat melihat riwayat semua pesanan yang mengandung produk mereka dengan filter status opsional.",
         "security": [
@@ -1090,7 +1175,10 @@
               }
             },
             "description": "Filter berdasarkan status pesanan (bisa multiple)",
-            "example": ["PROCESSING", "SHIPPED"]
+            "example": [
+              "PROCESSING",
+              "SHIPPED"
+            ]
           }
         ],
         "responses": {
@@ -1111,7 +1199,9 @@
     },
     "/api/v1/order/umkm/{id}/detail": {
       "get": {
-        "tags": ["Order UMKM"],
+        "tags": [
+          "Order UMKM"
+        ],
         "summary": "Get detail pesanan UMKM by ID (UMKM only)",
         "description": "UMKM dapat melihat detail pesanan spesifik yang mengandung produk mereka berdasarkan ID pesanan.",
         "security": [
@@ -1270,7 +1360,9 @@
     },
     "/api/v1/order/umkm/{id}/update-status": {
       "put": {
-        "tags": ["Order UMKM"],
+        "tags": [
+          "Order UMKM"
+        ],
         "summary": "Update status pesanan (UMKM only)",
         "description": "UMKM dapat mengubah status pesanan yang mengandung produk mereka. Hanya bisa mengubah ke status PROCESSING atau SHIPPED dengan validasi transisi yang benar.",
         "security": [
@@ -1295,11 +1387,16 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["status"],
+                "required": [
+                  "status"
+                ],
                 "properties": {
                   "status": {
                     "type": "string",
-                    "enum": ["PROCESSING", "SHIPPED"],
+                    "enum": [
+                      "PROCESSING",
+                      "SHIPPED"
+                    ],
                     "description": "Status baru pesanan",
                     "example": "PROCESSING"
                   }
@@ -1329,7 +1426,9 @@
     },
     "/api/v1/order/umkm/order-statuses": {
       "get": {
-        "tags": ["Order UMKM"],
+        "tags": [
+          "Order UMKM"
+        ],
         "summary": "Get daftar status yang tersedia untuk UMKM",
         "description": "Menampilkan daftar status pesanan yang bisa digunakan oleh UMKM (PROCESSING dan SHIPPED).",
         "security": [
@@ -1356,7 +1455,10 @@
                         "properties": {
                           "value": {
                             "type": "string",
-                            "enum": ["PROCESSING", "SHIPPED"]
+                            "enum": [
+                              "PROCESSING",
+                              "SHIPPED"
+                            ]
                           },
                           "label": {
                             "type": "string"
@@ -1395,7 +1497,9 @@
     },
     "/api/v1/order/{id}/detail": {
       "get": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Get order detail",
         "security": [
           {
@@ -1421,7 +1525,9 @@
     },
     "/api/v1/order/my-order": {
       "get": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Get user's orders",
         "security": [
           {
@@ -1437,7 +1543,9 @@
     },
     "/api/v1/order/history": {
       "get": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Get order history",
         "security": [
           {
@@ -1453,7 +1561,9 @@
     },
     "/api/v1/order/completed": {
       "get": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Get completed orders",
         "security": [
           {
@@ -1469,7 +1579,9 @@
     },
     "/api/v1/order/Order-statuses": {
       "get": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Get order statuses",
         "security": [
           {
@@ -1485,7 +1597,9 @@
     },
     "/api/v1/order/payment-method": {
       "get": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Get payment methods",
         "security": [
           {
@@ -1501,7 +1615,9 @@
     },
     "/api/v1/order/midtrans/notification": {
       "post": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Midtrans payment notification webhook",
         "responses": {
           "200": {
@@ -1512,7 +1628,9 @@
     },
     "/api/v1/order/contact-partner/{partnerId}": {
       "post": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Contact partner for order",
         "security": [
           {
@@ -1538,7 +1656,9 @@
     },
     "/api/v1/order/search-address": {
       "get": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Search shipping address",
         "security": [
           {
@@ -1568,7 +1688,9 @@
     },
     "/api/v1/order/search-cost": {
       "post": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Calculate shipping cost",
         "security": [
           {
@@ -1591,7 +1713,10 @@
                     "description": "Berat barang dalam gram (contoh: 1500)"
                   }
                 },
-                "required": ["destination", "weight"]
+                "required": [
+                  "destination",
+                  "weight"
+                ]
               },
               "example": {
                 "destination": "68121",
@@ -1612,7 +1737,9 @@
     },
     "/api/v1/order/{id}/cancel": {
       "put": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Cancel order",
         "security": [
           {
@@ -1642,7 +1769,9 @@
                     "example": "Barang tidak sesuai pesanan"
                   }
                 },
-                "required": ["reason"]
+                "required": [
+                  "reason"
+                ]
               }
             }
           }
@@ -1656,7 +1785,9 @@
     },
     "/api/v1/order/{id}/update-status": {
       "put": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Update order status",
         "security": [
           {
@@ -1686,7 +1817,9 @@
                     "example": "PROCESSING, SHIPPED, DELIVERED, CANCELLED"
                   }
                 },
-                "required": ["status"]
+                "required": [
+                  "status"
+                ]
               }
             }
           }
@@ -1700,7 +1833,9 @@
     },
     "/api/v1/order/{id}": {
       "put": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Update order",
         "security": [
           {
@@ -1724,7 +1859,9 @@
         }
       },
       "delete": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Delete order",
         "security": [
           {
@@ -1750,7 +1887,9 @@
     },
     "/api/v1/order/notifications": {
       "get": {
-        "tags": ["Orders"],
+        "tags": [
+          "Orders"
+        ],
         "summary": "Get order notifications",
         "security": [
           {
@@ -1766,7 +1905,9 @@
     },
     "/api/v1/company": {
       "get": {
-        "tags": ["Company"],
+        "tags": [
+          "Company"
+        ],
         "summary": "Get company information",
         "security": [
           {
@@ -1780,7 +1921,9 @@
         }
       },
       "post": {
-        "tags": ["Company"],
+        "tags": [
+          "Company"
+        ],
         "summary": "Create company profile",
         "security": [
           {
@@ -1823,7 +1966,9 @@
     },
     "/api/v1/company/{id}": {
       "get": {
-        "tags": ["Company"],
+        "tags": [
+          "Company"
+        ],
         "summary": "Get company by ID",
         "security": [
           {
@@ -1847,7 +1992,9 @@
         }
       },
       "put": {
-        "tags": ["Company"],
+        "tags": [
+          "Company"
+        ],
         "summary": "Update company profile",
         "security": [
           {
@@ -1900,7 +2047,9 @@
     },
     "/api/v1/auth/umkm": {
       "post": {
-        "tags": ["UMKM"],
+        "tags": [
+          "UMKM"
+        ],
         "summary": "Registrasi UMKM (jika belum login buat user baru)",
         "requestBody": {
           "required": true,
@@ -1975,7 +2124,9 @@
         }
       },
       "get": {
-        "tags": ["UMKM"],
+        "tags": [
+          "UMKM"
+        ],
         "summary": "Daftar semua UMKM (admin)",
         "security": [
           {
@@ -1994,7 +2145,9 @@
     },
     "/api/v1/auth/umkm/{idUmkm}": {
       "get": {
-        "tags": ["UMKM"],
+        "tags": [
+          "UMKM"
+        ],
         "summary": "Ambil UMKM berdasarkan idUmkm (owner atau admin)",
         "security": [
           {
@@ -2024,7 +2177,9 @@
         }
       },
       "put": {
-        "tags": ["UMKM"],
+        "tags": [
+          "UMKM"
+        ],
         "summary": "Update UMKM (owner atau admin)",
         "security": [
           {
@@ -2142,7 +2297,11 @@
                         },
                         "status_verifikasi": {
                           "type": "string",
-                          "enum": ["Pending", "Verified", "Rejected"],
+                          "enum": [
+                            "Pending",
+                            "Verified",
+                            "Rejected"
+                          ],
                           "example": "Verified"
                         },
                         "User": {
@@ -2326,7 +2485,9 @@
     },
     "/api/v1/auth/umkm/{idUmkm}/verify": {
       "post": {
-        "tags": ["UMKM"],
+        "tags": [
+          "UMKM"
+        ],
         "summary": "Verifikasi UMKM oleh admin (approve/reject)",
         "security": [
           {
@@ -2357,7 +2518,9 @@
                     "type": "string"
                   }
                 },
-                "required": ["approved"]
+                "required": [
+                  "approved"
+                ]
               }
             }
           }
@@ -2377,7 +2540,9 @@
     },
     "/api/v1/laporan-keuangan": {
       "post": {
-        "tags": ["Laporan Keuangan"],
+        "tags": [
+          "Laporan Keuangan"
+        ],
         "summary": "Create laporan keuangan baru (Admin only)",
         "description": "Hanya admin yang boleh membuat laporan keuangan manual.",
         "security": [
@@ -2391,7 +2556,10 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["periode", "report_date"],
+                "required": [
+                  "periode",
+                  "report_date"
+                ],
                 "properties": {
                   "periode": {
                     "type": "string",
@@ -2414,7 +2582,10 @@
                     "type": "array",
                     "items": {
                       "type": "object",
-                      "required": ["tanggal", "jumlah_pengeluaran"],
+                      "required": [
+                        "tanggal",
+                        "jumlah_pengeluaran"
+                      ],
                       "properties": {
                         "tanggal": {
                           "type": "string",
@@ -2470,7 +2641,9 @@
         }
       },
       "get": {
-        "tags": ["Laporan Keuangan"],
+        "tags": [
+          "Laporan Keuangan"
+        ],
         "summary": "Get all laporan keuangan",
         "description": "Admin dapat melihat semua laporan, UMKM hanya melihat laporan miliknya sendiri (laporan manual + pemasukan dari payment produk Tsarisma Coffee).",
         "security": [
@@ -2544,7 +2717,10 @@
                         "properties": {
                           "source": {
                             "type": "string",
-                            "enum": ["manual", "payment"]
+                            "enum": [
+                              "manual",
+                              "payment"
+                            ]
                           },
                           "id": {
                             "type": "integer"
@@ -2618,7 +2794,9 @@
     },
     "/api/v1/laporan-keuangan/{id}": {
       "get": {
-        "tags": ["Laporan Keuangan"],
+        "tags": [
+          "Laporan Keuangan"
+        ],
         "summary": "Get laporan keuangan by ID",
         "description": "Admin dapat melihat semua laporan, UMKM hanya dapat melihat laporan miliknya sendiri.",
         "security": [
@@ -2692,7 +2870,9 @@
         }
       },
       "put": {
-        "tags": ["Laporan Keuangan"],
+        "tags": [
+          "Laporan Keuangan"
+        ],
         "summary": "Update laporan keuangan (Admin only)",
         "description": "Hanya admin yang boleh mengupdate laporan keuangan.",
         "security": [
@@ -2765,7 +2945,9 @@
         }
       },
       "delete": {
-        "tags": ["Laporan Keuangan"],
+        "tags": [
+          "Laporan Keuangan"
+        ],
         "summary": "Delete laporan keuangan (Admin only)",
         "description": "Hanya admin yang boleh menghapus laporan keuangan.",
         "security": [
@@ -2815,7 +2997,9 @@
     },
     "/api/v1/penjualan/my-report": {
       "get": {
-        "tags": ["Laporan Penjualan"],
+        "tags": [
+          "Laporan Penjualan"
+        ],
         "summary": "Get laporan penjualan UMKM (UMKM only)",
         "description": "UMKM dapat melihat laporan penjualan produk mereka sendiri dengan summary (jumlah produk terjual, laba kotor, pajak 10%, laba bersih), chart penjualan per hari, dan top 5 products berdasarkan jumlah terjual.",
         "security": [
@@ -2985,7 +3169,9 @@
     },
     "/api/v1/penjualan/admin/report": {
       "get": {
-        "tags": ["Laporan Penjualan"],
+        "tags": [
+          "Laporan Penjualan"
+        ],
         "summary": "Get laporan penjualan semua UMKM (Admin only)",
         "description": "Admin dapat melihat laporan penjualan dari semua UMKM dengan summary total dan list per UMKM.",
         "security": [
@@ -3128,7 +3314,9 @@
     },
     "/api/v1/penjualan/admin/partner/{partnerId}": {
       "get": {
-        "tags": ["Laporan Penjualan"],
+        "tags": [
+          "Laporan Penjualan"
+        ],
         "summary": "Get laporan penjualan UMKM berdasarkan Partner ID (Admin only)",
         "description": "Admin dapat melihat detail laporan penjualan UMKM spesifik berdasarkan partner_id.",
         "security": [
@@ -3184,7 +3372,9 @@
     },
     "/api/v1/penjualan/my-top-products": {
       "get": {
-        "tags": ["Laporan Penjualan"],
+        "tags": [
+          "Laporan Penjualan"
+        ],
         "summary": "Get top products UMKM (UMKM only)",
         "description": "UMKM dapat melihat daftar produk terlaris mereka berdasarkan jumlah terjual dengan filter periode dan limit.",
         "security": [
@@ -3330,7 +3520,9 @@
     },
     "/api/v1/penjualan/admin/top-products": {
       "get": {
-        "tags": ["Laporan Penjualan"],
+        "tags": [
+          "Laporan Penjualan"
+        ],
         "summary": "Get top products dari semua UMKM (Admin only)",
         "description": "Admin dapat melihat daftar produk terlaris dari semua UMKM yang terdaftar, diurutkan berdasarkan jumlah terjual.",
         "security": [
@@ -3465,7 +3657,9 @@
     },
     "/api/v1/wilayah/provinces": {
       "get": {
-        "tags": ["Wilayah"],
+        "tags": [
+          "Wilayah"
+        ],
         "summary": "Get all provinces (Jawa Timur only)",
         "description": "Mengambil daftar provinsi. Untuk sistem ini hanya menampilkan Jawa Timur dari API eksternal.",
         "responses": {
@@ -3536,7 +3730,9 @@
     },
     "/api/v1/wilayah/regencies/{provinceCode}": {
       "get": {
-        "tags": ["Wilayah"],
+        "tags": [
+          "Wilayah"
+        ],
         "summary": "Get regencies by province code (Tapal Kuda only)",
         "description": "Mengambil daftar kabupaten berdasarkan kode provinsi. Hanya menampilkan 7 kabupaten Tapal Kuda dari API eksternal.",
         "parameters": [
@@ -3648,7 +3844,9 @@
     },
     "/api/v1/wilayah/districts/{regencyCode}": {
       "get": {
-        "tags": ["Wilayah"],
+        "tags": [
+          "Wilayah"
+        ],
         "summary": "Get districts by regency code",
         "description": "Mengambil daftar kecamatan berdasarkan kode kabupaten dari API eksternal.",
         "parameters": [
@@ -3710,7 +3908,9 @@
     },
     "/api/v1/wilayah/villages/{districtCode}": {
       "get": {
-        "tags": ["Wilayah"],
+        "tags": [
+          "Wilayah"
+        ],
         "summary": "Get villages by district code",
         "description": "Mengambil daftar desa/kelurahan berdasarkan kode kecamatan dari API eksternal.",
         "parameters": [
@@ -3772,7 +3972,9 @@
     },
     "/api/v1/wilayah/validate/{villageCode}": {
       "get": {
-        "tags": ["Wilayah"],
+        "tags": [
+          "Wilayah"
+        ],
         "summary": "Validate village code exists in Tapal Kuda database",
         "description": "Memvalidasi apakah ID desa ada di database wilayah Tapal Kuda. Endpoint ini digunakan backend untuk memastikan desa yang dipilih user valid sebelum disimpan.",
         "parameters": [
@@ -3900,7 +4102,9 @@
     },
     "/api/v1/jenis-layanan": {
       "get": {
-        "tags": ["Jenis Layanan"],
+        "tags": [
+          "Jenis Layanan"
+        ],
         "summary": "Get all jenis layanan",
         "responses": {
           "200": {
@@ -3945,7 +4149,9 @@
     },
     "/api/v1/jenis-layanan/{id}": {
       "get": {
-        "tags": ["Jenis Layanan"],
+        "tags": [
+          "Jenis Layanan"
+        ],
         "summary": "Get jenis layanan by ID",
         "parameters": [
           {
@@ -3986,7 +4192,9 @@
         }
       },
       "put": {
-        "tags": ["Jenis Layanan"],
+        "tags": [
+          "Jenis Layanan"
+        ],
         "summary": "Update existing Jenis Layanan by ID",
         "security": [
           {
@@ -4063,7 +4271,9 @@
     },
     "/api/v1/modul": {
       "get": {
-        "tags": ["Modul"],
+        "tags": [
+          "Modul"
+        ],
         "summary": "Get all modul",
         "responses": {
           "200": {
@@ -4100,7 +4310,9 @@
         }
       },
       "post": {
-        "tags": ["Modul"],
+        "tags": [
+          "Modul"
+        ],
         "summary": "Create new modul",
         "security": [
           {
@@ -4155,7 +4367,9 @@
     },
     "/api/v1/modul/{id}": {
       "get": {
-        "tags": ["Modul"],
+        "tags": [
+          "Modul"
+        ],
         "summary": "Get modul by ID",
         "parameters": [
           {
@@ -4193,7 +4407,9 @@
         }
       },
       "put": {
-        "tags": ["Modul"],
+        "tags": [
+          "Modul"
+        ],
         "summary": "Update existing modul by ID",
         "security": [
           {
@@ -4258,7 +4474,9 @@
         }
       },
       "delete": {
-        "tags": ["Modul"],
+        "tags": [
+          "Modul"
+        ],
         "summary": "Delete existing modul by ID",
         "security": [
           {
@@ -4303,7 +4521,9 @@
     },
     "/api/v1/layanan": {
       "get": {
-        "tags": ["Layanan"],
+        "tags": [
+          "Layanan"
+        ],
         "summary": "Get all layanan by requested role logic",
         "security": [
           {
@@ -4417,7 +4637,9 @@
         }
       },
       "post": {
-        "tags": ["Layanan"],
+        "tags": [
+          "Layanan"
+        ],
         "summary": "Issue new permintaan layanan",
         "security": [
           {
@@ -4785,7 +5007,9 @@
     },
     "/api/v1/layanan/{id}": {
       "get": {
-        "tags": ["Layanan"],
+        "tags": [
+          "Layanan"
+        ],
         "summary": "Get layanan by id",
         "security": [
           {
@@ -4897,7 +5121,9 @@
     },
     "/api/v1/layanan/{id}/accept-pengajuan": {
       "put": {
-        "tags": ["Layanan"],
+        "tags": [
+          "Layanan"
+        ],
         "summary": "Accept pengajuan layanan",
         "security": [
           {
@@ -4936,7 +5162,9 @@
     },
     "/api/v1/layanan/{id}/reject-pengajuan": {
       "put": {
-        "tags": ["Layanan"],
+        "tags": [
+          "Layanan"
+        ],
         "summary": "Reject pengajuan layanan with alasan",
         "security": [
           {
@@ -4991,7 +5219,9 @@
     },
     "/api/v1/layanan/{id}/logbook": {
       "put": {
-        "tags": ["Layanan"],
+        "tags": [
+          "Layanan"
+        ],
         "summary": "Upload logbook during pelaksanaan",
         "security": [
           {
@@ -5046,7 +5276,9 @@
     },
     "/api/v1/layanan/{id}/finish-pelaksanaan": {
       "put": {
-        "tags": ["Layanan"],
+        "tags": [
+          "Layanan"
+        ],
         "summary": "Finish pelaksanaan layanan",
         "security": [
           {
@@ -5085,7 +5317,9 @@
     },
     "/api/v1/mou": {
       "post": {
-        "tags": ["MoU"],
+        "tags": [
+          "MoU"
+        ],
         "summary": "Submit MoU file",
         "security": [
           {
@@ -5142,7 +5376,9 @@
     },
     "/api/v1/mou/{id}/accept": {
       "put": {
-        "tags": ["MoU"],
+        "tags": [
+          "MoU"
+        ],
         "summary": "Accept MoU application",
         "parameters": [
           {
@@ -5191,7 +5427,9 @@
     },
     "/api/v1/mou/{id}/reject": {
       "put": {
-        "tags": ["MoU"],
+        "tags": [
+          "MoU"
+        ],
         "summary": "Reject MoU application with alasan",
         "parameters": [
           {
@@ -5256,7 +5494,9 @@
     },
     "/api/v1/mou/{id}": {
       "put": {
-        "tags": ["MoU"],
+        "tags": [
+          "MoU"
+        ],
         "summary": "Submit revised MoU file",
         "security": [
           {
@@ -5321,7 +5561,9 @@
     },
     "/api/v1/laporan-layanan": {
       "post": {
-        "tags": ["Laporan Layanan"],
+        "tags": [
+          "Laporan Layanan"
+        ],
         "summary": "Submit laporan kegiatan data for P4S after layanan finished",
         "security": [
           {
@@ -5331,34 +5573,29 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": {
+            "multipart/form-data": {
               "schema": {
                 "type": "object",
                 "properties": {
-                  "id_layanan": { "type": "integer", "example": 35 },
-                  "foto_kegiatan": {
-                    "type": "string",
-                    "example": "https://res.cloudinary.com/db8lhx2hz/image/upload/v1766193375/konten-kopiraisa/laporan-layanan/1766193373202_9b5707b456b22f51466a.png"
-                  },
-                  "id_status_pelaporan": { "type": "integer", "example": 5 },
                   "nama_p4s": {
                     "type": "string",
-                    "example": "P4S Kopi Raisa",
-                    "description": "Nama P4S, WAJIB diisi"
+                    "description": "Nama kegiatan",
+                    "example": "Magang Batch 2 Perkebunan 2025"
+                  },
+                  "asal_kab_kota": {
+                    "type": "string",
+                    "description": "Harus lengkap, contoh: \"Kabupatan Jember\", \"Kota Malang\"",
+                    "example": "Kabupaten Jember"
+                  },
+                  "id_layanan": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "foto_kegiatan": {
+                    "type": "string",
+                    "format": "binary"
                   }
-                },
-                "required": [
-                  "id_layanan",
-                  "foto_kegiatan",
-                  "id_status_pelaporan",
-                  "nama_p4s"
-                ]
-              },
-              "example": {
-                "id_layanan": 35,
-                "foto_kegiatan": "https://res.cloudinary.com/db8lhx2hz/image/upload/v1766193375/konten-kopiraisa/laporan-layanan/1766193373202_9b5707b456b22f51466a.png",
-                "id_status_pelaporan": 5,
-                "nama_p4s": "P4S Kopi Raisa"
+                }
               }
             }
           }
@@ -5402,7 +5639,9 @@
     },
     "/api/v1/laporan-layanan/{id}": {
       "get": {
-        "tags": ["Laporan Layanan"],
+        "tags": [
+          "Laporan Layanan"
+        ],
         "summary": "Get laporan layanan by laporan layanan ID",
         "security": [
           {
@@ -5452,7 +5691,9 @@
     },
     "/api/v1/sertifikat/": {
       "post": {
-        "tags": ["Sertifikat"],
+        "tags": [
+          "Sertifikat"
+        ],
         "summary": "Submit sertifikat",
         "security": [
           {
@@ -5522,7 +5763,9 @@
     },
     "/api/v1/sertifikat/{id}": {
       "get": {
-        "tags": ["Sertifikat"],
+        "tags": [
+          "Sertifikat"
+        ],
         "summary": "Get sertifikat by sertifikat ID",
         "security": [
           {

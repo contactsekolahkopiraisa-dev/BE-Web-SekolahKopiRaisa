@@ -1,5 +1,5 @@
 const ApiError = require ("../utils/apiError.js");
-const { STATUS } = require("../utils/constant/enum.js");
+const { STATUS, STATEMENT_LAYANAN } = require("../utils/constant/enum.js");
 
 const { mouService } = require("./C_Mou.service.js");
 
@@ -20,7 +20,7 @@ const mouController = {
         try {
             // kembalikan kalau bukan customer
             // if (req.user.role !== 'customer') { throw new ApiError(403, 'Akses ditolak! Hanya customer yang dapat mengunggah MOU !'); }
-            const data = await mouService.create(req.body, req.file);
+            const data = await mouService.create(STATEMENT_LAYANAN.MOU_DIAJUKAN, req.user, req.body, req.file);
             res.status(201).json({ success: true, message: `Berhasil mengunggah MOU !`, data});
         } catch (err) {
             next(err);
@@ -31,7 +31,7 @@ const mouController = {
         try {
             // kembalikan kalau bukan customer
             // if (req.user.role !== 'customer') { throw new ApiError(403, 'Akses ditolak! Hanya customer yang dapat mengunggah MOU !'); }
-            const data = await mouService.update(req.params, req.file);
+            const data = await mouService.update(STATEMENT_LAYANAN.REVISI_MOU_DIAJUKAN, req.user, req.params, req.file);
             res.status(200).json({ success: true, message: `Berhasil mengubah MOU !`, data});
         } catch (err) {
             next(err);
@@ -40,7 +40,7 @@ const mouController = {
     // PUT ACCEPT MOU SUBMISSION
     async accept(req, res, next) {
         try {
-            const data = await mouService.updateStatus(req.params, req.body, STATUS.DISETUJUI.id);
+            const data = await mouService.updateStatus(STATEMENT_LAYANAN.PENGAJUAN_MOU_DISETUJUI, req.user, req.params, req.body, STATUS.DISETUJUI.id);
             res.status(200).json({success: true, message: 'Berhasil menyetujui MOU !', data});
         } catch (err) {
             next(err);
@@ -49,7 +49,7 @@ const mouController = {
     // PUT REJECT MOU SUBMISSION
     async reject(req, res, next) {
         try { 
-            const data = await mouService.updateStatus(req.params, req.body, STATUS.DITOLAK.id);
+            const data = await mouService.updateStatus(STATEMENT_LAYANAN.PENGAJUAN_MOU_DITOLAK, req.user, req.params, req.body, STATUS.DITOLAK.id);
             res.status(200).json({success: true, message: 'Berhasil menolak MOU !', data});
         } catch (err) {
             next(err);

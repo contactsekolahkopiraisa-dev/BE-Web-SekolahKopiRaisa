@@ -10,6 +10,17 @@
             "username": "postgres.riystelxevzizarzztdl",
             "password": "Ce4IyWg3UGYMnrNK",
             "name": "RaisaCloud"
+        },
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "local",
+            "database": "raisa",
+            "username": "postgres",
+            "password": "dammahom51"
         }
     ]
 }

@@ -7,7 +7,29 @@ const mouRepository = {
             where: { id: parseInt(id) },
             include: {
                 statusKode: true,
-                mouRejection: true
+                mouRejection: true,
+                layanan: {
+                    include: {
+                        konfigurasiLayanan: {
+                            include: {
+                                detailKonfigurasis: {
+                                    include: {
+                                        kegiatan: true,
+                                        subKegiatan: true,
+                                    },
+                                    orderBy: { urutan_ke: "asc" },
+                                },
+                            },
+                        },
+                        statusKodePengajuan: true,
+                        statusKodePelaksanaan: true,
+                        jenisLayanan: true,
+                        user: {
+                            select: { id: true, name: true, email: true, phone_number: true },
+                        },
+                        pesertas: true,
+                    }
+                },
             }
         })
     },
@@ -16,7 +38,29 @@ const mouRepository = {
             data,
             include: {
                 statusKode: true,
-                mouRejection: true
+                mouRejection: true,
+                layanan: {
+                    include: {
+                        konfigurasiLayanan: {
+                            include: {
+                                detailKonfigurasis: {
+                                    include: {
+                                        kegiatan: true,
+                                        subKegiatan: true,
+                                    },
+                                    orderBy: { urutan_ke: "asc" },
+                                },
+                            },
+                        },
+                        statusKodePengajuan: true,
+                        statusKodePelaksanaan: true,
+                        jenisLayanan: true,
+                        user: {
+                            select: { id: true, name: true, email: true, phone_number: true },
+                        },
+                        pesertas: true,
+                    }
+                },
             }
         })
     },
@@ -30,7 +74,29 @@ const mouRepository = {
             },
             include: {
                 statusKode: true,
-                mouRejection: true
+                mouRejection: true,
+                layanan: {
+                    include: {
+                        konfigurasiLayanan: {
+                            include: {
+                                detailKonfigurasis: {
+                                    include: {
+                                        kegiatan: true,
+                                        subKegiatan: true,
+                                    },
+                                    orderBy: { urutan_ke: "asc" },
+                                },
+                            },
+                        },
+                        statusKodePengajuan: true,
+                        statusKodePelaksanaan: true,
+                        jenisLayanan: true,
+                        user: {
+                            select: { id: true, name: true, email: true, phone_number: true },
+                        },
+                        pesertas: true,
+                    }
+                },
             }
         })
     },

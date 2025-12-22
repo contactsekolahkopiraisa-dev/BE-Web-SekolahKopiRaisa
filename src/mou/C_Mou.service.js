@@ -13,6 +13,8 @@ const { sanitizeData } = require("../utils/sanitizeData.js");
 const { STATUS } = require("../utils/constant/enum.js");
 const prisma = require("../db/index.js");
 const { layananRepository } = require("../layanan/C_Layanan.repository.js");
+const { findUserByRole } = require("../auth/user.repository.js");
+const { sendEmailLayananNotif } = require("../services/fiturLayananEmailSender.service.js");
 
 const mouService = {
   // GET MOU BY ID
@@ -24,13 +26,14 @@ const mouService = {
     return mou;
   },
   // CREATE NEW MOU
-  async create(dataRaw, file) {
+  async create(namaTahapan, userRaw, dataRaw, file) {
     // kembalikan kalau tidak ada file mounya
     if (!file) {
       throw new ApiError(400, "File tidak disertakan!");
     }
     // formatting
     const data = sanitizeData(dataRaw);
+    const user = sanitizeData(userRaw);
     // upload file ke Cloudinary
     const fileUpload = await uploadToCloudinary(
       file.buffer,
@@ -49,11 +52,23 @@ const mouService = {
     };
     // lempar ke repo
     const created = await mouRepository.create(payload);
+
+    // kirim notif
+    // kirim notif email semua admin
+    const emailTargets = (await findUserByRole('admin')).map(u => u.email);
+    const emaiSents = await sendEmailLayananNotif(user, true, emailTargets, created.layanan, namaTahapan);
+    console.log("SENT TO ADMIN: " + emaiSents);
+    // kirim juga ke user bersangkutan
+    const emailTarget = [user.email.toString()];
+    const emaiSent = await sendEmailLayananNotif(user, false, emailTarget, created.layanan, namaTahapan);
+    console.log("SENT TO CUST: " + emaiSent);
+
     return created;
   },
   // PUT MOU BY ID
-  async update(idRaw, file) {
+  async update(namaTahapan, userRaw, idRaw, file) {
     const { id } = sanitizeData(idRaw);
+    const user = sanitizeData(userRaw);
     // cari data itu ada tidak, reuse kode this.getById()
     const existingMou = await this.getById(id);
     if (!existingMou) {
@@ -90,10 +105,21 @@ const mouService = {
     }
     // lempar ke repo
     const updated = await mouRepository.update(id, data);
+
+    // kirim notif
+    // kirim notif email semua admin
+    const emailTargets = (await findUserByRole('admin')).map(u => u.email);
+    const emaiSents = await sendEmailLayananNotif(user, true, emailTargets, updated.layanan, namaTahapan);
+    console.log("SENT TO ADMIN: " + emaiSents);
+    // kirim juga ke user bersangkutan
+    const emailTarget = [user.email.toString()];
+    const emaiSent = await sendEmailLayananNotif(user, false, emailTarget, updated.layanan, namaTahapan);
+    console.log("SENT TO CUST: " + emaiSent);
+
     return updated;
   },
   // PUT ACCEPT/REJECT MOU
-  async updateStatus(idRaw, dataRaw, status) {
+  async updateStatus(namaTahapan, user, idRaw, dataRaw, status) {
     // pakai transaction agar ketika rejection / mou gagal maka semuanya batal
     return prisma.$transaction(
       async (tx) => {
@@ -133,7 +159,7 @@ const mouService = {
 
           if (needsPelaksanaanUpdate) {
             // trigger ubah status di tabel layanan jadi sedang berjalan
-            // DEV NOTES : memang agak g nyambung tp mmg blm bs pakai cron job
+            // DEV NOTES : memang agak g nyambung tp mmg blm bs pakai cron job, perbaikan di dev selanjutnya
             const layananPayload = {
               id_status_pelaksanaan: STATUS.SEDANG_BERJALAN.id,
             };
@@ -152,10 +178,17 @@ const mouService = {
         if (layananUpdated) {
           updated.layanan = layananUpdated;
         }
+
+        // kirim notif
+        // kirim ke user bersangkutan
+        const emailTarget = [updated.layanan.user.email.toString()];
+        const emaiSent = await sendEmailLayananNotif(user, false, emailTarget, updated.layanan, namaTahapan);
+        console.log("SENT TO CUST: " + emaiSent);
+
         return updated;
       },
       {
-        timeout: 10000,
+        timeout: 30000,
       }
     );
   },

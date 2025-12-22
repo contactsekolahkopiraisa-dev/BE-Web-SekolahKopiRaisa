@@ -2,7 +2,6 @@ const ApiError = require("../utils/apiError.js");
 const {
   uploadToCloudinary,
 } = require("../services/cloudinaryUpload.service.js");
-const { sendEmail } = require("../utils/email");
 const { STATUS } = require("../utils/constant/enum.js");
 
 const formatLayanan = (l) => ({
@@ -127,111 +126,9 @@ async function uploadFilesBySchema(schemaFiles, files) {
   return uploaded;
 }
 
-const formatRangkumanKegiatan = (detailKonfigurasis) => {
-  return detailKonfigurasis
-    .map((d, i) => {
-      return `${i + 1}. ${d.kegiatan.nama_kegiatan} - ${
-        d.subKegiatan.nama_sub_kegiatan
-      }`;
-    })
-    .join("\n");
-};
-const sendNotifikasiAdminLayanan = async (emailAdmins, layanan) => {
-  if (!emailAdmins) throw new Error("Email admin wajib.");
-
-  const kegiatanList = formatRangkumanKegiatan(
-    layanan.konfigurasiLayanan.detailKonfigurasis
-  );
-
-  for (const admin of emailAdmins) {
-    const mail = {
-      from: `"Sistem Layanan RAISA" <${
-        process.env.EMAIL_USER || process.env.SMTP_USER
-      }>`,
-      to: admin.email,
-      subject: `PEMBERITAHUAN LAYANAN - ${layanan.jenisLayanan.nama_jenis_layanan}`,
-      text: `Telah masuk pengajuan layanan baru.
-  
-  === IDENTITAS PEMOHON ===
-  Nama     : ${layanan.user.name}
-  Email    : ${layanan.user.email}
-  No HP    : ${layanan.user.phone_number}
-  Instansi : ${layanan.instansi_asal}
-  
-  === DETAIL LAYANAN ===
-  ID Layanan          : ${layanan.id}
-  Jenis Layanan       : ${layanan.jenisLayanan.nama_jenis_layanan}
-  Tanggal Mulai       : ${layanan.tanggal_mulai}
-  Tanggal Selesai     : ${layanan.tanggal_selesai}
-  Jumlah Peserta      : ${layanan.jumlah_peserta}
-  
-  === FILE PERSYARATAN ===
-  Proposal            : ${layanan.file_proposal || "-"}
-  Surat Permohonan    : ${layanan.file_surat_permohonan || "-"}
-  Surat Pengantar     : ${layanan.file_surat_pengantar || "-"}
-  Surat Undangan      : ${layanan.file_surat_undangan || "-"}
-  
-  === KEGIATAN SESUAI KONFIGURASI ===
-  ${kegiatanList}
-  
-  === PESERTA (Jika Ada) ===
-  ${layanan.peserta
-    .map((p) => `- ${p.nama_peserta} (${p.nim || "NIM tidak ada"})`)
-    .join("\n")}
-  
-  Pengajuan ini mohon untuk dapat anda lakukan tindak lanjut
-  `,
-    };
-    
-    await sendEmail(mail);
-  }
-
-
-};
-
-const sendNotifikasiPengusulLayanan = async (emailPemohon, layanan) => {
-  if (!emailPemohon) throw new Error("Email pemohon wajib.");
-
-  const kegiatanList = formatRangkumanKegiatan(
-    layanan.konfigurasiLayanan.detailKonfigurasis
-  );
-
-  const mail = {
-    from: `"Sistem Layanan RAISA" <${
-      process.env.EMAIL_USER || process.env.SMTP_USER
-    }>`,
-    to: emailPemohon,
-    subject: `Pengajuan Layanan Berhasil - ${layanan.jenisLayanan.nama_jenis_layanan}`,
-    text: `Pengajuan layanan Anda telah berhasil kami terima.
-
-=== DETAIL PENGAJUAN ===
-Jenis Layanan   : ${layanan.jenisLayanan.nama_jenis_layanan}
-Tanggal Mulai   : ${layanan.tanggal_mulai}
-Tanggal Selesai : ${layanan.tanggal_selesai}
-Instansi Asal   : ${layanan.instansi_asal}
-Jumlah Peserta  : ${layanan.jumlah_peserta}
-
-=== KEGIATAN YANG AKAN DIJALANKAN ===
-${kegiatanList}
-
-=== FILE YANG ANDA KIRIM ===
-Proposal            : ${layanan.file_proposal || "-"}
-Surat Permohonan    : ${layanan.file_surat_permohonan || "-"}
-Surat Pengantar     : ${layanan.file_surat_pengantar || "-"}
-Surat Undangan      : ${layanan.file_surat_undangan || "-"}
-
-Terima kasih.
-Pengajuan Anda sedang kami proses dan menunggu persetujuan.
-`,
-  };
-
-  await sendEmail(mail);
-};
 
 module.exports = {
   uploadFilesBySchema,
-  sendNotifikasiAdminLayanan,
-  sendNotifikasiPengusulLayanan,
   buildFilter,
   injectStatus,
   formatLayanan,

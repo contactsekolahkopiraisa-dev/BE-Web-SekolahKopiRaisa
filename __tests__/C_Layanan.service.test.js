@@ -61,7 +61,7 @@ describe('LAYANAN SERVICE UNIT TESTS', () => {
             statusKodeRepository.findById.mockResolvedValue({ id: STATUS.DISETUJUI.id });
             layananRepository.update.mockResolvedValue({});
 
-            await layananService.updateStatus(1, mockAdmin, STATUS.DISETUJUI.id);
+            await layananService.updateStatus("PENGAJUAN DISETUJUI", 1, mockAdmin, STATUS.DISETUJUI.id);
 
             expect(layananRepository.update).toHaveBeenCalledWith(
                 1,
@@ -77,7 +77,7 @@ describe('LAYANAN SERVICE UNIT TESTS', () => {
             statusKodeRepository.findById.mockResolvedValue({ id: STATUS.DITOLAK.id });
 
             await expect(
-                layananService.updateStatus(1, mockAdmin, STATUS.DITOLAK.id, null) // alasan: null
+                layananService.updateStatus("PENGAJUAN DITOLAK",1, mockAdmin, STATUS.DITOLAK.id, null) // alasan: null
             ).rejects.toMatchObject({
                 statusCode: 400,
                 message: 'Alasan Penolakan harus disertakan!',
@@ -92,7 +92,7 @@ describe('LAYANAN SERVICE UNIT TESTS', () => {
             layananService.getById = jest.fn().mockResolvedValue(mockLayananBerjalan);
             statusKodeRepository.findById.mockResolvedValue({ id: STATUS.SELESAI.id });
 
-            await layananService.updateStatus(1, mockCustomer, STATUS.SELESAI.id);
+            await layananService.updateStatus("PELAKSANAAN SELESAI", 1, mockCustomer, STATUS.SELESAI.id);
 
             expect(layananRepository.update).toHaveBeenCalledWith(
                 1,

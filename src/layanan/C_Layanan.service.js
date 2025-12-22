@@ -9,7 +9,7 @@ const {
   uploadToCloudinary,
 } = require("../services/cloudinaryUpload.service.js");
 const { sanitizeData } = require("../utils/sanitizeData.js");
-const { STATUS } = require("../utils/constant/enum.js");
+const { STATUS, STATEMENT_LAYANAN } = require("../utils/constant/enum.js");
 const { JENIS_SCHEMA, validateData } = require("./C_Layanan.validate.js");
 const {
   layananRepository,
@@ -23,19 +23,15 @@ const {
 } = require("./C_Layanan.repository.js");
 const {
   uploadFilesBySchema,
-  sendNotifikasiAdminLayanan,
-  sendNotifikasiPengusulLayanan,
   buildFilter,
-  injectStatus,
   formatLayanan,
   hitungPeserta,
 } = require("./C_Layanan.helper.js");
 const {
   calculateDurationMonth,
 } = require("../utils/calculateDurationMonth.js");
-const { mouService } = require("../mou/C_Mou.service.js");
-const { Console } = require("console");
 const { findUserByRole } = require("../auth/user.repository.js");
+const { sendEmailLayananNotif } = require("../services/fiturLayananEmailSender.service.js");
 
 const statusKodeService = {
   // GET ALL KODE STATUS
@@ -282,9 +278,9 @@ const layananService = {
       item.durasi_dalam_bulan =
         item.tanggal_mulai && item.tanggal_selesai
           ? calculateDurationMonth(
-              new Date(item.tanggal_mulai),
-              new Date(item.tanggal_selesai)
-            )
+            new Date(item.tanggal_mulai),
+            new Date(item.tanggal_selesai)
+          )
           : null;
       return formatLayanan(item);
     });
@@ -411,19 +407,20 @@ const layananService = {
     );
 
     // masukkan peserta ke var untuk direturn
-    created.peserta = pesertaAdded;
+    created.pesertas = pesertaAdded;
 
-    // TODO : HARUSNYA MAILER DIBUAT AUTOSERVICE TERSENDIRI
-    // const adminEmail = process.env.EMAIL_USER;
-    const adminEmails = await findUserByRole('admin');
-    console.log(adminEmails);
-    await sendNotifikasiAdminLayanan(adminEmails, created);
-    // 2. Kirim ke Pengusul / User
-    await sendNotifikasiPengusulLayanan(created.user.email, created);
+    // TODO : HARUSNYA MAILER DIBUAT AUTOSERVICE TERSENDIRI, perbaikilah wahai dev selanjutnya
+    const emailTargets = (await findUserByRole('admin')).map(u => u.email);
+    const emailTerkirims = await sendEmailLayananNotif(user, true, emailTargets, created, STATEMENT_LAYANAN.LAYANAN_DIAJUKAN);
+    console.log(emailTerkirims);
+    // kirim juga ke customer
+    const emailTarget = [user.email.toString()];
+    const emailTerkirim = await sendEmailLayananNotif(user, false, emailTarget, created, STATEMENT_LAYANAN.LAYANAN_DIAJUKAN);
+    console.log(emailTerkirim);
 
     return created;
   },
-  async updateStatus(idLayanan, user, idStatus, alasan = null) {
+  async updateStatus(statementLayanan, idLayanan, user, idStatus, alasan = null) {
     // ambil kode status tujuan dari req, 404 nya ngikut bawaan
     const status = await statusKodeRepository.findById(idStatus);
     // cari layanan ada atau tidak, 404 nya ngikut bawaan
@@ -449,7 +446,6 @@ const layananService = {
 
     // LOGIC PENGAJUAN
     if (existingLayanan.pengajuan.id == STATUS.MENUNGGU_PERSETUJUAN.id) {
-      console.log("updating pengajuan...");
 
       // Update status pengajuan dengan idStatus yang diterima
       payload.id_status_pengajuan = idStatus;
@@ -474,7 +470,9 @@ const layananService = {
         payload.id_status_pelaksanaan = STATUS.BELUM_TERLAKSANA.id;
       }
     }
-    // lupa validasi waktu
+
+    // belum ada validasi waktu, tolong perbaikan untuk dev selajutnya
+
     // LOGIC PENYELESAIAN
     if (existingLayanan.pelaksanaan.id == STATUS.SEDANG_BERJALAN.id) {
       console.log("updating pelaksanaan...");
@@ -499,7 +497,7 @@ const layananService = {
       // Cek apakah sudah pernah ditolak sebelumnya
       const existingRejection =
         Array.isArray(updated.layananRejection) &&
-        updated.layananRejection.length > 0
+          updated.layananRejection.length > 0
           ? updated.layananRejection[0]
           : null;
 
@@ -525,7 +523,24 @@ const layananService = {
       }
     }
 
-    // return await layananService.getById(idLayanan, user);
+    // kirim email notif hasil update :
+    // to specified cust only if called by admin
+    if (user.role === 'admin') {
+      // const emailTarget = [user.email.toString()];// salah
+      const emailTarget = [updated.user.email.toString()];// salah
+      const emailTerkirim = await sendEmailLayananNotif(user, true, emailTarget, updated, statementLayanan);
+      console.log(emailTerkirim);
+      // to specified cust & all admin if called by customer
+    } else if (user.role === 'customer') {
+      const emailTargets = (await findUserByRole('admin')).map(u => u.email);
+      const emailTerkirims = await sendEmailLayananNotif(user, true, emailTargets, updated, statementLayanan);
+      console.log(emailTerkirims);
+      // kirim juga ke customer
+      const emailTarget = [user.email.toString()];
+      const emailTerkirim = await sendEmailLayananNotif(user, false, emailTarget, updated, statementLayanan);
+      console.log(emailTerkirim);
+    }
+
     return updated;
   },
   async uploadLogbook(id_layanan, link, user) {
