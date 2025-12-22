@@ -29,7 +29,7 @@ const insertUMKM = async (newUmkmData) => {
     id_user: newUmkmData.id_user || newUmkmData.idUser,
     nama_umkm: _truncate(newUmkmData.nama_umkm || newUmkmData.namaUmkm || '', 150),
     ktp: _truncate(newUmkmData.ktp || null, 16),
-    sertifikat_halal: newUmkmData.sertifikat_halal || newUmkmData.sertifikatHalal || null,
+    surat_izin_edar: newUmkmData.surat_izin_edar || newUmkmData.suratIzinEdar || null, 
   };
 
   if (Array.isArray(newUmkmData.addresses) && newUmkmData.addresses.length > 0) {
@@ -159,7 +159,7 @@ const updateUMKMById = async (idUmkm, updateData) => {
   const data = { ...updateData };
   if (data.idUser) { data.id_user = data.idUser; delete data.idUser; }
   if (data.namaUmkm) { data.nama_umkm = data.namaUmkm; delete data.namaUmkm; }
-  if (data.sertifikatHalal) { data.sertifikat_halal = data.sertifikatHalal; delete data.sertifikatHalal; }
+  if (data.suratIzinEdar) { data.surat_izin_edar = data.suratIzinEdar; delete data.suratIzinEdar; } 
   
   if (data.addresses) {
     await prisma.address.deleteMany({ where: { id_umkm: Number(idUmkm) } });
@@ -289,7 +289,7 @@ module.exports = {
   insertUMKM,
   isUMKMRegistered,
   findUMKMById,
-  findUMKMByUserId,  // ✅ Export fungsi ini
+  findUMKMByUserId,
   updateUMKMById,
   updateVerificationStatus,
   verifyUMKM

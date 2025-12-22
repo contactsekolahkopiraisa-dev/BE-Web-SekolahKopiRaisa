@@ -54,20 +54,20 @@ const createUMKM = async (newUmkmData) => {
     }
   }
 
-  let sertifikatUrls = [];
+  let suratIzinEdarUrls = []; 
 
   if (newUmkmData.files && Array.isArray(newUmkmData.files) && newUmkmData.files.length > 0) {
     const uploadPromises = newUmkmData.files.map(file => 
       uploadToCloudinary(file.buffer, file.originalname)
     );
     const uploadResults = await Promise.all(uploadPromises);
-    sertifikatUrls = uploadResults.map(result => result.url);
+    suratIzinEdarUrls = uploadResults.map(result => result.url);
   }
 
   const umkmData = await insertUMKM({
     ...newUmkmData,
-    sertifikat_halal: sertifikatUrls, 
-    sertifikatHalal: sertifikatUrls   
+    surat_izin_edar: suratIzinEdarUrls,  
+    suratIzinEdar: suratIzinEdarUrls     
   });
 
   return umkmData;
@@ -143,17 +143,19 @@ const updateUMKM = async (idUmkm, updateData) => {
   };
 
   if (updateData.files && updateData.files.length > 0) {
-    if (existing.sertifikat_halal && Array.isArray(existing.sertifikat_halal)) {
-      for (const url of existing.sertifikat_halal) {
+    //  Hapus file lama dari Cloudinary
+    if (existing.surat_izin_edar && Array.isArray(existing.surat_izin_edar)) {
+      for (const url of existing.surat_izin_edar) {
         await deleteFromCloudinaryByUrl(url);
       }
     }
     
+    //  Upload file baru
     const uploadPromises = updateData.files.map(f => 
       uploadToCloudinary(f.buffer, f.originalname)
     );
     const results = await Promise.all(uploadPromises);
-    umkmPayload.sertifikat_halal = results.map(r => r.url);
+    umkmPayload.surat_izin_edar = results.map(r => r.url); 
   }
 
   if (updateData.addresses) {
@@ -319,7 +321,7 @@ module.exports = {
   createUMKM,
   getAllUMKM,
   getUMKMById,
-  getUMKMByUserId,  // ✅ Export fungsi ini
+  getUMKMByUserId,
   updateUMKM,
   verifyUMKM
 };

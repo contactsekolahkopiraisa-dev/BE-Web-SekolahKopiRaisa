@@ -1,5 +1,5 @@
 const express = require('express');
-const { uploadUMKM } = require('../middleware/multer');
+const { uploadFile } = require('../middleware/multer'); 
 const { multerErrorHandler, authMiddleware, normalizeUmkmFiles } = require('../middleware/middleware');
 const ApiError = require('../utils/apiError');
 const nodemailer = require('nodemailer');
@@ -49,9 +49,9 @@ async function sendEmail({ to, subject, html, text }) {
  */
 router.post(
   '/',
-  uploadUMKM.fields([
-    { name: 'sertifikatHalal', maxCount: 20 },
-    { name: 'sertifikasiHalal', maxCount: 20 },
+  uploadFile.fields([
+    { name: 'suratIzinEdar', maxCount: 20 },  
+    { name: 'surat_izin_edar', maxCount: 20 },
   ]),
   multerErrorHandler,
   normalizeUmkmFiles,
@@ -208,7 +208,6 @@ router.get('/:idUmkm', authMiddleware, async (req, res) => {
     const data = await getUMKMById(idUmkm);
     if (!data) return res.status(404).json({ message: 'Data UMKM tidak ditemukan' });
 
-    // ✅ IZINKAN: admin ATAU pemilik UMKM (data.id_user === currentUser.id)
     const isOwner = currentUser.id === data.id_user;
     if (!currentUser.admin && !isOwner) {
       return res.status(403).json({ 
@@ -231,9 +230,9 @@ router.get('/:idUmkm', authMiddleware, async (req, res) => {
 router.put(
   '/:idUmkm',
   authMiddleware,
-  uploadUMKM.fields([
-    { name: 'sertifikatHalal', maxCount: 20 },
-    { name: 'sertifikasiHalal', maxCount: 20 },
+  uploadFile.fields([
+    { name: 'suratIzinEdar', maxCount: 20 },  
+    { name: 'surat_izin_edar', maxCount: 20 },
   ]),
   multerErrorHandler,
   normalizeUmkmFiles,
@@ -258,7 +257,6 @@ router.put(
       const existing = await getUMKMById(idUmkm);
       if (!existing) return res.status(404).json({ message: 'Data UMKM tidak ditemukan' });
 
-      // ✅ IZINKAN: admin ATAU pemilik UMKM (existing.id_user === currentUser.id)
       const isOwner = currentUser.id === existing.id_user;
       if (!currentUser.admin && !isOwner) {
         return res.status(403).json({ 
