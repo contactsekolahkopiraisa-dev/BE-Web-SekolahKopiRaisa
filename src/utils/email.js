@@ -80,7 +80,7 @@ async function sendEmail({ to, subject, text, html, from }) {
   }
 
   const mailOptions = {
-    from: from || (process.env.EMAIL_FROM || `"No Reply" <${process.env.EMAIL_USER || process.env.SMTP_USER}>`),
+    from: from || (process.env.EMAIL_FROM || `"Sekolah Kopi Raisa" <${process.env.EMAIL_USER || process.env.SMTP_USER}>`),
     to,
     subject,
     text,

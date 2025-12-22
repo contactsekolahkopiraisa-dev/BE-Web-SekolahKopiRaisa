@@ -2064,7 +2064,7 @@
                   "name",
                   "namaUmkm",
                   "ktp",
-                  "sertifikatHalal",
+                  "suratIzinEdar",
                   "addresses"
                 ],
                 "properties": {
@@ -2099,10 +2099,10 @@
                     "description": "Nomor KTP (opsional)",
                     "example": "3501234567890001"
                   },
-                  "sertifikatHalal": {
+                  "suratIzinEdar": {
                     "type": "string",
                     "format": "binary",
-                    "description": "Upload gambar sertifikat halal (file)"
+                    "description": "Upload gambar surat izin edar (file)"
                   },
                   "addresses": {
                     "type": "string",
@@ -2241,13 +2241,13 @@
                     "description": "JSON Array alamat dengan format baru menggunakan id_desa. Alamat lama akan dihapus dan diganti dengan yang baru.",
                     "example": "[\n  {\n    \"id_desa\": 9211002,\n    \"alamat\": \"Jl. PB Sudirman No.10 Updated\",\n    \"kode_pos\": \"68124\"\n  },\n  {\n    \"id_desa\": 9211001,\n    \"alamat\": \"Jl. Alternatif No.5\",\n    \"kode_pos\": \"68121\"\n  }\n]"
                   },
-                  "sertifikatHalal": {
+                  "suratIzinEdar": {
                     "type": "array",
                     "items": {
                       "type": "string",
                       "format": "binary"
                     },
-                    "description": "Upload file sertifikat halal baru (bisa multiple files). File lama akan dihapus dari Cloudinary dan diganti dengan yang baru."
+                    "description": "Upload file surat izin edar baru (bisa multiple files). File lama akan dihapus dari Cloudinary dan diganti dengan yang baru."
                   }
                 }
               }
@@ -2285,14 +2285,14 @@
                           "type": "string",
                           "example": "3506012345678901"
                         },
-                        "sertifikat_halal": {
+                        "suratIzinEdar": {
                           "type": "array",
                           "items": {
                             "type": "string"
                           },
                           "example": [
-                            "https://res.cloudinary.com/xxx/sertifikat1.jpg",
-                            "https://res.cloudinary.com/xxx/sertifikat2.pdf"
+                            "https://res.cloudinary.com/xxx/suratIzinEdar1.jpg",
+                            "https://res.cloudinary.com/xxx/suratIzinEdar2.pdf"
                           ]
                         },
                         "status_verifikasi": {

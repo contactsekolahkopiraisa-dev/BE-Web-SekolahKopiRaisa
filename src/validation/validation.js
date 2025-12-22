@@ -124,7 +124,7 @@ const validateCreateUMKM = [
     body('namaUmkm')
         .trim()
         .notEmpty().withMessage('*Nama UMKM wajib diisi')
-        .isLength({ min: 3, max: 100 }).withMessage('*Nama UMKM 3-100 karakter'),
+        .isLength({ min: 3, max: 150 }).withMessage('*Nama UMKM 3-150 karakter'),
 
     body('ktp')
         .optional()
@@ -148,11 +148,57 @@ const validateCreateUMKM = [
 ];
 
 const validateUpdateUMKM = [
+    body('name')
+        .optional()
+        .trim()
+        .notEmpty().withMessage('*Nama pemilik tidak boleh kosong')
+        .isLength({ min: 3, max: 100 }).withMessage('*Nama pemilik 3-100 karakter'),
+
+    body('email')
+        .optional()
+        .trim()
+        .notEmpty().withMessage('*Email tidak boleh kosong')
+        .custom((value) => {
+            if (!validator.isEmail(value)) {
+                throw new Error('*Format email tidak valid');
+            }
+            return true;
+        }),
+
+    body('phone_number')
+        .optional()
+        .trim()
+        .notEmpty().withMessage('*Nomor telepon tidak boleh kosong')
+        .custom((value) => {
+            if (!validator.isMobilePhone(value, 'id-ID')) {
+                throw new Error('*Format nomor telepon tidak valid');
+            }
+            if (!validator.isNumeric(value)) {
+                throw new Error('*Nomor telepon harus berupa angka');
+            }
+            if (value.length < 10 || value.length > 15) {
+                throw new Error('*Panjang nomor telepon tidak valid');
+            }
+            return true;
+        }),
+
+    body('password')
+        .optional()
+        .custom((value) => {
+            // Allow empty string to skip password update
+            if (value && value.trim() !== '') {
+                if (value.length < 6) {
+                    throw new Error('*Password minimal 6 karakter');
+                }
+            }
+            return true;
+        }),
+
     body('namaUmkm')
         .optional()
         .trim()
         .notEmpty().withMessage('*Nama UMKM tidak boleh kosong')
-        .isLength({ min: 3, max: 100 }).withMessage('*Nama UMKM 3-100 karakter'),
+        .isLength({ min: 3, max: 150 }).withMessage('*Nama UMKM 3-150 karakter'),
 
     body('ktp')
         .optional()
@@ -174,14 +220,6 @@ const validateUpdateUMKM = [
             return true;
         }),
 ];
-
-// jangan lupa export:
-module.exports = {
-  // ... validator lainnya ...
-    validateCreateUMKM,
-  // ... rest ...
-};
-
 
 const createNewsValidator = [
     // Title wajib, tidak boleh kosong, dan maksimal 255 karakter
@@ -531,5 +569,4 @@ module.exports = {
     validateUpdateLaporanKeuangan,
     validateCreatePengeluaran,
     validateUpdatePengeluaran
-    // ...other exports...
 };
