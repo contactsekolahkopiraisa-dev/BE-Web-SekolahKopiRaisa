@@ -54,20 +54,20 @@ const createUMKM = async (newUmkmData) => {
     }
   }
 
-  let sertifikatUrls = [];
+  let suratIzinEdarUrls = []; 
 
   if (newUmkmData.files && Array.isArray(newUmkmData.files) && newUmkmData.files.length > 0) {
     const uploadPromises = newUmkmData.files.map(file => 
       uploadToCloudinary(file.buffer, file.originalname)
     );
     const uploadResults = await Promise.all(uploadPromises);
-    sertifikatUrls = uploadResults.map(result => result.url);
+    suratIzinEdarUrls = uploadResults.map(result => result.url);
   }
 
   const umkmData = await insertUMKM({
     ...newUmkmData,
-    sertifikat_halal: sertifikatUrls, 
-    sertifikatHalal: sertifikatUrls   
+    surat_izin_edar: suratIzinEdarUrls,  
+    suratIzinEdar: suratIzinEdarUrls     
   });
 
   return umkmData;
@@ -143,17 +143,19 @@ const updateUMKM = async (idUmkm, updateData) => {
   };
 
   if (updateData.files && updateData.files.length > 0) {
-    if (existing.sertifikat_halal && Array.isArray(existing.sertifikat_halal)) {
-      for (const url of existing.sertifikat_halal) {
+    // ✅ Hapus file lama dari Cloudinary
+    if (existing.surat_izin_edar && Array.isArray(existing.surat_izin_edar)) {
+      for (const url of existing.surat_izin_edar) {
         await deleteFromCloudinaryByUrl(url);
       }
     }
     
+    // ✅ Upload file baru
     const uploadPromises = updateData.files.map(f => 
       uploadToCloudinary(f.buffer, f.originalname)
     );
     const results = await Promise.all(uploadPromises);
-    umkmPayload.sertifikat_halal = results.map(r => r.url);
+    umkmPayload.surat_izin_edar = results.map(r => r.url); 
   }
 
   if (updateData.addresses) {
@@ -292,17 +294,122 @@ const verifyUMKM = async (idUmkm, { approved, reason, adminId }) => {
   if (userEmail) {
     try {
       if (isApproved) {
-        const subject = 'Verifikasi UMKM Disetujui';
-        const html = `<p>Halo ${updated.User?.name || ''},</p>
-          <p>Pengajuan verifikasi UMKM Anda telah <strong>disetujui</strong>.</p>
-          <p>Nama UMKM: <strong>${updated.nama_umkm}</strong></p>`;
+        const subject = 'Verifikasi UMKM Anda Telah Disetujui';
+        const html = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <style>
+              body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; background: #f9f9f9; }
+              .header { background: #2c3e50; color: white; padding: 25px; text-align: center; border-radius: 8px 8px 0 0; }
+              .content { background: #ffffff; padding: 30px; border: 1px solid #e0e0e0; }
+              .umkm-name { color: #2c3e50; font-size: 1.2em; font-weight: bold; margin: 15px 0; padding: 10px; background: #ecf0f1; border-radius: 4px; }
+              .info-box { background: #e8f5e9; border-left: 4px solid #4caf50; padding: 15px; margin: 20px 0; border-radius: 4px; }
+              .footer { background: #ecf0f1; padding: 20px; text-align: center; font-size: 0.9em; color: #666; border-radius: 0 0 8px 8px; }
+              .button { display: inline-block; padding: 12px 30px; background: #2c3e50; color: white; text-decoration: none; border-radius: 4px; margin: 20px 0; }
+              ul { padding-left: 20px; }
+              li { margin: 8px 0; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1 style="margin: 0; font-size: 1.6em;">Verifikasi UMKM Disetujui</h1>
+              </div>
+              <div class="content">
+                <p>Kepada Yth. <strong>${updated.User?.name || ''}</strong>,</p>
+                
+                <p>Dengan ini kami informasikan bahwa pengajuan verifikasi UMKM Anda telah <strong>disetujui</strong> oleh tim kami.</p>
+                
+                <div class="info-box">
+                  <p style="margin: 0 0 5px 0;"><strong>Nama UMKM:</strong></p>
+                  <div class="umkm-name">${updated.nama_umkm}</div>
+                </div>
+                
+                <p><strong>Langkah Selanjutnya:</strong></p>
+                <ul>
+                  <li>Anda dapat mengakses seluruh fitur sebagai UMKM terverifikasi</li>
+                  <li>Kelola produk dan layanan melalui dashboard</li>
+                  <li>Akses laporan penjualan dan keuangan</li>
+                </ul>
+                
+                <p>Terima kasih atas kepercayaan Anda menggunakan platform kami.</p>
+                
+                <p style="margin-top: 25px;">Hormat kami,<br><strong>Tim Sekolah Kopi Raisa</strong></p>
+              </div>
+              <div class="footer">
+                <p style="margin: 5px 0;">Email: <a href="mailto:contact.sekolahkopiraisa@gmail.com" style="color: #2c3e50;">contact.sekolahkopiraisa@gmail.com</a></p>
+                <p style="margin: 5px 0;">WhatsApp: <a href="https://wa.me/6285172252910" style="color: #25D366;">+62 851-7225-2910</a></p>
+                <p style="margin: 10px 0 5px 0; color: #999; font-size: 0.85em;">Email otomatis, mohon tidak membalas langsung.</p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `;
         await sendEmail({ to: userEmail, subject, html });
       } else {
-        const subject = 'Verifikasi UMKM Ditolak';
-        const html = `<p>Halo ${updated.User?.name || ''},</p>
-          <p>Pengajuan verifikasi UMKM Anda <strong>ditolak</strong>.</p>
-          <p>Nama UMKM: <strong>${updated.nama_umkm}</strong></p>
-          <p>Alasan: ${reason || '-'}</p>`;
+        const subject = 'Informasi Verifikasi UMKM';
+        const html = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <style>
+              body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; background: #f9f9f9; }
+              .header { background: #c0392b; color: white; padding: 25px; text-align: center; border-radius: 8px 8px 0 0; }
+              .content { background: #ffffff; padding: 30px; border: 1px solid #e0e0e0; }
+              .umkm-name { color: #c0392b; font-size: 1.2em; font-weight: bold; margin: 10px 0; padding: 10px; background: #fadbd8; border-radius: 4px; }
+              .reason-box { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px; }
+              .info-box { background: #e3f2fd; border-left: 4px solid #2196F3; padding: 15px; margin: 20px 0; border-radius: 4px; }
+              .footer { background: #ecf0f1; padding: 20px; text-align: center; font-size: 0.9em; color: #666; border-radius: 0 0 8px 8px; }
+              .button { display: inline-block; padding: 12px 30px; background: #2196F3; color: white; text-decoration: none; border-radius: 4px; margin: 20px 0; }
+              ul { padding-left: 20px; }
+              li { margin: 8px 0; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1 style="margin: 0; font-size: 1.6em;">Informasi Verifikasi UMKM</h1>
+              </div>
+              <div class="content">
+                <p>Kepada Yth. <strong>${updated.User?.name || ''}</strong>,</p>
+                
+                <p>Terima kasih telah mengajukan verifikasi UMKM. Setelah meninjau dokumen dan informasi yang disampaikan, saat ini pengajuan verifikasi Anda <strong>belum dapat disetujui</strong>.</p>
+                
+                <div class="umkm-name">${updated.nama_umkm}</div>
+                
+                <div class="reason-box">
+                  <p style="margin: 0 0 8px 0;"><strong>Alasan:</strong></p>
+                  <p style="margin: 0;">${reason || 'Tidak disebutkan'}</p>
+                </div>
+                
+                <p><strong>Yang Perlu Dilakukan:</strong></p>
+                <ul>
+                  <li>Periksa kembali dokumen yang diupload (Surat Izin Edar, KTP)</li>
+                  <li>Pastikan seluruh informasi sudah lengkap dan akurat</li>
+                  <li>Pastikan file yang diupload jelas dan terbaca dengan baik</li>
+                  <li>Tinjau kembali persyaratan yang diminta</li>
+                </ul>
+                
+                <div class="info-box">
+                  <p style="margin: 0;">Jika memerlukan bantuan atau penjelasan lebih lanjut, silakan hubungi tim kami melalui kontak yang tersedia.</p>
+                </div>
+                
+                <p>Kami berharap dapat segera memproses verifikasi UMKM Anda. Terima kasih atas kerjasamanya.</p>
+                
+                <p style="margin-top: 25px;">Hormat kami,<br><strong>Tim Sekolah Kopi Raisa</strong></p>
+              </div>
+              <div class="footer">
+                <p style="margin: 5px 0;">Email: <a href="mailto:contact.sekolahkopiraisa@gmail.com" style="color: #2c3e50;">contact.sekolahkopiraisa@gmail.com</a></p>
+                <p style="margin: 5px 0;">WhatsApp: <a href="https://wa.me/6285172252910" style="color: #25D366;">+62 851-7225-2910</a></p>
+                <p style="margin: 10px 0 5px 0; color: #999; font-size: 0.85em;">Email otomatis, mohon tidak membalas langsung.</p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `;
         await sendEmail({ to: userEmail, subject, html });
       }
     } catch (err) {
@@ -319,7 +426,7 @@ module.exports = {
   createUMKM,
   getAllUMKM,
   getUMKMById,
-  getUMKMByUserId,  // ✅ Export fungsi ini
+  getUMKMByUserId,
   updateUMKM,
   verifyUMKM
 };
