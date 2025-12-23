@@ -33,7 +33,7 @@ const sertifikatService = {
     if (
       !existingLayanan.laporan ||
       existingLayanan.laporan.nama_status_kode ===
-        STATUS.BELUM_TERSEDIA.nama_status_kode
+      STATUS.BELUM_TERSEDIA.nama_status_kode
     ) {
       throw new ApiError(
         409,
@@ -56,7 +56,17 @@ const sertifikatService = {
 
     const created = await sertifikatRepository.create(data);
     // kirim notif
-    const emailTarget = [existingLayanan.user.email.toString()];
+    const emailTarget = [created.layanan.user.email.toString()];
+    console.log(existingLayanan);
+    console.log("====" * 100);
+    console.log(created);
+    console.log("====" * 100);
+    existingLayanan.jenisLayanan = existingLayanan.jenis_layanan;
+    existingLayanan.konfigurasiLayanan = created.layanan.konfigurasiLayanan;
+    existingLayanan.pesertas = existingLayanan.peserta;
+    existingLayanan.user = existingLayanan.pemohon;
+    console.log(existingLayanan)
+
     const emailSent = await sendEmailLayananNotif(user, false, emailTarget, existingLayanan, namaTahapan);
 
     return created;

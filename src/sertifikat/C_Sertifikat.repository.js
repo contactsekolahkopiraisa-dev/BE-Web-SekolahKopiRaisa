@@ -13,6 +13,19 @@ const sertifikatRepository = {
                     select: {
                         id: true,
                         id_user: true,
+                    },
+                    include: {
+                        konfigurasiLayanan: {
+                            include: {
+                                detailKonfigurasis: {
+                                    include: {
+                                        kegiatan: true,
+                                        subKegiatan: true,
+                                    },
+                                    orderBy: { urutan_ke: "asc" },
+                                },
+                            },
+                        },
                     }
                 }
             }
@@ -20,7 +33,29 @@ const sertifikatRepository = {
     },
     create: async (data) => {
         return prisma.sertifikat.create({
-            data
+            data,
+            include: {
+                layanan: {
+                    include: {
+                        user: {
+                            select: {
+                                email: true
+                            }
+                        },
+                        konfigurasiLayanan: {
+                            include: {
+                                detailKonfigurasis: {
+                                    include: {
+                                        kegiatan: true,
+                                        subKegiatan: true,
+                                    },
+                                    orderBy: { urutan_ke: "asc" },
+                                },
+                            },
+                        },
+                    }
+                }
+            }
         })
     }
 }
