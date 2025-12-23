@@ -100,7 +100,7 @@ const layananRepository = {
         statusKodePengajuan: true,
         statusKodePelaksanaan: true,
         user: {
-          select: { id: true, name: true },
+          select: { id: true, name: true, email: true },
         },
         pesertas: {
           select: {
@@ -189,7 +189,7 @@ const layananRepository = {
         statusKodePengajuan: true,
         statusKodePelaksanaan: true,
         user: {
-          select: { id: true, name: true },
+          select: { id: true, name: true, email: true, phone_number: true },
         },
         pesertas: {
           select: {
@@ -265,6 +265,11 @@ const layananRepository = {
         },
         tanggal_selesai: { gte: new Date() },
       },
+      include: {
+        user: {
+          select: { id: true, name: true },
+        },
+      }
     });
   },
   create: async (data) => {
@@ -285,7 +290,18 @@ const layananRepository = {
         statusKodePengajuan: true,
         statusKodePelaksanaan: true,
         jenisLayanan: true,
-        user: true,
+        user: {
+          select: { id: true, name: true, email: true, phone_number: true },
+        },
+        mou: {
+          select: {
+            id: true,
+            statusKode: true,
+            file_mou: true,
+            tanggal_upload: true,
+            mouRejection: true,
+          },
+        },
       },
     });
   },
@@ -300,6 +316,30 @@ const layananRepository = {
         statusKodePengajuan: true,
         statusKodePelaksanaan: true,
         pesertas: true,
+        jenisLayanan: true,
+        konfigurasiLayanan: {
+          include: {
+            detailKonfigurasis: {
+              include: {
+                kegiatan: true,
+                subKegiatan: true,
+              },
+              orderBy: { urutan_ke: "asc" },
+            },
+          },
+        },
+        user: {
+          select: { id: true, name: true, email: true, phone_number: true },
+        },
+        mou: {
+          select: {
+            id: true,
+            statusKode: true,
+            file_mou: true,
+            tanggal_upload: true,
+            mouRejection: true,
+          },
+        },
       },
     });
   },
