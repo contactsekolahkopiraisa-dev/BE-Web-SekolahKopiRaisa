@@ -1,5 +1,6 @@
 const { layananService } = require("../layanan/C_Layanan.service");
 const { uploadToCloudinary } = require("../services/cloudinaryUpload.service");
+const { sendEmailLayananNotif } = require("../services/fiturLayananEmailSender.service");
 const ApiError = require("../utils/apiError");
 const { STATUS } = require("../utils/constant/enum");
 const { sanitizeData } = require("../utils/sanitizeData");
@@ -23,12 +24,12 @@ const sertifikatService = {
     }
     return sertifikat;
   },
-  async create(data, file, user) {
+  async create(namaTahapan, data, file, user) {
     // cari layanannya ada atau tidak, 404 nya include disana
     const existingLayanan = await layananService.getById(data.id_layanan, user);
     data = sanitizeData(data);
 
-    // ✅ FIX: Hanya cek apakah laporan sudah ada (sudah diisi), bukan cek status
+    // FIX: Hanya cek apakah laporan sudah ada (sudah diisi), bukan cek status
     if (
       !existingLayanan.laporan ||
       existingLayanan.laporan.nama_status_kode ===
@@ -54,6 +55,10 @@ const sertifikatService = {
     }
 
     const created = await sertifikatRepository.create(data);
+    // kirim notif
+    const emailTarget = [existingLayanan.user.email.toString()];
+    const emailSent = await sendEmailLayananNotif(user, false, emailTarget, existingLayanan, namaTahapan);
+
     return created;
   },
 };

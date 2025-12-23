@@ -1,10 +1,14 @@
+const { findUserByRole } = require("../auth/user.repository");
+const { konfigurasiLayanan } = require("../db");
 const { layananService } = require("../layanan/C_Layanan.service");
 const { uploadToCloudinary } = require("../services/cloudinaryUpload.service");
+const { sendEmailLayananNotif } = require("../services/fiturLayananEmailSender.service");
 const ApiError = require("../utils/apiError");
 const { calculateDurationMonth } = require("../utils/calculateDurationMonth");
 const { STATUS } = require("../utils/constant/enum");
 const { sanitizeData } = require("../utils/sanitizeData");
 const { laporanLayananRepository } = require("./C_LaporanLayanan.repository");
+
 
 const laporanLayananService = {
   async getById(id) {
@@ -30,8 +34,9 @@ const laporanLayananService = {
       statusPelaporan: laporanLayanan.statusPelaporan,
     };
   },
-  async create(dataRaw, file, user) {
+  async create(namaTahapan, dataRaw, file, userRaw) {
     const data = sanitizeData(dataRaw);
+    const user = sanitizeData(userRaw);
     if (!file) {
       throw new ApiError(404, "Foto kegiatan tidak disertakan!");
     }
@@ -100,6 +105,16 @@ const laporanLayananService = {
 
     // insert
     const created = await laporanLayananRepository.create(data);
+    // kirim notif ke admin
+    const emailTargets = (await findUserByRole('admin')).map(u => u.email);
+    layanan.jenisLayanan = created.layanan.jenisLayanan;
+    layanan.konfigurasiLayanan = created.layanan.konfigurasiLayanan;
+    layanan.pesertas = created.layanan.pesertas;
+    layanan.user = created.layanan.user;
+    console.log(layanan)
+    console.log('='*100)
+    console.log(created)
+    const emailSent = await sendEmailLayananNotif(user, true, emailTargets, layanan, namaTahapan);
     return created;
   },
 };

@@ -1,6 +1,6 @@
 const { jenisLayananService, targetPesertaService, layananService, statusKodeService } = require("./C_Layanan.service.js");
 const ApiError = require ("../utils/apiError.js");
-const { STATUS } = require("../utils/constant/enum.js");
+const { STATUS, STATEMENT_LAYANAN } = require("../utils/constant/enum.js");
 
 
 const statusKodeController = {
@@ -110,7 +110,7 @@ const layananController = {
     // PUT ACCEPT PENGAJUAN LAYANAN
     async acceptPengajuan(req, res, next) {
         try {
-            const layanan = await layananService.updateStatus(req.params.id,req.user, STATUS.DISETUJUI.id);
+            const layanan = await layananService.updateStatus(STATEMENT_LAYANAN.PENGAJUAN_LAYANAN_DISETUJUI, req.params.id,req.user, STATUS.DISETUJUI.id);
             res.status(200).json({ success: true, message: "Berhasil menyetujui layanan!", data: layanan });
         } catch (err) {
             next(err);
@@ -119,7 +119,7 @@ const layananController = {
     // PUT REJECT PENGAJUAN LAYANAN
     async rejectPengajuan(req, res, next) {
         try {
-            const layanan = await layananService.updateStatus(req.params.id, req.user, STATUS.DITOLAK.id, req.body.alasan);
+            const layanan = await layananService.updateStatus(STATEMENT_LAYANAN.PENGAJUAN_LAYANAN_DITOLAK, req.params.id, req.user, STATUS.DITOLAK.id, req.body.alasan);
             res.status(200).json({ success: true, message: "Berhasil menolak layanan!", data: layanan });
         } catch (err) {
             next(err);
@@ -137,7 +137,7 @@ const layananController = {
     // PUT SELESAIKAN PELAKSANAAN LAYANAN
     async finishPelaksanaan(req, res, next) {
         try {
-            const layanan = await layananService.updateStatus(req.params.id, req.user, STATUS.SELESAI.id);
+            const layanan = await layananService.updateStatus(STATEMENT_LAYANAN.PELAKSANAAN_SELESAI, req.params.id, req.user, STATUS.SELESAI.id);
             res.status(200).json({ success: true, message: "Berhasil menyelesaikan layanan !", data: layanan });
         } catch (err) {
             next(err);

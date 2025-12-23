@@ -3,8 +3,8 @@ const prisma = require('../db/index.js');
 const laporanLayananRepository = {
     findById: async (id) => {
         return prisma.Laporan.findFirst({
-            where: { id: parseInt(id)},
-            include: { 
+            where: { id: parseInt(id) },
+            include: {
                 layanan: {
                     select: {
                         id: true,
@@ -16,7 +16,20 @@ const laporanLayananRepository = {
                             select: {
                                 nama_jenis_layanan: true
                             }
-                        }
+                        },
+                        konfigurasiLayanan: {
+                            include: {
+                                detailKonfigurasis: {
+                                    include: {
+                                        kegiatan: true,
+                                        subKegiatan: true,
+                                    },
+                                    orderBy: { urutan_ke: "asc" },
+                                },
+                            },
+                        },
+                        pesertas: true,
+                        user: true,
                     }
                 },
                 statusPelaporan: true
@@ -38,7 +51,20 @@ const laporanLayananRepository = {
                             select: {
                                 nama_jenis_layanan: true
                             }
-                        }
+                        },
+                        konfigurasiLayanan: {
+                            include: {
+                                detailKonfigurasis: {
+                                    include: {
+                                        kegiatan: true,
+                                        subKegiatan: true,
+                                    },
+                                    orderBy: { urutan_ke: "asc" },
+                                },
+                            },
+                        },
+                        pesertas: true,
+                        user: true,
                     }
                 },
                 statusPelaporan: true
