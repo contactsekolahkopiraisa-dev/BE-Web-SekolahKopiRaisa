@@ -2143,6 +2143,209 @@
         }
       }
     },
+    "/api/v1/auth/umkm/user/{userId}": {
+      "get": {
+        "tags": [
+          "UMKM"
+        ],
+        "summary": "Ambil UMKM berdasarkan userId (owner atau admin)",
+        "description": "Mengambil data UMKM berdasarkan ID user. Hanya owner atau admin yang bisa mengakses.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID User pemilik UMKM",
+            "example": 5
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Data UMKM dikembalikan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id_umkm": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "id_user": {
+                          "type": "integer",
+                          "example": 5
+                        },
+                        "nama_umkm": {
+                          "type": "string",
+                          "example": "Sekolah Kopi Raisa"
+                        },
+                        "ktp": {
+                          "type": "string",
+                          "example": "3501234567890001"
+                        },
+                        "surat_izin_edar": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "example": [
+                            "https://res.cloudinary.com/xxx/suratIzin1.jpg"
+                          ]
+                        },
+                        "status_verifikasi": {
+                          "type": "string",
+                          "enum": [
+                            "Pending",
+                            "Verified",
+                            "Rejected"
+                          ],
+                          "example": "Pending"
+                        },
+                        "alasan_penolakan": {
+                          "type": "string",
+                          "nullable": true,
+                          "example": null
+                        },
+                        "User": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer",
+                              "example": 5
+                            },
+                            "name": {
+                              "type": "string",
+                              "example": "Raisa"
+                            },
+                            "email": {
+                              "type": "string",
+                              "example": "umkmraisa@gmail.com"
+                            },
+                            "phone_number": {
+                              "type": "string",
+                              "example": "081234567890"
+                            },
+                            "role": {
+                              "type": "string",
+                              "example": "USER"
+                            }
+                          }
+                        },
+                        "addresses": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id_alamat": {
+                                "type": "integer",
+                                "example": 1
+                              },
+                              "alamat": {
+                                "type": "string",
+                                "example": "Jl. PB Sudirman No.10"
+                              },
+                              "kode_pos": {
+                                "type": "string",
+                                "example": "68124"
+                              },
+                              "desa": {
+                                "type": "object",
+                                "properties": {
+                                  "id_desa": {
+                                    "type": "integer",
+                                    "example": 9211002
+                                  },
+                                  "nama_desa": {
+                                    "type": "string",
+                                    "example": "Antirogo"
+                                  },
+                                  "kecamatan": {
+                                    "type": "object",
+                                    "properties": {
+                                      "id_kecamatan": {
+                                        "type": "integer",
+                                        "example": 921100
+                                      },
+                                      "nama_kecamatan": {
+                                        "type": "string",
+                                        "example": "Sumbersari"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "userId tidak diberikan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "userId dibutuhkan"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Akses ditolak - bukan owner atau admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Access denied. Hanya pemilik atau admin yang boleh mengakses data ini."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Data UMKM tidak ditemukan untuk user ini",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Data UMKM tidak ditemukan"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/umkm/{idUmkm}": {
       "get": {
         "tags": [
@@ -3660,7 +3863,7 @@
         "tags": [
           "Wilayah"
         ],
-        "summary": "Get all provinces (Jawa Timur only)",
+        "summary": "Get all data provinsi (Jawa Timur only)",
         "description": "Mengambil daftar provinsi. Untuk sistem ini hanya menampilkan Jawa Timur dari API eksternal.",
         "responses": {
           "200": {
@@ -3733,7 +3936,7 @@
         "tags": [
           "Wilayah"
         ],
-        "summary": "Get regencies by province code (Tapal Kuda only)",
+        "summary": "Get data wilayah kabupaten berdasarkan kode provinsi",
         "description": "Mengambil daftar kabupaten berdasarkan kode provinsi. Hanya menampilkan 7 kabupaten Tapal Kuda dari API eksternal.",
         "parameters": [
           {
@@ -3847,7 +4050,7 @@
         "tags": [
           "Wilayah"
         ],
-        "summary": "Get districts by regency code",
+        "summary": "Get data kecamatan berdasarkan kode kabupaten",
         "description": "Mengambil daftar kecamatan berdasarkan kode kabupaten dari API eksternal.",
         "parameters": [
           {
@@ -3911,7 +4114,7 @@
         "tags": [
           "Wilayah"
         ],
-        "summary": "Get villages by district code",
+        "summary": "Get data desa berdasarkan kode kecamatan",
         "description": "Mengambil daftar desa/kelurahan berdasarkan kode kecamatan dari API eksternal.",
         "parameters": [
           {
@@ -3975,8 +4178,8 @@
         "tags": [
           "Wilayah"
         ],
-        "summary": "Validate village code exists in Tapal Kuda database",
-        "description": "Memvalidasi apakah ID desa ada di database wilayah Tapal Kuda. Endpoint ini digunakan backend untuk memastikan desa yang dipilih user valid sebelum disimpan.",
+        "summary": "validasi kode desa berdasarkan ID desa",
+        "description": "Memvalidasi apakah ID desa ada di database wilayah Tapal Kuda.",
         "parameters": [
           {
             "name": "villageCode",
