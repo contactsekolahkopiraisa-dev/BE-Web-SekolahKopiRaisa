@@ -33,9 +33,9 @@ const formatFilePersyaratan = (layanan) => {
         { label: "Surat Permohonan", value: layanan.file_surat_permohonan },
         { label: "Surat Pengantar", value: layanan.file_surat_pengantar },
         { label: "Surat Undangan", value: layanan.file_surat_undangan },
-        { label: "MoU", value: layanan.mou.file_mou },
-        { label: "File Sertifikat", value: layanan.sertifikat.file_sertifikat},
-        { label: "Link Sertifikat", value: layanan.sertifikat.link_sertifikat},
+        { label: "MoU", value: layanan.mou?.file_mou },
+        { label: "File Sertifikat", value: layanan.sertifikat?.file_sertifikat},
+        { label: "Link Sertifikat", value: layanan.sertifikat?.link_sertifikat},
     ];
 
     const tersedia = files.filter(f => f.value);

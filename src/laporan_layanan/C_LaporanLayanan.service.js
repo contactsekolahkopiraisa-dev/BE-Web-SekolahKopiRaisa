@@ -59,9 +59,10 @@ const laporanLayananService = {
       jenisLayanan.includes("undangan narasumber");
 
     if (isSimpleFlow) {
-      if (
-        !layanan.pengajuan.nama_status_kode.toLowerCase().includes("disetujui")
-      ) {
+      if (layanan.pengajuan.nama_status_kode.toLowerCase().includes("selesai") ){
+        // lanjut
+      }
+      else if (!layanan.pengajuan.nama_status_kode.toLowerCase().includes("disetujui")) {
         throw new ApiError(
           409,
           "Pengajuan belum disetujui! tidak bisa mengirim laporan"
