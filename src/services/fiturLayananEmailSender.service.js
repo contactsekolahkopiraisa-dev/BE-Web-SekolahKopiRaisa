@@ -34,6 +34,8 @@ const formatFilePersyaratan = (layanan) => {
         { label: "Surat Pengantar", value: layanan.file_surat_pengantar },
         { label: "Surat Undangan", value: layanan.file_surat_undangan },
         { label: "MoU", value: layanan.mou.file_mou },
+        { label: "File Sertifikat", value: layanan.sertifikat.file_sertifikat},
+        { label: "Link Sertifikat", value: layanan.sertifikat.link_sertifikat},
     ];
 
     const tersedia = files.filter(f => f.value);
@@ -110,7 +112,7 @@ const MESSAGE_MAP = {
     },
 
     [STATEMENT_LAYANAN.SERTIFIKAT_DIKIRIM.nama_status_kode]: {
-        admin: "Sertifikat kegiatan Anda telah berhasil dikirim.\nSilakan periksa sertifikat yang telah dikirimkan.\nTerima kasih atas partisipasi Anda."
+        user: "Sertifikat kegiatan Anda telah berhasil dikirim.\nSilakan periksa sertifikat yang telah dikirimkan di website kami.\nTerima kasih atas partisipasi Anda."
     }
 };
 
