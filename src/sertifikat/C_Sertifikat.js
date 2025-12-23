@@ -1,3 +1,4 @@
+const { STATEMENT_LAYANAN } = require("../utils/constant/enum");
 const { sertifikatService } = require("./C_Sertifikat.service");
 
 
@@ -14,7 +15,7 @@ const sertifikatController = {
     // POST SERTIFIKAT TO DB
     async create(req, res, next) {
         try {
-            const data = await sertifikatService.create(req.body, req.file, req.user);
+            const data = await sertifikatService.create(STATEMENT_LAYANAN.SERTIFIKAT_DIKIRIM, req.body, req.file, req.user);
             res.status(201).json({ success: true, message: `Berhasil mengunggah sertifikat !`, data});
         } catch (err) {
             next(err);

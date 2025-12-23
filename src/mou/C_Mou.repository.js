@@ -28,6 +28,7 @@ const mouRepository = {
                             select: { id: true, name: true, email: true, phone_number: true },
                         },
                         pesertas: true,
+                        mou: true,
                     }
                 },
             }
@@ -59,6 +60,7 @@ const mouRepository = {
                             select: { id: true, name: true, email: true, phone_number: true },
                         },
                         pesertas: true,
+                        mou: true,
                     }
                 },
             }
@@ -95,6 +97,7 @@ const mouRepository = {
                             select: { id: true, name: true, email: true, phone_number: true },
                         },
                         pesertas: true,
+                        mou: true,
                     }
                 },
             }

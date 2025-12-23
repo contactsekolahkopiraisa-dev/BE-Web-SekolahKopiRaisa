@@ -16,6 +16,8 @@ const STATEMENT_LAYANAN = Object.freeze({
     REVISI_MOU_DIAJUKAN:            { id: 2, nama_status_kode: "REVISI MOU DIAJUKAN" },
     PENGAJUAN_MOU_DISETUJUI:        { id: 2, nama_status_kode: "PENGAJUAN MOU DISETUJUI" },
     PELAKSANAAN_SELESAI:            { id: 3, nama_status_kode: "PELAKSANAAN SELESAI" },
+    LAPORAN_DISERAHKAN:             { id: 8, nama_status_kode: "LAPORAN DISERAHKAN"},
+    SERTIFIKAT_DIKIRIM:             { id: 9, nama_status_kode: "SERTIFIKAT DIKIRIM"}
 });
 
 
