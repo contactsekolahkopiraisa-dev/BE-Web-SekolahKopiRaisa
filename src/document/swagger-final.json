@@ -3863,7 +3863,7 @@
         "tags": [
           "Wilayah"
         ],
-        "summary": "Get all data provinsi (Jawa Timur only)",
+        "summary": "Get all data provinsi (sementara cuma Jawa Timur)",
         "description": "Mengambil daftar provinsi. Untuk sistem ini hanya menampilkan Jawa Timur dari API eksternal.",
         "responses": {
           "200": {
