@@ -82,11 +82,16 @@ const getProductById = async (productId, userId, isAdmin) => {
     
     // Jika ada userId dan bukan admin, validasi ownership
     if (userId && !isAdmin) {
-        const partner = await getPartnerByUserId(userId);
+        // cek kalau user punya partner atau ndak
+        const partner = await prisma.partner.findUnique({
+            where: { user_id: userId },
+        });
         
-        if (product.partner_id !== partner.id) {
+        // validasi UMKM kalo punya partner
+        if (partner && product.partner_id !== partner.id) {
             throw new ApiError(403, "Akses ditolak! Produk ini bukan milik UMKM Anda.");
         }
+        // akses semua produk (customer)
     }
     
     return product;
