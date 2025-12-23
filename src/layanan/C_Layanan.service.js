@@ -467,7 +467,12 @@ const layananService = {
       }
       // kalau pengajuan diacc maka ubah status pelaksanaan
       if (idStatus == STATUS.DISETUJUI.id) {
-        payload.id_status_pelaksanaan = STATUS.BELUM_TERLAKSANA.id;
+        const isButuhMOU = ["Magang", "Praktek Kerja Lapangan (PKL)", "Pelatihan"].includes(existingLayanan.jenis_layanan.nama_jenis_layanan);
+        if (isButuhMOU === false) {
+          payload.id_status_pelaksanaan = STATUS.SEDANG_BERJALAN.id;
+        } else {
+          payload.id_status_pelaksanaan = STATUS.BELUM_TERLAKSANA.id;
+        }
       }
     }
 
