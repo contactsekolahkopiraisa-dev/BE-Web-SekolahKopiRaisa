@@ -10,14 +10,14 @@ const STATUS = Object.freeze({
 const STATEMENT_LAYANAN = Object.freeze({
     LAYANAN_DIAJUKAN:               { id: 1, nama_status_kode: "LAYANAN DIAJUKAN" },
     PENGAJUAN_LAYANAN_DISETUJUI:    { id: 2, nama_status_kode: "PENGAJUAN LAYANAN DISETUJUI" },
-    PENGAJUAN_LAYANAN_DITOLAK:      { id: 2, nama_status_kode: "PENGAJUAN LAYANAN DITOLAK" },
-    MOU_DIAJUKAN:                   { id: 2, nama_status_kode: "MOU DIAJUKAN" },
-    PENGAJUAN_MOU_DITOLAK:          { id: 2, nama_status_kode: "PENGAJUAN MOU DITOLAK" },
-    REVISI_MOU_DIAJUKAN:            { id: 2, nama_status_kode: "REVISI MOU DIAJUKAN" },
-    PENGAJUAN_MOU_DISETUJUI:        { id: 2, nama_status_kode: "PENGAJUAN MOU DISETUJUI" },
-    PELAKSANAAN_SELESAI:            { id: 3, nama_status_kode: "PELAKSANAAN SELESAI" },
-    LAPORAN_DISERAHKAN:             { id: 8, nama_status_kode: "LAPORAN DISERAHKAN"},
-    SERTIFIKAT_DIKIRIM:             { id: 9, nama_status_kode: "SERTIFIKAT DIKIRIM"}
+    PENGAJUAN_LAYANAN_DITOLAK:      { id: 3, nama_status_kode: "PENGAJUAN LAYANAN DITOLAK" },
+    MOU_DIAJUKAN:                   { id: 4, nama_status_kode: "MOU DIAJUKAN" },
+    PENGAJUAN_MOU_DITOLAK:          { id: 5, nama_status_kode: "PENGAJUAN MOU DITOLAK" },
+    REVISI_MOU_DIAJUKAN:            { id: 6, nama_status_kode: "REVISI MOU DIAJUKAN" },
+    PENGAJUAN_MOU_DISETUJUI:        { id: 7, nama_status_kode: "PENGAJUAN MOU DISETUJUI" },
+    PELAKSANAAN_SELESAI:            { id: 8, nama_status_kode: "PELAKSANAAN SELESAI" },
+    LAPORAN_DISERAHKAN:             { id: 9, nama_status_kode: "LAPORAN DISERAHKAN"},
+    SERTIFIKAT_DIKIRIM:             { id: 10, nama_status_kode: "SERTIFIKAT DIKIRIM"}
 });
 
 
