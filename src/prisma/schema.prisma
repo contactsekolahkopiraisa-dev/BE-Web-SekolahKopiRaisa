@@ -931,6 +931,7 @@ model Modul {
   judul_modul     String    @unique @db.VarChar(128)
   deskripsi       String?   @db.Text
   file_modul      String    @db.Text  // yg disave disini link cloud nya
+  foto_sampul     String?   @db.Text  // yg disave disini link cloud nya
   created_at      DateTime  @default(now())
   updated_at      DateTime  @updatedAt
 
