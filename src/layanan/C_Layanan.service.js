@@ -31,7 +31,9 @@ const {
   calculateDurationMonth,
 } = require("../utils/calculateDurationMonth.js");
 const { findUserByRole } = require("../auth/user.repository.js");
-const { sendEmailLayananNotif } = require("../services/fiturLayananEmailSender.service.js");
+const {
+  sendEmailLayananNotif,
+} = require("../services/fiturLayananEmailSender.service.js");
 
 const statusKodeService = {
   // GET ALL KODE STATUS
@@ -278,9 +280,9 @@ const layananService = {
       item.durasi_dalam_bulan =
         item.tanggal_mulai && item.tanggal_selesai
           ? calculateDurationMonth(
-            new Date(item.tanggal_mulai),
-            new Date(item.tanggal_selesai)
-          )
+              new Date(item.tanggal_mulai),
+              new Date(item.tanggal_selesai)
+            )
           : null;
       return formatLayanan(item);
     });
@@ -339,10 +341,18 @@ const layananService = {
     const rule = await validateData(payload, jenisLayanan, files);
 
     // hitung jumlah peserta
-    payload.jumlah_peserta = await hitungPeserta(
-      payload.pesertas,
-      rule.peserta
-    );
+    const namaJenis = jenisLayanan.nama_jenis_layanan;
+
+    if (["Pelatihan", "Kunjungan"].includes(namaJenis)) {
+      // pakai input FE
+      payload.jumlah_peserta = parseInt(payload.jumlah_peserta || 0);
+    } else {
+      // magang / pkl / lainnya
+      payload.jumlah_peserta = await hitungPeserta(
+        payload.pesertas,
+        rule.peserta
+      );
+    }
 
     // LOGIC KONFIGURASI LAYANAN
     // memakai hash untuk menyimpan kombinasi konfigurasi kegiatan & sub yang dipih
@@ -410,17 +420,35 @@ const layananService = {
     created.pesertas = pesertaAdded;
 
     // TODO : HARUSNYA MAILER DIBUAT AUTOSERVICE TERSENDIRI, perbaikilah wahai dev selanjutnya
-    const emailTargets = (await findUserByRole('admin')).map(u => u.email);
-    const emailTerkirims = await sendEmailLayananNotif(user, true, emailTargets, created, STATEMENT_LAYANAN.LAYANAN_DIAJUKAN);
+    const emailTargets = (await findUserByRole("admin")).map((u) => u.email);
+    const emailTerkirims = await sendEmailLayananNotif(
+      user,
+      true,
+      emailTargets,
+      created,
+      STATEMENT_LAYANAN.LAYANAN_DIAJUKAN
+    );
     console.log(emailTerkirims);
     // kirim juga ke customer
     const emailTarget = [user.email.toString()];
-    const emailTerkirim = await sendEmailLayananNotif(user, false, emailTarget, created, STATEMENT_LAYANAN.LAYANAN_DIAJUKAN);
+    const emailTerkirim = await sendEmailLayananNotif(
+      user,
+      false,
+      emailTarget,
+      created,
+      STATEMENT_LAYANAN.LAYANAN_DIAJUKAN
+    );
     console.log(emailTerkirim);
 
     return created;
   },
-  async updateStatus(statementLayanan, idLayanan, user, idStatus, alasan = null) {
+  async updateStatus(
+    statementLayanan,
+    idLayanan,
+    user,
+    idStatus,
+    alasan = null
+  ) {
     // ambil kode status tujuan dari req, 404 nya ngikut bawaan
     const status = await statusKodeRepository.findById(idStatus);
     // cari layanan ada atau tidak, 404 nya ngikut bawaan
@@ -446,7 +474,6 @@ const layananService = {
 
     // LOGIC PENGAJUAN
     if (existingLayanan.pengajuan.id == STATUS.MENUNGGU_PERSETUJUAN.id) {
-
       // Update status pengajuan dengan idStatus yang diterima
       payload.id_status_pengajuan = idStatus;
 
@@ -467,7 +494,11 @@ const layananService = {
       }
       // kalau pengajuan diacc maka ubah status pelaksanaan
       if (idStatus == STATUS.DISETUJUI.id) {
-        const isButuhMOU = ["Magang", "Praktek Kerja Lapangan (PKL)", "Pelatihan"].includes(existingLayanan.jenis_layanan.nama_jenis_layanan);
+        const isButuhMOU = [
+          "Magang",
+          "Praktek Kerja Lapangan (PKL)",
+          "Pelatihan",
+        ].includes(existingLayanan.jenis_layanan.nama_jenis_layanan);
         if (isButuhMOU === false) {
           payload.id_status_pelaksanaan = STATUS.SEDANG_BERJALAN.id;
         } else {
@@ -502,7 +533,7 @@ const layananService = {
       // Cek apakah sudah pernah ditolak sebelumnya
       const existingRejection =
         Array.isArray(updated.layananRejection) &&
-          updated.layananRejection.length > 0
+        updated.layananRejection.length > 0
           ? updated.layananRejection[0]
           : null;
 
@@ -530,19 +561,37 @@ const layananService = {
 
     // kirim email notif hasil update :
     // to specified cust only if called by admin
-    if (user.role === 'admin') {
+    if (user.role === "admin") {
       // const emailTarget = [user.email.toString()];// salah
-      const emailTarget = [updated.user.email.toString()];// salah
-      const emailTerkirim = await sendEmailLayananNotif(user, true, emailTarget, updated, statementLayanan);
+      const emailTarget = [updated.user.email.toString()]; // salah
+      const emailTerkirim = await sendEmailLayananNotif(
+        user,
+        true,
+        emailTarget,
+        updated,
+        statementLayanan
+      );
       console.log(emailTerkirim);
       // to specified cust & all admin if called by customer
-    } else if (user.role === 'customer') {
-      const emailTargets = (await findUserByRole('admin')).map(u => u.email);
-      const emailTerkirims = await sendEmailLayananNotif(user, true, emailTargets, updated, statementLayanan);
+    } else if (user.role === "customer") {
+      const emailTargets = (await findUserByRole("admin")).map((u) => u.email);
+      const emailTerkirims = await sendEmailLayananNotif(
+        user,
+        true,
+        emailTargets,
+        updated,
+        statementLayanan
+      );
       console.log(emailTerkirims);
       // kirim juga ke customer
       const emailTarget = [user.email.toString()];
-      const emailTerkirim = await sendEmailLayananNotif(user, false, emailTarget, updated, statementLayanan);
+      const emailTerkirim = await sendEmailLayananNotif(
+        user,
+        false,
+        emailTarget,
+        updated,
+        statementLayanan
+      );
       console.log(emailTerkirim);
     }
 
