@@ -466,11 +466,21 @@
           {
             "name": "orderBy",
             "in": "query",
-            "description": "Urutkan berdasarkan field apa",
+            "description": "Urutkan berdasarkan field apa (kalau pakai direct url bisa langsung call misal \"sekolahkopiraisa.com/api/v1/layanan?created_at=asc\", tidak perlu pisah by dan ordinal seperti dokumentasi ini)",
             "required": false,
             "schema": {
               "type": "string",
               "example": "created_at"
+            }
+          },
+          {
+            "name": "orderOrdinal",
+            "in": "query",
+            "description": "Mode urutan asc atau desc (kalau pakai direct url bisa langsung call misal \"sekolahkopiraisa.com/api/v1/layanan?created_at=asc\", tidak perlu pisah by dan ordinal seperti dokumentasi ini)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "asc"
             }
           }
         ],

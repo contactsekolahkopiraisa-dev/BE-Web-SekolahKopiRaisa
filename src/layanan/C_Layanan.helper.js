@@ -46,31 +46,54 @@ const buildFilter = (query) => {
   const filterOptions = {
     where: {},
   };
+  // // SEMUA WHERE FILTERING DISINI MASIH BELUM DITERAPKAN KARENA BELUM DIMINTA, BISA DITERAPKAN DI DEV SELANJUTNYA
+  // const allowedQueryFields = [
+  //   "nama_kegiatan",
+  //   "created_at",
+  //   "tanggal_mulai",
+  //   "tanggal_selesai",
+  // ];
+  // // filtering pakai where status, masih beluym jalan
+  // if (query.status) {
+  //   filterOptions.where.status = query.status;
+  // }
 
-  // Example filtering
-  if (query.status) {
-    filterOptions.where.status = query.status;
-  }
-
-  if (query.ongoing === "true") {
-    filterOptions.where.tanggal_selesai = { gte: new Date() };
-  }
+  // if (query.ongoing === "true") {
+  //   filterOptions.where.tanggal_selesai = { gte: new Date() };
+  // }
 
   // Sorting
   const allowedSortFields = [
-    "nama",
+    "nama_kegiatan",
     "created_at",
     "tanggal_mulai",
     "tanggal_selesai",
   ];
-  if (query.sort_by && allowedSortFields.includes(query.sort_by)) {
-    filterOptions.orderBy = {
-      [query.sort_by]: query.order === "asc" ? "asc" : "desc",
-    };
-  } else {
-    filterOptions.orderBy = { created_at: "desc" }; // default
-  }
 
+  // cari field sorting dari query param
+
+  // mode normal (seperti /api/v1/layanan?orderBy=asc)
+  for (const field of allowedSortFields) {
+    if (query[field]) {
+      const direction = query[field].toLowerCase();
+      if (direction === "asc" || direction === "desc") {
+        filterOptions.orderBy = { [field]: direction, };
+        console.log(query); console.log("FILTER: "); console.log(filterOptions)
+        return filterOptions;
+      }
+    }
+  }
+  // mode swagger (swagger tidak support langsung sttring '=' sehingga dipisah by dan ordinal nya)
+  if (query.orderBy && allowedSortFields.includes(query.orderBy)) {
+    filterOptions.orderBy = {
+      [query.orderBy]: query.orderOrdinal || "desc",
+    };
+    console.log(query); console.log("FILTER SWAG: "); console.log(filterOptions)
+    return filterOptions;
+  }
+  // default sorting
+  filterOptions.orderBy = { created_at: "desc" };
+  console.log(query); console.log("FILTER DEF: "); console.log(filterOptions)
   return filterOptions;
 };
 
