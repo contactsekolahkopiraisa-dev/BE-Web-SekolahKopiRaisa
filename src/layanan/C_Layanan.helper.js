@@ -6,6 +6,7 @@ const { STATUS } = require("../utils/constant/enum.js");
 
 const formatLayanan = (l) => ({
   id: l.id,
+  opened_at: l.opened_at,
   nama_kegiatan: l.nama_kegiatan,
   tempat_kegiatan: l.tempat_kegiatan,
   jumlah_peserta: l.jumlah_peserta,
@@ -45,57 +46,65 @@ const formatLayanan = (l) => ({
 const buildFilter = (query) => {
   const filterOptions = {
     where: {},
+    orderBy: []
   };
-  // // SEMUA WHERE FILTERING DISINI MASIH BELUM DITERAPKAN KARENA BELUM DIMINTA, BISA DITERAPKAN DI DEV SELANJUTNYA
-  // const allowedQueryFields = [
-  //   "nama_kegiatan",
-  //   "created_at",
-  //   "tanggal_mulai",
-  //   "tanggal_selesai",
-  // ];
-  // // filtering pakai where status, masih beluym jalan
-  // if (query.status) {
-  //   filterOptions.where.status = query.status;
-  // }
 
-  // if (query.ongoing === "true") {
-  //   filterOptions.where.tanggal_selesai = { gte: new Date() };
-  // }
-
-  // Sorting
   const allowedSortFields = [
     "nama_kegiatan",
     "created_at",
     "tanggal_mulai",
     "tanggal_selesai",
+    "opened_at",
   ];
 
-  // cari field sorting dari query param
+  let hasProductionSort = false;
 
-  // mode normal (seperti /api/v1/layanan?orderBy=asc)
+  // MODE PRODUCTION (MULTI PARAM)
   for (const field of allowedSortFields) {
-    if (query[field]) {
-      const direction = query[field].toLowerCase();
-      if (direction === "asc" || direction === "desc") {
-        filterOptions.orderBy = { [field]: direction, };
-        console.log(query); console.log("FILTER: "); console.log(filterOptions)
-        return filterOptions;
-      }
+    if (!query[field]) continue;
+
+    const direction = query[field].toLowerCase();
+    if (direction !== "asc" && direction !== "desc") continue;
+
+    hasProductionSort = true;
+
+    if (field === "opened_at") {
+      // aturan khusus opened_at
+      filterOptions.orderBy.push(
+        { opened_at: direction },
+        { created_at: "asc" }
+      );
+    } else {
+      filterOptions.orderBy.push({ [field]: direction });
     }
   }
-  // mode swagger (swagger tidak support langsung sttring '=' sehingga dipisah by dan ordinal nya)
-  if (query.orderBy && allowedSortFields.includes(query.orderBy)) {
-    filterOptions.orderBy = {
-      [query.orderBy]: query.orderOrdinal || "desc",
-    };
-    console.log(query); console.log("FILTER SWAG: "); console.log(filterOptions)
-    return filterOptions;
+
+  // MODE SWAGGER (SINGLE PARAM)
+  if (
+    !hasProductionSort &&
+    query.orderBy &&
+    allowedSortFields.includes(query.orderBy)
+  ) {
+    const direction = (query.orderOrdinal || "asc").toLowerCase();
+
+    if (query.orderBy === "opened_at") {
+      filterOptions.orderBy.push(
+        { opened_at: direction },
+        { created_at: "asc" }
+      );
+    } else {
+      filterOptions.orderBy.push({ [query.orderBy]: direction });
+    }
   }
-  // default sorting
-  filterOptions.orderBy = { created_at: "desc" };
-  console.log(query); console.log("FILTER DEF: "); console.log(filterOptions)
+
+  // DEFAULT SORTING
+  if (filterOptions.orderBy.length === 0) {
+    filterOptions.orderBy.push({ created_at: "desc" });
+  }
+
   return filterOptions;
 };
+
 
 // FUNGSI HITUNG PESERTA BERDASARKAN JENIS LAYANAN
 const hitungPeserta = async (pesertas, rule) => {

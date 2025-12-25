@@ -740,6 +740,9 @@ model Layanan {
   file_surat_pengantar    String? @db.Text
   file_surat_undangan     String? @db.Text
   created_at              DateTime  @default(now())
+  // update 2025-12-25 mekanisme opened at
+  // ini masih terbatas pada 1 user, belum mendukung personalisasi opened at per user
+  opened_at               DateTime?
 
   user                      User                 @relation(fields: [id_user], references: [id])
   jenisLayanan              JenisLayanan         @relation(fields: [id_jenis_layanan], references: [id])

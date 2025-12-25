@@ -81,6 +81,7 @@ const layananRepository = {
       ...filterOptions,
       select: {
         id: true,
+        opened_at: true,
         nama_kegiatan: true,
         tempat_kegiatan: true,
         jumlah_peserta: true,
@@ -170,6 +171,7 @@ const layananRepository = {
       ...filterOptions,
       select: {
         id: true,
+        opened_at: true,
         nama_kegiatan: true,
         tempat_kegiatan: true,
         jumlah_peserta: true,

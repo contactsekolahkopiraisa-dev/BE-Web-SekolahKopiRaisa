@@ -1216,6 +1216,47 @@
         }
       }
     },
+    "/api/v1/layanan/{id}/set-as-opened": {
+      "put": {
+        "tags": [
+          "Layanan"
+        ],
+        "summary": "Set layanan as opened by admin",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID dari layanan yang ingin di set opened, otomatis memakai waktu now()",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Modul created successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil memperbarui status layanan!",
+                  "data": {
+                    "id": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/layanan/{id}/finish-pelaksanaan": {
       "put": {
         "tags": [
