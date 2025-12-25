@@ -5,6 +5,9 @@ jest.mock('../src/services/cloudinaryDelete.service.js', () => require('../__moc
 jest.mock('../src/utils/sanitizeData.js');
 const { sanitizeData } = require('../src/utils/sanitizeData.js');
 
+jest.mock('../src/services/fiturLayananEmailSender.service.js', () => ({
+    sendEmailLayananNotif: jest.fn().mockResolvedValue(true)
+}));
 
 // Mock Repository Layer
 jest.mock('../src/laporan_layanan/C_LaporanLayanan.repository.js');
@@ -17,32 +20,48 @@ const { layananService } = require('../src/layanan/C_Layanan.service.js');
 
 // Import Target
 const { laporanLayananService } = require('../src/laporan_layanan/C_LaporanLayanan.service.js');
-const { STATUS } = require('../src/utils/constant/enum.js');
+const { STATUS, STATEMENT_LAYANAN } = require('../src/utils/constant/enum.js');
 
 
 describe('LAPORAN LAYANAN SERVICE UNIT TESTS', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         // make sure sanitizeData mengembalikan objek
-        sanitizeData.mockImplementation(data => data ? { ...data } : {}); 
+        sanitizeData.mockImplementation(data => data ? { ...data } : {});
         // Mock Cloudinary untuk berhasil
         require('../src/services/cloudinaryUpload.service.js').uploadToCloudinary.mockResolvedValue({ url: 'http://cloudinary.com/laporan_foto.jpg' });
     });
-    
+
     const mockFile = { buffer: Buffer.from('file'), originalname: 'foto.jpg' };
     const mockUser = { id: 2, role: 'customer' };
-    const mockData = { id_layanan: 1, nama_p4s: 'P4S ABC' }; 
+    const mockData = { id_layanan: 1, nama_p4s: 'P4S ABC' };
     const mockLayananSelesai = {
         id: 1, pemohon: { id: 2 },
+        instansi_asal: 'Universitas Jember',
         pelaksanaan: { id: STATUS.SELESAI.id, nama_status_kode: STATUS.SELESAI.nama_status_kode },
-        laporan: { nama_status_kode: STATUS.BELUM_TERSEDIA.nama_status_kode }
+        laporan: { nama_status_kode: STATUS.BELUM_TERSEDIA.nama_status_kode },
+        jenisLayanan: { nama_jenis_layanan: 'Magang' },
+        konfigurasiLayanan: {
+            detailKonfigurasis: [
+                {
+                    kegiatan: { nama_kegiatan: 'Kegiatan Test' },
+                    subKegiatan: { nama_sub_kegiatan: 'Sub Test' },
+                    urutan_ke: 1
+                }
+            ]
+        },
+        pesertas: [{ nama_peserta: 'jon do', nim: '3232' }],
+        user: {name : 'jon do', email: 'customer@test.com', phone_number: '01234'}
     };
 
     it('create should successfully create a report if prerequisites are met', async () => {
         layananService.getById.mockResolvedValue(mockLayananSelesai);
-        laporanLayananRepository.create.mockResolvedValue({ id: 1 });
+        laporanLayananRepository.create.mockResolvedValue({
+            id: 1,
+            layanan: mockLayananSelesai
+        });
 
-        await laporanLayananService.create(mockData, mockFile, mockUser);
+        await laporanLayananService.create(STATEMENT_LAYANAN.LAPORAN_DISERAHKAN, mockData, mockFile, mockUser);
 
         expect(layananService.getById).toHaveBeenCalledWith(mockData.id_layanan, mockUser, expect.any(Object));
         expect(laporanLayananRepository.create).toHaveBeenCalled();
@@ -55,7 +74,7 @@ describe('LAPORAN LAYANAN SERVICE UNIT TESTS', () => {
         };
         layananService.getById.mockResolvedValue(mockLayananBelumSelesai);
 
-        await expect(laporanLayananService.create(mockData, mockFile, mockUser)).rejects.toMatchObject({
+        await expect(laporanLayananService.create(STATEMENT_LAYANAN.LAPORAN_DISERAHKAN, mockData, mockFile, mockUser)).rejects.toMatchObject({
             statusCode: 409,
             message: expect.stringContaining('Pelaksanaan layanan belum selesai'),
         });

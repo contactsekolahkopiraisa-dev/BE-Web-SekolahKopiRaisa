@@ -14,6 +14,7 @@ const mockFileMiddleware = (fieldName) => (req, res, next) => {
         foto_kegiatan: [{ buffer: Buffer.from('mock') }], 
         file_mou: [{ buffer: Buffer.from('mock') }],
         file_sertifikat: [{ buffer: Buffer.from('mock') }],
+        foto_sampul: [{ buffer: Buffer.from('mock') }],
     };
     req.body = req.body || {}; 
     next();
@@ -32,5 +33,6 @@ module.exports = {
     upload: mockMulterMethods, 
     uploadFile: mockMulterMethods, 
     uploadUMKM: mockMulterMethods,
+    uploadFileMix: mockMulterMethods
     // Jika ada exports lain di multer.js (misalnya uploadNews, uploadProduct), tambahkan di sini
 };
