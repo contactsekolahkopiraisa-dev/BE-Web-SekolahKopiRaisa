@@ -70,19 +70,20 @@ describe('SERTIFIKAT SERVICE UNIT TESTS', () => {
     });
 
     it('create should throw 409 if related report is not approved (Prasyarat Status)', async () => {
-        const mockLayananPending = {
-            id: 1, pemohon: { id: 1 },
+        const mockLayananNoReport = {
+            id: 1,
+            pemohon: { id: 1 },
             user: { name: 'jon do', email: 'customer@test.com', phone_number: '01234' },
             laporan: {
-                statusPelaporan: { id: 1, nama_status_kode: STATUS.MENUNGGU_PERSETUJUAN.nama_status_kode }
+                nama_status_kode: STATUS.BELUM_TERSEDIA.nama_status_kode
             }
         };
-        layananService.getById.mockResolvedValue(mockLayananPending);
+        layananService.getById.mockResolvedValue(mockLayananNoReport);
         sertifikatRepository.create.mockResolvedValue(mockCreatedResponse)
 
         await expect(sertifikatService.create(STATEMENT_LAYANAN.SERTIFIKAT_DIKIRIM, mockData, mockFile, mockUserAdmin)).rejects.toMatchObject({
             statusCode: 409,
-            message: expect.stringContaining('Hanya bisa upload sertifikat setelah laporan disetujui'),
+            message: expect.stringContaining('Hanya bisa upload sertifikat setelah laporan diisi'),
         });
     });
 });
