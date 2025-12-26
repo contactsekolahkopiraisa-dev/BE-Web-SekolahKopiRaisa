@@ -6,6 +6,7 @@ const { STATUS } = require("../utils/constant/enum.js");
 
 const formatLayanan = (l) => ({
   id: l.id,
+  opened_at: l.opened_at,
   nama_kegiatan: l.nama_kegiatan,
   tempat_kegiatan: l.tempat_kegiatan,
   jumlah_peserta: l.jumlah_peserta,
@@ -45,34 +46,65 @@ const formatLayanan = (l) => ({
 const buildFilter = (query) => {
   const filterOptions = {
     where: {},
+    orderBy: []
   };
 
-  // Example filtering
-  if (query.status) {
-    filterOptions.where.status = query.status;
-  }
-
-  if (query.ongoing === "true") {
-    filterOptions.where.tanggal_selesai = { gte: new Date() };
-  }
-
-  // Sorting
   const allowedSortFields = [
-    "nama",
+    "nama_kegiatan",
     "created_at",
     "tanggal_mulai",
     "tanggal_selesai",
+    "opened_at",
   ];
-  if (query.sort_by && allowedSortFields.includes(query.sort_by)) {
-    filterOptions.orderBy = {
-      [query.sort_by]: query.order === "asc" ? "asc" : "desc",
-    };
-  } else {
-    filterOptions.orderBy = { created_at: "desc" }; // default
+
+  let hasProductionSort = false;
+
+  // MODE PRODUCTION (MULTI PARAM)
+  for (const field of allowedSortFields) {
+    if (!query[field]) continue;
+
+    const direction = query[field].toLowerCase();
+    if (direction !== "asc" && direction !== "desc") continue;
+
+    hasProductionSort = true;
+
+    if (field === "opened_at") {
+      // aturan khusus opened_at
+      filterOptions.orderBy.push(
+        { opened_at: direction },
+        { created_at: "asc" }
+      );
+    } else {
+      filterOptions.orderBy.push({ [field]: direction });
+    }
+  }
+
+  // MODE SWAGGER (SINGLE PARAM)
+  if (
+    !hasProductionSort &&
+    query.orderBy &&
+    allowedSortFields.includes(query.orderBy)
+  ) {
+    const direction = (query.orderOrdinal || "asc").toLowerCase();
+
+    if (query.orderBy === "opened_at") {
+      filterOptions.orderBy.push(
+        { opened_at: direction },
+        { created_at: "asc" }
+      );
+    } else {
+      filterOptions.orderBy.push({ [query.orderBy]: direction });
+    }
+  }
+
+  // DEFAULT SORTING
+  if (filterOptions.orderBy.length === 0) {
+    filterOptions.orderBy.push({ created_at: "desc" });
   }
 
   return filterOptions;
 };
+
 
 // FUNGSI HITUNG PESERTA BERDASARKAN JENIS LAYANAN
 const hitungPeserta = async (pesertas, rule) => {

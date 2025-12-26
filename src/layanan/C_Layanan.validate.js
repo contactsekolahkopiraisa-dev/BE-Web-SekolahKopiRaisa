@@ -121,7 +121,7 @@ const JENIS_SCHEMA = {
   },
   Pelatihan: {
     fields: {
-      required: ["pesertas", "isi_konfigurasi_layanan"],
+      // required: ["pesertas", "isi_konfigurasi_layanan"],
       forbidden: ["nama_kegiatan", "tempat_kegiatan"],
     },
     files: {
@@ -134,7 +134,7 @@ const JENIS_SCHEMA = {
   },
   Kunjungan: {
     fields: {
-      required: ["pesertas", "isi_konfigurasi_layanan"],
+      // required: ["pesertas", "isi_konfigurasi_layanan"],
       forbidden: ["nama_kegiatan", "tempat_kegiatan"],
     },
     files: {

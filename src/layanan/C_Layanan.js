@@ -134,6 +134,15 @@ const layananController = {
             next(err);
         }
     },
+    // PUT MARK AS READ LAYANAN
+    async setAsOpened(req, res, next) {
+        try {
+            const layanan = await layananService.setAsOpened(req.params.id, req.user);
+            res.status(200).json({ success: true, message: "Berhasil mengubah opened_at layanan!", data: layanan });
+        } catch (err) {
+            next(err);
+        }
+    },
     // PUT SELESAIKAN PELAKSANAAN LAYANAN
     async finishPelaksanaan(req, res, next) {
         try {
