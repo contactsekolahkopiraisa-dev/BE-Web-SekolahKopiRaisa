@@ -4751,11 +4751,21 @@
           {
             "name": "orderBy",
             "in": "query",
-            "description": "Urutkan berdasarkan field apa",
+            "description": "Urutkan berdasarkan field apa (kalau pakai direct url bisa langsung call misal \"sekolahkopiraisa.com/api/v1/layanan?created_at=asc\", tidak perlu pisah by dan ordinal seperti dokumentasi ini)",
             "required": false,
             "schema": {
               "type": "string",
               "example": "created_at"
+            }
+          },
+          {
+            "name": "orderOrdinal",
+            "in": "query",
+            "description": "Mode urutan asc atau desc (kalau pakai direct url bisa langsung call misal \"sekolahkopiraisa.com/api/v1/layanan?created_at=asc\", tidak perlu pisah by dan ordinal seperti dokumentasi ini)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "asc"
             }
           }
         ],
@@ -5473,6 +5483,47 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Modul created successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Berhasil memperbarui status layanan!",
+                  "data": {
+                    "id": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/layanan/{id}/set-as-opened": {
+      "put": {
+        "tags": [
+          "Layanan"
+        ],
+        "summary": "Set layanan as opened by admin",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID dari layanan yang ingin di set opened, otomatis memakai waktu now()",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Modul created successfully",

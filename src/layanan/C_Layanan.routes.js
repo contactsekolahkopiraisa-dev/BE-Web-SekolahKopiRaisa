@@ -29,6 +29,7 @@ layananRoutes.post('/', authMiddleware, roleMiddleware('customer'), validate(lay
 layananRoutes.put('/:id/accept-pengajuan', authMiddleware, roleMiddleware('admin'), layananController.acceptPengajuan);
 layananRoutes.put('/:id/reject-pengajuan', authMiddleware, roleMiddleware('admin'), validate(rejectSchema), layananController.rejectPengajuan);
 layananRoutes.put('/:id/logbook', authMiddleware, roleMiddleware('customer'), validate(uploadLogbookSchema), layananController.uploadLogbook);
+layananRoutes.put('/:id/set-as-opened', authMiddleware, roleMiddleware('admin'), layananController.setAsOpened);
 layananRoutes.put('/:id/finish-pelaksanaan', authMiddleware, roleMiddleware('customer'), layananController.finishPelaksanaan);
 // STATUS ROUTES
 statusKodeRoutes.get('/', statusKodeController.getAll);

@@ -268,21 +268,25 @@ const layananService = {
     const filterOptions = buildFilter(query);
 
     if (user.role === "customer") {
-      filterOptions.where.id_user = user.id;
+      filterOptions.where = {
+        ...filterOptions.where,
+        id_user: user.id,
+      };
+
     }
 
     const layanans = await layananRepository.findAll(filterOptions);
-    if (!layanans) {
-      throw new ApiError(404, "Data layanan tidak ada!");
+    if (layanans.length === 0) {
+      throw new ApiError(200, "Data layanan yang dicari tidak ada!");
     }
 
     return layanans.map((item) => {
       item.durasi_dalam_bulan =
         item.tanggal_mulai && item.tanggal_selesai
           ? calculateDurationMonth(
-              new Date(item.tanggal_mulai),
-              new Date(item.tanggal_selesai)
-            )
+            new Date(item.tanggal_mulai),
+            new Date(item.tanggal_selesai)
+          )
           : null;
       return formatLayanan(item);
     });
@@ -296,7 +300,7 @@ const layananService = {
     }
 
     const layanan = await layananRepository.findById(filterOptions);
-    if (!layanan) {
+    if (layanan.length === 0) {
       throw new ApiError(404, "Data layanan tidak ada!");
     }
 
@@ -533,7 +537,7 @@ const layananService = {
       // Cek apakah sudah pernah ditolak sebelumnya
       const existingRejection =
         Array.isArray(updated.layananRejection) &&
-        updated.layananRejection.length > 0
+          updated.layananRejection.length > 0
           ? updated.layananRejection[0]
           : null;
 
@@ -609,6 +613,18 @@ const layananService = {
     const updated = await layananRepository.update(id_layanan, payload);
     return updated;
   },
+  async setAsOpened(id_layanan, user) {
+    // cari layanan ada atau tidak, 404 nya ngikut bawaan
+    const existingLayanan = await layananService.getById(id_layanan, user);
+
+    // create payload
+    const payload = {
+      opened_at: new Date(),
+    };
+    // lempar ke repo
+    const updated = await layananRepository.update(id_layanan, payload);
+    return updated;
+  }
 };
 
 module.exports = {

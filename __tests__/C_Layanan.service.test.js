@@ -11,15 +11,21 @@ const { layananRepository, jenisLayananRepository, statusKodeRepository, layanan
 jest.mock('../src/layanan/C_Layanan.helper.js');
 const { buildFilter, hitungPeserta, sendNotifikasiAdminLayanan, sendNotifikasiPengusulLayanan } = require('../src/layanan/C_Layanan.helper.js');
 
+// Mock User Repository
+jest.mock('../src/auth/user.repository.js', () => ({
+    findUserByRole: jest.fn().mockResolvedValue([{ email: 'admin@test.com' }])
+}));
+const { findUserByRole } = require('../src/auth/user.repository.js');
+
 // Mock Prisma Transaction
-jest.mock('../src/db/index.js', () => ({ 
-    $transaction: jest.fn(async (callback) => await callback({})), 
+jest.mock('../src/db/index.js', () => ({
+    $transaction: jest.fn(async (callback) => await callback({})),
 }));
 
 // Impor Target
 const { layananService, jenisLayananService } = require('../src/layanan/C_Layanan.service.js');
 const ApiError = require('../src/utils/apiError.js');
-const { STATUS } = require('../src/utils/constant/enum.js');
+const { STATUS, STATEMENT_LAYANAN } = require('../src/utils/constant/enum.js');
 
 
 describe('LAYANAN SERVICE UNIT TESTS', () => {
@@ -32,7 +38,7 @@ describe('LAYANAN SERVICE UNIT TESTS', () => {
 
     describe('jenisLayananService', () => {
         const mockJenisLayanan = { id: 1, nama_jenis_layanan: 'Pelatihan', is_active: true };
-        
+
         it('getAll should return all items', async () => {
             jenisLayananRepository.findAll.mockResolvedValue([mockJenisLayanan]);
             await expect(jenisLayananService.getAll()).resolves.toEqual([mockJenisLayanan]);
@@ -47,21 +53,48 @@ describe('LAYANAN SERVICE UNIT TESTS', () => {
 
 
     describe('layananService.updateStatus', () => {
-        const mockAdmin = { id: 1, admin: true, role: 'admin' };
-        const mockCustomer = { id: 2, role: 'customer' };
+        const mockAdmin = { id: 1, admin: true, role: 'admin', email: 'testAdm@example.com' };
+        const mockCustomer = { id: 2, role: 'customer', email: 'customer@test.com' };
         const mockLayananPending = {
             id: 1, pemohon: { id: 2 },
             pengajuan: { id: STATUS.MENUNGGU_PERSETUJUAN.id },
             pelaksanaan: { id: STATUS.MENUNGGU_PERSETUJUAN.id },
             layananRejection: [],
+            jenis_layanan: { nama_jenis_layanan: 'Magang' },
+            konfigurasiLayanan: {
+                detailKonfigurasis: [
+                    {
+                        kegiatan: { nama_kegiatan: 'Kegiatan Test' },
+                        subKegiatan: { nama_sub_kegiatan: 'Sub Test' },
+                        urutan_ke: 1
+                    }
+                ]
+            },
+            pesertas: [{nama_peserta: 'jon do', nim: '3232'}]
         };
 
         it('should update status to DISETUJUI and BELUM_TERLAKSANA when accepted by admin', async () => {
             layananService.getById = jest.fn().mockResolvedValue(mockLayananPending);
             statusKodeRepository.findById.mockResolvedValue({ id: STATUS.DISETUJUI.id });
-            layananRepository.update.mockResolvedValue({});
+            layananRepository.update.mockResolvedValue({
+                id: 1,
+                user: { email: 'customer@test.com' },
+                pengajuan: { id: STATUS.DISETUJUI.id, nama_status_kode: STATUS.DISETUJUI.nama_status_kode },
+                pelaksanaan: { id: STATUS.BELUM_TERLAKSANA.id, nama_status_kode: STATUS.BELUM_TERLAKSANA.nama_status_kode },
+                jenisLayanan: { nama_jenis_layanan: 'Magang' },
+                konfigurasiLayanan: {
+                    detailKonfigurasis: [
+                        {
+                            kegiatan: { nama_kegiatan: 'Kegiatan Test' },
+                            subKegiatan: { nama_sub_kegiatan: 'Sub Test' },
+                            urutan_ke: 1
+                        }
+                    ]
+                },
+                pesertas: [{nama_peserta: 'jon do', nim: '3232'}]
+            });
 
-            await layananService.updateStatus("PENGAJUAN DISETUJUI", 1, mockAdmin, STATUS.DISETUJUI.id);
+            await layananService.updateStatus(STATEMENT_LAYANAN.PENGAJUAN_LAYANAN_DISETUJUI, 1, mockAdmin, STATUS.DISETUJUI.id);
 
             expect(layananRepository.update).toHaveBeenCalledWith(
                 1,
@@ -77,22 +110,39 @@ describe('LAYANAN SERVICE UNIT TESTS', () => {
             statusKodeRepository.findById.mockResolvedValue({ id: STATUS.DITOLAK.id });
 
             await expect(
-                layananService.updateStatus("PENGAJUAN DITOLAK",1, mockAdmin, STATUS.DITOLAK.id, null) // alasan: null
+                layananService.updateStatus(STATEMENT_LAYANAN.PENGAJUAN_LAYANAN_DITOLAK, 1, mockAdmin, STATUS.DITOLAK.id, null) // alasan: null
             ).rejects.toMatchObject({
                 statusCode: 400,
                 message: 'Alasan Penolakan harus disertakan!',
             });
         });
-        
+
         it('should allow customer owner to finish service from SEDANG_BERJALAN to SELESAI', async () => {
-             const mockLayananBerjalan = {
+            findUserByRole.mockResolvedValue([{ email: 'admin@test.com' }]);
+            const mockLayananBerjalan = {
                 ...mockLayananPending,
                 pelaksanaan: { id: STATUS.SEDANG_BERJALAN.id },
             };
             layananService.getById = jest.fn().mockResolvedValue(mockLayananBerjalan);
             statusKodeRepository.findById.mockResolvedValue({ id: STATUS.SELESAI.id });
+            layananRepository.update.mockResolvedValue({
+                id: 1,
+                user: { email: 'customer@test.com' },
+                pelaksanaan: { id: STATUS.SELESAI.id },
+                jenisLayanan: { nama_jenis_layanan: 'Magang' },
+                konfigurasiLayanan: {
+                    detailKonfigurasis: [
+                        {
+                            kegiatan: { nama_kegiatan: 'Kegiatan Test' },
+                            subKegiatan: { nama_sub_kegiatan: 'Sub Test' },
+                            urutan_ke: 1
+                        }
+                    ]
+                },
+                pesertas: [{nama_peserta: 'jon do', nim: '3232'}]
+            });
 
-            await layananService.updateStatus("PELAKSANAAN SELESAI", 1, mockCustomer, STATUS.SELESAI.id);
+            await layananService.updateStatus(STATEMENT_LAYANAN.PELAKSANAAN_SELESAI, 1, mockCustomer, STATUS.SELESAI.id);
 
             expect(layananRepository.update).toHaveBeenCalledWith(
                 1,
