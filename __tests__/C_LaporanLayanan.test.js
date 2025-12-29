@@ -35,6 +35,17 @@ describe('LAPORAN LAYANAN CONTROLLER: /api/v1/laporan-layanan', () => {
         expect(res.statusCode).toBe(200);
         expect(laporanLayananService.getById).toHaveBeenCalled();
     });
+    it('GET /:id should return 404 data on GET by id when data not found', async () => {
+        laporanLayananService.getById.mockRejectedValue(new Error("Data not found"));
+        const res = await request(app).get('/api/v1/laporan-layanan/1').set('x-user-role', 'customer');
+        expect(res.statusCode).not.toBe(200);
+        expect(laporanLayananService.getById).toHaveBeenCalled();
+    });
+    it('GET /:id should return 403  on GET by id (unauthorized)', async () => {
+        laporanLayananService.getById.mockResolvedValue(mockLaporan);
+        const res = await request(app).get('/api/v1/laporan-layanan/1').set('x-user-role', 'UMKM');
+        expect(res.statusCode).toBe(403);
+    });
 
     it('POST / should allow customer to create laporan and return 201', async () => {
         laporanLayananService.create.mockResolvedValue(mockLaporan);
@@ -42,9 +53,13 @@ describe('LAPORAN LAYANAN CONTROLLER: /api/v1/laporan-layanan', () => {
         expect(res.statusCode).toBe(201);
         expect(laporanLayananService.create).toHaveBeenCalled();
     });
-
-    it('POST / should return 403 if admin tries to create (diblock di controller)', async () => {
+    it('POST / should return 403 if admin tries to create', async () => {
         const res = await request(app).post('/api/v1/laporan-layanan').set('x-user-role', 'admin').send({});
         expect(res.statusCode).toBe(403);
+    });
+    it('POST / should return 500 if service failed to create', async () => {
+      laporanLayananService.create.mockRejectedValue(new Error("Service failed"))
+        const res = await request(app).post('/api/v1/laporan-layanan').set('x-user-role', 'customer').send({});
+        expect(res.statusCode).toBe(500);
     });
 });

@@ -45,4 +45,23 @@ describe('SERTIFIKAT CONTROLLER: /api/v1/sertifikat', () => {
         const res = await request(app).post('/api/v1/sertifikat').set('x-user-role', 'customer').send({});
         expect(res.statusCode).toBe(403);
     });
+
+    it('GET /:id should return error status when service fails (Coverage for getById catch)', async () => {
+        sertifikatService.getById.mockRejectedValue(new Error("Database Error"));
+
+        const res = await request(app)
+            .get('/api/v1/sertifikat/1')
+            .set('x-user-role', 'admin');
+        expect(res.statusCode).not.toBe(200);
+    });
+
+    it('POST / should return error status when service fails (Coverage for create catch)', async () => {
+        sertifikatService.create.mockRejectedValue(new Error("Service Failure"));
+
+        const res = await request(app)
+            .post('/api/v1/sertifikat')
+            .set('x-user-role', 'admin')
+            .send({ id_layanan: 1 });
+        expect(res.statusCode).not.toBe(201);
+    });
 });
