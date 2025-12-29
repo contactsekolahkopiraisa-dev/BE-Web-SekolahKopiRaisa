@@ -20,7 +20,6 @@ const { layananService } = require('../src/layanan/C_Layanan.service.js');
 const { sertifikatService } = require('../src/sertifikat/C_Sertifikat.service.js');
 const { STATUS, STATEMENT_LAYANAN } = require('../src/utils/constant/enum.js');
 
-
 describe('SERTIFIKAT SERVICE UNIT TESTS', () => {
     beforeEach(() => {
         jest.clearAllMocks();
