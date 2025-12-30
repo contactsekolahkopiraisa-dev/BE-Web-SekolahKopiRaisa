@@ -29,7 +29,7 @@ const modulController = {
     async create(req, res, next) {
         try {
             // kembalikan kalau bukan admin
-            if (req.user.admin !== true) { throw new ApiError(403, 'Akses ditolak! Hanya admin yang dapat mengunggah modul !'); }
+            // if (req.user.admin !== true) { throw new ApiError(403, 'Akses ditolak! Hanya admin yang dapat mengunggah modul !'); }
             // kembalikan kalau tidak ada file modulnya
             if (!req.files) { throw new ApiError(400, 'File tidak disertakan!'); }
 
@@ -44,13 +44,13 @@ const modulController = {
     async update(req, res, next) {
         try {
             // kembalikan kalau bukan admin
-            if (req.user.admin !== true) { throw new ApiError(403, 'Akses ditolak! Hanya admin yang dapat mengubah modul !'); }
+            // if (req.user.admin !== true) { throw new ApiError(403, 'Akses ditolak! Hanya admin yang dapat mengubah modul !'); }
             
             const { id } = req.params, { judul_modul: namaLama } = await modulService.getById(id);
 
             const data = await modulService.update(id, req.body, req.files);
 
-            res.status(200).json({ success: true, message: `Berhasil mengubah Modul '${namaLama || data.judul_modul}' !`, data});
+            res.status(200).json({ success: true, message: `Berhasil mengubah Modul' !`, data});
         } catch (err) {
             next(err);
         }
@@ -59,7 +59,7 @@ const modulController = {
     async delete(req, res, next) {
         try {
             // kembalikan kalau bukan admin
-            if (req.user.admin !== true) { throw new ApiError(403, 'Akses ditolak! Hanya admin yang dapat menghapus modul !'); }
+            // if (req.user.admin !== true) { throw new ApiError(403, 'Akses ditolak! Hanya admin yang dapat menghapus modul !'); }
             const data = await modulService.delete(req.params.id);
             res.status(200).json({ success: true, message: `Berhasil menghapus Modul ID '${req.params.id}' !`, data});
         } catch (err) {
