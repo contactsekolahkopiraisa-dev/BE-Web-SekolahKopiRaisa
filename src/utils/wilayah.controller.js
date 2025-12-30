@@ -68,21 +68,12 @@ router.get('/regencies/:provinceCode', async (req, res) => {
     
     console.log('[Controller] Fetching regencies for province:', provinceCode);
     
-    // Kabupaten Tapal Kuda yang diizinkan
-    const tapalKudaCodes = ['35.08', '35.09', '35.10', '35.11', '35.12', '35.13', '35.14'];
-    const tapalKudaNames = {
-      '35.08': 'Lumajang',
-      '35.09': 'Jember',
-      '35.10': 'Banyuwangi',
-      '35.11': 'Bondowoso',
-      '35.12': 'Situbondo',
-      '35.13': 'Probolinggo',
-      '35.14': 'Pasuruan'
-    };
+    // Support optional query param 'tapalKudaOnly' to limit to Tapal Kuda.
+    const tapalKudaOnly = String(req.query.tapalKudaOnly || '').toLowerCase() === 'true';
     
-    const allRegencies = await wilayahService.getRegencies(provinceCode, { useCache: true });
+    const allRegencies = await wilayahService.getRegencies(provinceCode, { useCache: true, onlyTapalKuda: tapalKudaOnly });
     
-    console.log('[Controller] Total regencies fetched:', allRegencies.length);
+    console.log('[Controller] Total regencies fetched after service filter:', allRegencies.length);
     
     // Pastikan adalah array
     if (!Array.isArray(allRegencies)) {
@@ -96,19 +87,12 @@ router.get('/regencies/:provinceCode', async (req, res) => {
       });
     }
     
-    // Filter hanya kabupaten Tapal Kuda
-    const tapalKudaRegencies = allRegencies.filter(r => 
-      tapalKudaCodes.includes(String(r.code))
-    );
-
-    console.log('[Controller] Tapal Kuda regencies found:', tapalKudaRegencies.length);
-
     return res.status(200).json({ 
       success: true,
-      data: tapalKudaRegencies,
+      data: allRegencies,
       info: {
-        total: tapalKudaRegencies.length,
-        tapalKudaOnly: true
+        total: allRegencies.length,
+        tapalKudaOnly: tapalKudaOnly
       }
     });
     
