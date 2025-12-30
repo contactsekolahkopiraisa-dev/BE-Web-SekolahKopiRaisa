@@ -423,7 +423,7 @@ const layananService = {
     // masukkan peserta ke var untuk direturn
     created.pesertas = pesertaAdded;
 
-    // TODO : HARUSNYA MAILER DIBUAT AUTOSERVICE TERSENDIRI, perbaikilah wahai dev selanjutnya
+    // TODO : HARUSNYA MAILER DIBUAT MICROSERVICE TERSENDIRI, perbaikilah wahai dev selanjutnya
     const emailTargets = (await findUserByRole("admin")).map((u) => u.email);
     const emailTerkirims = await sendEmailLayananNotif(
       user,

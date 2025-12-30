@@ -18,7 +18,7 @@ const laporanLayananController = {
     async create(req, res, next) {
         try {
             // kembalikan kalau bukan cust
-            if (req.user.role !== 'customer') { throw new ApiError(403, 'Akses ditolak! Hanya customer yang dapat menyerahkan laporan !'); }
+            // if (req.user.role !== 'customer') { throw new ApiError(403, 'Akses ditolak! Hanya customer yang dapat menyerahkan laporan !'); }
             const laporan = await laporanLayananService.create(STATEMENT_LAYANAN.LAPORAN_DISERAHKAN, req.body, req.file, req.user);
             res.status(201).json({ success: true, message: "Berhasil mengirim laporan!", data: laporan });
         } catch (err) {

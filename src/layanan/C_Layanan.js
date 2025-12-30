@@ -69,7 +69,7 @@ const targetPesertaController = {
     // GET TARGET PESERTA BY ID
     async getById(req, res, next) {
         try {            
-            const data = await targetPesertaService.getById(id);
+            const data = await targetPesertaService.getById(req.params.id);
             res.status(200).json({ success: true, message: `Berhasil Mendapatkan Target Peserta !`, data });
         } catch (err) {
             next(err); // dilempar ke middleware errorHandler
@@ -100,7 +100,7 @@ const layananController = {
     async create(req, res, next) {
         try {
             // kembalikan kalau bukan cust
-            if (req.user.role !== 'customer') { throw new ApiError(403, 'Akses ditolak! Hanya customer yang dapat mengajukan layanan !'); }
+            // if (req.user.role !== 'customer') { throw new ApiError(403, 'Akses ditolak! Hanya customer yang dapat mengajukan layanan !'); }
             const layanan = await layananService.create(req.body, req.files, req.user);
             res.status(201).json({ success: true, message: "Berhasil mengajukan layanan!", data: layanan });
         } catch (err) {
