@@ -1,5 +1,5 @@
 // src/utils/wilayah.service.js
-// MENGGUNAKAN DATABASE LOKAL - TIDAK PERLU API EKSTERNAL
+// MENGGUNAKAN DATABASE LOKAL - TIDAK PAKAI API EKSTERNAL
 const prisma = require('../db');
 
 // simple in-memory cache
@@ -80,7 +80,7 @@ async function getProvinces({ useCache = true } = {}) {
 }
 
 /**
- * Get regencies - ambil dari DB lokal (filter Tapal Kuda)
+ * Get regencies - ambil dari DB lokal
  */
 async function getRegencies(provinceCode, { useCache = true } = {}) {
     if (!provinceCode) throw new TypeError('provinceCode is required');
