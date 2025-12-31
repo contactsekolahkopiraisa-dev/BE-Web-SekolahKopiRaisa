@@ -16,6 +16,11 @@ const allowedFileMimeTypes = [
   'application/x-rar-compressed',
   'text/plain',
   'application/json',
+  // tambah file biar bisa upload gambar
+  // 'image/jpeg',
+  // 'image/png',
+  // 'image/jpg',
+  // 'image/webp',
 ];
 // TIPE MIX ALLOWED UNTUK CLOUDINARY
 const allowedMixMimeTypes = [
@@ -32,7 +37,9 @@ const allowedMixMimeTypes = [
 ];
 // TIPE EKSTENSI RAW DIBOLEHKAN
 const allowedFileExtensions = [
-  '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.zip', '.rar', '.txt', '.json'
+  '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.zip', '.rar', '.txt', '.json',
+  // tambah ekstensi buat upload gambar
+  // '.png', '.jpg', '.jpeg', '.webp'
 ];
 // TIPE EKSTENSI MIX DIBOLEHKAN
 const allowedMixExtensions = [
