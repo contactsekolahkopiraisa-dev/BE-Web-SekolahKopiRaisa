@@ -16,10 +16,17 @@ const allowedFileMimeTypes = [
   'application/x-rar-compressed',
   'text/plain',
   'application/json',
+  // tambah file biar bisa upload gambar
+  'image/jpeg',
+  'image/png',
+  'image/jpg',
+  'image/webp',
 ];
 // TIPE EKSTENSI DIBOLEHKAN
 const allowedFileExtensions = [
-  '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.zip', '.rar', '.txt', '.json'
+  '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.zip', '.rar', '.txt', '.json',
+  // tambah ekstensi buat upload gambar
+  '.png', '.jpg', '.jpeg', '.webp'
 ];
 
 
