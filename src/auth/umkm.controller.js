@@ -1,5 +1,5 @@
 const express = require('express');
-const { uploadFile } = require('../middleware/multer'); 
+const { uploadFile, uploadUMKM } = require('../middleware/multer'); 
 const { multerErrorHandler, authMiddleware, normalizeUmkmFiles } = require('../middleware/middleware');
 const ApiError = require('../utils/apiError');
 const nodemailer = require('nodemailer');
@@ -49,7 +49,7 @@ async function sendEmail({ to, subject, html, text }) {
  */
 router.post(
   '/',
-  uploadFile.fields([
+  uploadUMKM.fields([
     { name: 'suratIzinEdar', maxCount: 20 },  
     { name: 'surat_izin_edar', maxCount: 20 },
   ]),
@@ -230,7 +230,7 @@ router.get('/:idUmkm', authMiddleware, async (req, res) => {
 router.put(
   '/:idUmkm',
   authMiddleware,
-  uploadFile.fields([
+  uploadUMKM.fields([
     { name: 'suratIzinEdar', maxCount: 20 },  
     { name: 'surat_izin_edar', maxCount: 20 },
   ]),
