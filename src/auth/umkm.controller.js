@@ -19,6 +19,7 @@ const { validateCreateUMKM, validateUpdateUMKM, validateLogin, validateVerifyUMK
 const { loginUser } = require('./user.service');
 const { findUMKMByUserId } = require('./umkm.repository');
 const { validationResult } = require('express-validator');
+const { json } = require('stream/consumers');
 
 const router = express.Router();
 
@@ -57,6 +58,9 @@ router.post(
   normalizeUmkmFiles,
   validateCreateUMKM,
   async (req, res) => {
+    console.log('DEBUG UMKM FILES:');
+    console.log('req.files:', JSON.stringify(req.files, null, 2));
+    console.log('req.body:', req.body);
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {

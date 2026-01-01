@@ -418,44 +418,51 @@ const companyMulterErrorHandler = (err, req, res, next) => {
 };
 
 const normalizeUmkmFiles = (req, res, next) => {
-  // Normalize files for UMKM routes: accept variations and convert all to 'sertifikatHalal'
-  const allowedNames = ["sertifikatHalal", "sertifikasiHalal"];
+  // Normalize suratIzinEdar
+  const allowedSurat = ["suratIzinEdar", "surat_izin_edar"];
 
+  // Handle array format (from multer.array())
   if (Array.isArray(req.files)) {
-    const hadAlternate = req.files.some(
-      (f) => f.fieldname && f.fieldname !== "sertifikatHalal"
-    );
-    req.files = req.files.filter((f) => allowedNames.includes(f.fieldname));
-    req.files.forEach((f) => {
-      f.fieldname = "sertifikatHalal";
+    const normalizedFiles = [];
+    
+    req.files.forEach((file) => {
+      // ✅ Only handle surat_izin_edar, accept both formats for backward compatibility
+      if (['suratIzinEdar', 'surat_izin_edar'].includes(file.fieldname)) {
+        file.fieldname = 'surat_izin_edar';
+        normalizedFiles.push(file);
+      }
     });
-    if (hadAlternate)
-      console.warn(
-        '[normalizeUmkmFiles] Normalized non-standard field(s) to "sertifikatHalal"'
-      );
+    
+    req.files = normalizedFiles;
+    console.log('[normalizeUmkmFiles] Normalized array files:', normalizedFiles.length, 'files');
     return next();
   }
 
+  // Handle object format (from multer.fields())
   if (req.files && typeof req.files === "object") {
-    const hadAlternate = ["sertifikasiHalal"].some(
-      (n) => req.files[n] && req.files[n].length > 0
-    );
-    const filesArr = [
-      ...(req.files["sertifikatHalal"] || []),
-      ...(req.files["sertifikasiHalal"] || []),
+    const normalizedFiles = {};
+
+    // ✅ Normalize surat_izin_edar
+    const suratFiles = [
+      ...(req.files["suratIzinEdar"] || []),
+      ...(req.files["surat_izin_edar"] || []),
     ];
-    filesArr.forEach((f) => {
-      f.fieldname = "sertifikatHalal";
-    });
-    if (hadAlternate)
-      console.warn(
-        '[normalizeUmkmFiles] Normalized non-standard field(s) to "sertifikatHalal"'
-      );
-    req.files = filesArr;
+    if (suratFiles.length > 0) {
+      suratFiles.forEach((f) => {
+        f.fieldname = "surat_izin_edar"; 
+      });
+      normalizedFiles["surat_izin_edar"] = suratFiles;
+      console.log('[normalizeUmkmFiles] Normalized', suratFiles.length, 'surat_izin_edar files');
+    }
+
+    req.files = normalizedFiles;
+    console.log('[normalizeUmkmFiles] Normalized files:', Object.keys(normalizedFiles));
     return next();
   }
 
-  req.files = [];
+  // Fallback: no files
+  req.files = {};
+  console.log('[normalizeUmkmFiles] No files to normalize');
   next();
 };
 
