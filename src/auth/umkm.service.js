@@ -42,6 +42,9 @@ async function validateTapalKudaAddress(id_desa) {
  * Create UMKM
  */
 const createUMKM = async (newUmkmData) => {
+  console.log('=== CREATE UMKM DEBUG ===');
+  console.log('newUmkmData.files:', JSON.stringify(newUmkmData.files, null, 2));
+
   const existingUMKM = await isUMKMRegistered(newUmkmData.idUser);
   if (existingUMKM) throw new ApiError(400, 'User sudah memiliki data UMKM!');
 
@@ -56,20 +59,32 @@ const createUMKM = async (newUmkmData) => {
 
   let suratIzinEdarUrls = []; 
 
-  if (newUmkmData.files && Array.isArray(newUmkmData.files) && newUmkmData.files.length > 0) {
-    const uploadPromises = newUmkmData.files.map(file => 
-      uploadToCloudinary(file.buffer, file.originalname)
-    );
-    const uploadResults = await Promise.all(uploadPromises);
-    suratIzinEdarUrls = uploadResults.map(result => result.url);
+  if (newUmkmData.files && typeof newUmkmData.files === 'object' && !Array.isArray(newUmkmData.files)) {
+    const suratFiles = newUmkmData.files['surat_izin_edar'];
+    
+    console.log('suratFiles found:', suratFiles ? suratFiles.length : 0);
+    
+    if (suratFiles && Array.isArray(suratFiles) && suratFiles.length > 0) {
+      const uploadPromises = suratFiles.map(file => {
+        console.log('Uploading file:', file.originalname);
+        return uploadToCloudinary(file.buffer, file.originalname);
+      });
+      const uploadResults = await Promise.all(uploadPromises);
+      suratIzinEdarUrls = uploadResults.map(result => result.url);
+      console.log('✅ Uploaded URLs:', suratIzinEdarUrls);
+    } else {
+      console.warn('⚠️ No surat_izin_edar files found in request');
+    }
+  } else {
+    console.warn('⚠️ newUmkmData.files is not an object or is empty');
   }
 
   const umkmData = await insertUMKM({
     ...newUmkmData,
-    surat_izin_edar: suratIzinEdarUrls,  
-    suratIzinEdar: suratIzinEdarUrls     
+    surat_izin_edar: suratIzinEdarUrls,     
   });
 
+  console.log('✅ UMKM created with surat_izin_edar:', umkmData.surat_izin_edar);
   return umkmData;
 };
 
@@ -125,6 +140,9 @@ const getUMKMByUserId = async (userId) => {
  * Update UMKM
  */
 const updateUMKM = async (idUmkm, updateData) => {
+  console.log('=== UPDATE UMKM DEBUG ===');
+  console.log('updateData.files:', JSON.stringify(updateData.files, null, 2));
+
   const existing = await findUMKMById(idUmkm);
   if (!existing) throw new ApiError(404, 'Data UMKM tidak ditemukan!');
 
@@ -142,20 +160,26 @@ const updateUMKM = async (idUmkm, updateData) => {
     ktp: updateData.ktp || existing.ktp
   };
 
-  if (updateData.files && updateData.files.length > 0) {
-    // ✅ Hapus file lama dari Cloudinary
-    if (existing.surat_izin_edar && Array.isArray(existing.surat_izin_edar)) {
-      for (const url of existing.surat_izin_edar) {
-        await deleteFromCloudinaryByUrl(url);
-      }
-    }
+  // Handle files sebagai OBJECT
+  if (updateData.files && typeof updateData.files === 'object' && !Array.isArray(updateData.files)) {
+    const suratFiles = updateData.files['surat_izin_edar'] || updateData.files['suratIzinEdar'];
     
-    // ✅ Upload file baru
-    const uploadPromises = updateData.files.map(f => 
-      uploadToCloudinary(f.buffer, f.originalname)
-    );
-    const results = await Promise.all(uploadPromises);
-    umkmPayload.surat_izin_edar = results.map(r => r.url); 
+    if (suratFiles && Array.isArray(suratFiles) && suratFiles.length > 0) {
+      // Hapus file lama dari Cloudinary
+      if (existing.surat_izin_edar && Array.isArray(existing.surat_izin_edar)) {
+        for (const url of existing.surat_izin_edar) {
+          await deleteFromCloudinaryByUrl(url);
+        }
+      }
+      
+      // Upload file baru
+      const uploadPromises = suratFiles.map(f => 
+        uploadToCloudinary(f.buffer, f.originalname)
+      );
+      const results = await Promise.all(uploadPromises);
+      umkmPayload.surat_izin_edar = results.map(r => r.url); 
+      console.log('✅ Updated surat_izin_edar URLs:', umkmPayload.surat_izin_edar);
+    }
   }
 
   if (updateData.addresses) {
