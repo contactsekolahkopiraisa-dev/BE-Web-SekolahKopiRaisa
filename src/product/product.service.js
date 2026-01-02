@@ -12,6 +12,7 @@ const {
   findProductsByPartnerId 
 } = require('./product.repository');
 const { findPartnerById } = require('../partners/partner.repository');
+const { getOrCreateDefaultAdminPartner } = require('../partners/partner.service');
 const { uploadToCloudinary } = require('../services/cloudinaryUpload.service');
 const { deleteFromCloudinaryByUrl, extractPublicId } = require('../utils/cloudinary');
 const prisma = require('../db');
@@ -55,10 +56,8 @@ const validateProductOwnership = async (productId, userId, isAdmin) => {
 // Get all products (untuk admin atau public)
 const getAllProducts = async () => {
     const products = await findAllProducts();
-    if (!products || products.length === 0) {
-        throw new ApiError(404, 'Produk tidak ada!');
-    }
-    return products;
+    // Kembalikan array kosong jika tidak ada produk, tidak perlu throw error
+    return products || [];
 }
 
 // Get products by partner (untuk UMKM)
@@ -66,10 +65,8 @@ const getAllProducts = async () => {
 //     const partner = await getPartnerByUserId(userId);
 //     const products = await findProductsByPartnerId(partner.id);
     
-//     if (!products || products.length === 0) {
-//         return []; // Return empty array jika belum ada produk
-//     }
-//     return products;
+//     // Return empty array jika belum ada produk
+//     return products || [];
 // }
 
 // Get product by ID dengan validasi ownership untuk UMKM
@@ -127,9 +124,19 @@ const createProduct = async (newProductData) => {
     try {
         const { image, stock, user_id, is_admin, ...rest } = newProductData
 
-        // Otomatis ambil partner_id dari user yang login
-        const partner = await getPartnerByUserId(user_id);
-        const finalPartnerId = partner.id;
+        let finalPartnerId;
+
+        // Jika admin, gunakan partner default admin
+        if (is_admin) {
+            const defaultPartner = await getOrCreateDefaultAdminPartner();
+            finalPartnerId = defaultPartner.id;
+            console.log('🏢 Admin membuat produk menggunakan partner default:', defaultPartner.name);
+        } else {
+            // Jika UMKM, ambil partner mereka
+            const partner = await getPartnerByUserId(user_id);
+            finalPartnerId = partner.id;
+            console.log('🏪 UMKM membuat produk menggunakan partner:', partner.name);
+        }
 
         const cleanProductData = {
             ...rest,
@@ -194,7 +201,7 @@ const updateProduct = async (id, updatedProductData, userId, isAdmin) => {
         };
 
         // UMKM tidak bisa mengubah partner_id (selalu milik mereka sendiri)
-        // Hapus partner_id dari data yang akan diupdate
+        // Admin juga tidak perlu mengubah partner_id
         delete cleanProductData.partner_id;
 
         if (productFile && productFile.buffer && productFile.originalname) {
