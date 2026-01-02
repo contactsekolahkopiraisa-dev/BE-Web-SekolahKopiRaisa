@@ -1,4 +1,5 @@
 const ApiError = require("../utils/apiError");
+const prisma = require("../db");
 
 const {
     findPartner,
@@ -8,6 +9,33 @@ const {
     deletePartner,
     editPartner
 } = require("./partner.repository");
+
+// Helper function: Get atau create default admin partner
+const getOrCreateDefaultAdminPartner = async () => {
+    // Cek apakah sudah ada partner default admin
+    let defaultPartner = await prisma.partner.findFirst({
+        where: {
+            name: 'Admin Sekolah Kopi Raisa',
+            user_id: null
+        }
+    });
+
+    // Jika belum ada, buat baru
+    if (!defaultPartner) {
+        defaultPartner = await prisma.partner.create({
+            data: {
+                name: 'Admin Sekolah Kopi Raisa',
+                owner_name: 'Administrator',
+                phone_number: '-', // Ganti dengan nomor admin yang sebenarnya
+                address: 'Jl. Sekolah Kopi Raisa No. 1',
+                user_id: null,
+            }
+        });
+        console.log('✅ Partner default admin berhasil dibuat:', defaultPartner);
+    }
+
+    return defaultPartner;
+};
 
 const getAllPartners = async () => {
     const partners = await findPartner();
@@ -51,9 +79,17 @@ const updatePartner = async (id, editedPartnerData, userId, isAdmin) => {
         throw new ApiError(404,'Partner tidak ditemukan!');
     }
 
-    // Validasi akses: admin bisa update semua, UMKM hanya bisa update miliknya sendiri
-    if (!isAdmin && existingPartner.user_id !== userId) {
-        throw new ApiError(403, 'Akses ditolak! Anda tidak memiliki izin untuk mengupdate partner ini.');
+    // Cek apakah ini partner default admin
+    if (existingPartner.user_id === null && existingPartner.name === 'Admin Sekolah Kopi Raisa') {
+        // Hanya admin yang bisa update partner default
+        if (!isAdmin) {
+            throw new ApiError(403, 'Akses ditolak! Hanya admin yang bisa mengupdate partner default.');
+        }
+    } else {
+        // Validasi akses: admin bisa update semua, UMKM hanya bisa update miliknya sendiri
+        if (!isAdmin && existingPartner.user_id !== userId) {
+            throw new ApiError(403, 'Akses ditolak! Anda tidak memiliki izin untuk mengupdate partner ini.');
+        }
     }
 
     console.log('data update:', editedPartnerData);
@@ -69,6 +105,12 @@ const removePartner = async (id) => {
     if (!existingPartner) {
         throw new ApiError(404,'Partner tidak ditemukan!');
     }
+
+    // Cek apakah ini partner default admin - tidak bisa dihapus
+    if (existingPartner.user_id === null && existingPartner.name === 'Admin Sekolah Kopi Raisa') {
+        throw new ApiError(403, 'Partner default admin tidak bisa dihapus!');
+    }
+
     const partnerData = await deletePartner(id);
     
     if (!partnerData) {
@@ -83,5 +125,6 @@ module.exports = {
     getMyPartnerProfile,
     createPartner, 
     updatePartner, 
-    removePartner 
+    removePartner,
+    getOrCreateDefaultAdminPartner
 };
