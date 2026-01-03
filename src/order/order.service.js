@@ -1177,74 +1177,74 @@ const getUMKMOrderDetailById = async (orderId, userId) => {
 /**
  * Insert data ke sales_report ketika order DELIVERED
  */
-const insertToSalesReport = async (orderId, orderData = null) => {
-    const order = orderData || await prisma.order.findUnique({
-        where: { id: orderId },
-        include: {
-            orderItems: {
-                include: {
-                    product: true,
-                    partner: true,
-                },
-            },
-            payment: true,
-        },
-    });
+// const insertToSalesReport = async (orderId, orderData = null) => {
+//     const order = orderData || await prisma.order.findUnique({
+//         where: { id: orderId },
+//         include: {
+//             orderItems: {
+//                 include: {
+//                     product: true,
+//                     partner: true,
+//                 },
+//             },
+//             payment: true,
+//         },
+//     });
 
-    if (!order) {
-        throw new Error('Order tidak ditemukan');
-    }
+//     if (!order) {
+//         throw new Error('Order tidak ditemukan');
+//     }
 
-    // DEBUGGING
-    console.log(`📊 Checking sales report for order ${orderId}:`);
-    console.log(`   Status Order: ${order.status}`);
-    console.log(`   Status Payment: ${order.payment?.status}`);
-    console.log(`   Payment Method: ${order.payment?.method}`);
+//     // DEBUGGING
+//     console.log(`📊 Checking sales report for order ${orderId}:`);
+//     console.log(`   Status Order: ${order.status}`);
+//     console.log(`   Status Payment: ${order.payment?.status}`);
+//     console.log(`   Payment Method: ${order.payment?.method}`);
 
-    // Validasi: Hanya insert jika DELIVERED & SUCCESS
-    if (order.status !== 'DELIVERED' || order.payment?.status !== 'SUCCESS') {
-        console.log(`⚠️ Order ${orderId} belum memenuhi syarat untuk sales report`);
-        console.log(`   Reason: Status=${order.status}, PaymentStatus=${order.payment?.status}`);
-        return;
-    }
+//     // Validasi: Hanya insert jika DELIVERED & SUCCESS
+//     if (order.status !== 'DELIVERED' || order.payment?.status !== 'SUCCESS') {
+//         console.log(`⚠️ Order ${orderId} belum memenuhi syarat untuk sales report`);
+//         console.log(`   Reason: Status=${order.status}, PaymentStatus=${order.payment?.status}`);
+//         return;
+//     }
 
-    // Cek apakah sudah pernah di-insert
-    const existingReport = await prisma.salesReport.findFirst({
-        where: { id_order: orderId },
-    });
+//     // Cek apakah sudah pernah di-insert
+//     const existingReport = await prisma.salesReport.findFirst({
+//         where: { id_order: orderId },
+//     });
 
-    if (existingReport) {
-        console.log(`ℹ️ Sales report untuk order ${orderId} sudah ada`);
-        return;
-    }
+//     if (existingReport) {
+//         console.log(`ℹ️ Sales report untuk order ${orderId} sudah ada`);
+//         return;
+//     }
 
-    // Filter hanya orderItem yang punya partner_id
-    const validItems = order.orderItems.filter(item => item.partner_id);
+//     // Filter hanya orderItem yang punya partner_id
+//     const validItems = order.orderItems.filter(item => item.partner_id);
     
-    if (validItems.length === 0) {
-        console.warn(`⚠️ Order ${orderId} tidak ada item dengan partner`);
-        return;
-    }
+//     if (validItems.length === 0) {
+//         console.warn(`⚠️ Order ${orderId} tidak ada item dengan partner`);
+//         return;
+//     }
 
-    // Insert ke sales_report untuk setiap orderItem
-    const salesReportData = validItems.map(item => ({
-        id_order: order.id,
-        id_order_item: item.id,
-        id_product: item.products_id,
-        partner_id: item.partner_id,
-        quantity: item.quantity,
-        price_per_unit: item.price,
-        subtotal: item.quantity * item.price,
-        tanggal_transaksi: order.created_at,
-    }));
+//     // Insert ke sales_report untuk setiap orderItem
+//     const salesReportData = validItems.map(item => ({
+//         id_order: order.id,
+//         id_order_item: item.id,
+//         id_product: item.products_id,
+//         partner_id: item.partner_id,
+//         quantity: item.quantity,
+//         price_per_unit: item.price,
+//         subtotal: item.quantity * item.price,
+//         tanggal_transaksi: order.created_at,
+//     }));
 
-    await prisma.salesReport.createMany({
-        data: salesReportData,
-        skipDuplicates: true, // ← Safety net
-    });
+//     await prisma.salesReport.createMany({
+//         data: salesReportData,
+//         skipDuplicates: true, // ← Safety net
+//     });
 
-    console.log(`✅ Sales report berhasil dibuat untuk order ${orderId} (${validItems.length} items)`);
-};
+//     console.log(`✅ Sales report berhasil dibuat untuk order ${orderId} (${validItems.length} items)`);
+// };
 
 const createNotificationForPaymentFailed = async (order, payment, status) => {
     let statusText = '';
@@ -1311,6 +1311,6 @@ module.exports = {
     getUMKMOrderDetailById,
     updateUMKMOrderStatus,
     getUMKMOrderStatuses,
-    insertToSalesReport,
+    // insertToSalesReport,
     createNotificationForPaymentFailed,
 };
