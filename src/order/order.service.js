@@ -653,9 +653,22 @@ const updatedOrderStatus = async (orderId, newStatus, user) => {
             console.log(`✅ Payment COD untuk order ${orderId} otomatis diupdate ke SUCCESS`);
         }
 
+        const updatedOrderData = await prisma.order.findUnique({
+            where: { id: parseInt(orderId) },
+            include: {
+                orderItems: {
+                    include: {
+                        product: true,
+                        partner: true,
+                    },
+                },
+                payment: true,
+            },
+        });
+
         // insert ke sales_report (setelah payment diupdate)
         try {
-            await insertToSalesReport(orderId);
+            await insertToSalesReport(parseInt(orderId), updatedOrderData);
         } catch (salesError) {
             console.error('❌ Gagal insert ke sales report:', salesError);
         }
@@ -1102,8 +1115,8 @@ const getUMKMOrderDetailById = async (orderId, userId) => {
 /**
  * Insert data ke sales_report ketika order DELIVERED
  */
-const insertToSalesReport = async (orderId) => {
-    const order = await prisma.order.findUnique({
+const insertToSalesReport = async (orderId, orderData = null) => {
+    const order = orderData || await prisma.order.findUnique({
         where: { id: orderId },
         include: {
             orderItems: {
@@ -1120,9 +1133,16 @@ const insertToSalesReport = async (orderId) => {
         throw new Error('Order tidak ditemukan');
     }
 
+    // DEBUGGING
+    console.log(`📊 Checking sales report for order ${orderId}:`);
+    console.log(`   Status Order: ${order.status}`);
+    console.log(`   Status Payment: ${order.payment?.status}`);
+    console.log(`   Payment Method: ${order.payment?.method}`);
+
     // Validasi: Hanya insert jika DELIVERED & SUCCESS
     if (order.status !== 'DELIVERED' || order.payment?.status !== 'SUCCESS') {
         console.log(`⚠️ Order ${orderId} belum memenuhi syarat untuk sales report`);
+        console.log(`   Reason: Status=${order.status}, PaymentStatus=${order.payment?.status}`);
         return;
     }
 
@@ -1158,6 +1178,7 @@ const insertToSalesReport = async (orderId) => {
 
     await prisma.salesReport.createMany({
         data: salesReportData,
+        skipDuplicates: true, // ← Safety net
     });
 
     console.log(`✅ Sales report berhasil dibuat untuk order ${orderId} (${validItems.length} items)`);
