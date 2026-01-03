@@ -26,8 +26,7 @@ const getOrCreateDefaultAdminPartner = async () => {
             data: {
                 name: 'Admin Sekolah Kopi Raisa',
                 owner_name: 'Administrator',
-                phone_number: '-', // Ganti dengan nomor admin yang sebenarnya
-                address: 'Jl. Sekolah Kopi Raisa No. 1',
+                phone_number: '081234567890', // masih dummy di DB
                 user_id: null,
             }
         });
