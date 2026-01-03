@@ -107,6 +107,23 @@ router.get("/user", authMiddleware, async (req, res) => {
   try {
     const user = req.user;
 
+    // Ambil id_partner dari tabel Partner berdasarkan user_id
+    let partnerId = null;
+    
+    try {
+      const partner = await prisma.partner.findUnique({
+        where: { user_id: user.id },
+        select: { id: true }
+      });
+      
+      if (partner) {
+        partnerId = partner.id;
+      }
+    } catch (error) {
+      console.warn("Gagal mengambil id_partner:", error.message);
+      // Tidak throw error, biarkan partnerId tetap null
+    }
+
     return res.status(200).json({
       message: "Data profil berhasil diambil!",
       data: {
@@ -118,6 +135,7 @@ router.get("/user", authMiddleware, async (req, res) => {
         admin: user.admin,
         verified: user.verified,
         role: user.role,
+        id_partner: partnerId,
       },
     });
   } catch (error) {
