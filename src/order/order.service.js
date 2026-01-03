@@ -641,40 +641,102 @@ const updatedOrderStatus = async (orderId, newStatus, user) => {
         }
     }
 
-    const updatedOrder = await updateStatusOrders(orderId, newStatus);
-
-    if (newStatus === OrderStatus.DELIVERED) {
-        // Update payment COD jadi SUCCESS (jika COD)
-        if (order.payment?.method === 'COD' && order.payment.status !== 'SUCCESS') {
-            await prisma.payment.update({
-                where: { id: order.payment.id },
-                data: { status: 'SUCCESS' }
-            });
-            console.log(`✅ Payment COD untuk order ${orderId} otomatis diupdate ke SUCCESS`);
-        }
-
-        const updatedOrderData = await prisma.order.findUnique({
+    return await prisma.$transaction(async (tx) => {
+        // 1️⃣ Update order status
+        const updatedOrder = await tx.order.update({
             where: { id: parseInt(orderId) },
-            include: {
-                orderItems: {
-                    include: {
-                        product: true,
-                        partner: true,
-                    },
-                },
-                payment: true,
+            data: {
+                status: newStatus,
+                updated_at: new Date(),
             },
         });
+        console.log(`✅ Order ${orderId} status updated to ${newStatus}`);
 
-        // insert ke sales_report (setelah payment diupdate)
-        try {
-            await insertToSalesReport(parseInt(orderId), updatedOrderData);
-        } catch (salesError) {
-            console.error('❌ Gagal insert ke sales report:', salesError);
+        // 2️⃣ Jika DELIVERED, update payment COD dan insert sales report
+        if (newStatus === OrderStatus.DELIVERED) {
+            console.log(`📦 Processing DELIVERED actions for order ${orderId}`);
+            
+            // Update payment COD ke SUCCESS
+            if (order.payment?.method === 'COD' && order.payment.status !== 'SUCCESS') {
+                await tx.payment.update({
+                    where: { id: order.payment.id },
+                    data: { 
+                        status: 'SUCCESS',
+                        updated_at: new Date()
+                    }
+                });
+                console.log(`✅ Payment COD untuk order ${orderId} otomatis diupdate ke SUCCESS`);
+            }
+
+            // 3️⃣ Ambil order data lengkap dalam transaction (DATA TERBARU!)
+            const orderForReport = await tx.order.findUnique({
+                where: { id: parseInt(orderId) },
+                include: {
+                    orderItems: {
+                        include: {
+                            product: true,
+                            partner: true,
+                        },
+                    },
+                    payment: true,
+                    user: true,
+                },
+            });
+
+            console.log(`📊 Order data for sales report:`);
+            console.log(`   - Status Order: ${orderForReport.status}`);
+            console.log(`   - Status Payment: ${orderForReport.payment?.status}`);
+            console.log(`   - Payment Method: ${orderForReport.payment?.method}`);
+            console.log(`   - Total Items: ${orderForReport.orderItems.length}`);
+
+            // 4️⃣ Validasi sebelum insert sales report
+            if (orderForReport.status === 'DELIVERED' && orderForReport.payment?.status === 'SUCCESS') {
+                // Cek apakah sudah ada di sales_report
+                const existingReport = await tx.salesReport.findFirst({
+                    where: { id_order: parseInt(orderId) },
+                });
+
+                if (existingReport) {
+                    console.log(`ℹ️ Sales report untuk order ${orderId} sudah ada, skip insert`);
+                } else {
+                    // Filter hanya item yang punya partner_id
+                    const validItems = orderForReport.orderItems.filter(item => item.partner_id);
+                    
+                    if (validItems.length > 0) {
+                        const salesReportData = validItems.map(item => ({
+                            id_order: orderForReport.id,
+                            id_order_item: item.id,
+                            id_product: item.products_id,
+                            partner_id: item.partner_id,
+                            quantity: item.quantity,
+                            price_per_unit: item.price,
+                            subtotal: item.quantity * item.price,
+                            tanggal_transaksi: orderForReport.created_at,
+                        }));
+
+                        await tx.salesReport.createMany({
+                            data: salesReportData,
+                            skipDuplicates: true,
+                        });
+
+                        console.log(`✅ Sales report berhasil dibuat untuk order ${orderId} (${validItems.length} items)`);
+                    } else {
+                        console.warn(`⚠️ Order ${orderId} tidak ada item dengan partner`);
+                    }
+                }
+            } else {
+                console.warn(`⚠️ Order ${orderId} tidak memenuhi syarat sales report:`);
+                console.warn(`   - Status: ${orderForReport.status} (expected: DELIVERED)`);
+                console.warn(`   - Payment: ${orderForReport.payment?.status} (expected: SUCCESS)`);
+            }
         }
-    }
 
-    return updatedOrder;
+        console.log(`✅ Transaction completed for order ${orderId}`);
+        return updatedOrder;
+    }, {
+        maxWait: 5000, // Maksimal 5 detik untuk acquire transaction
+        timeout: 10000, // Maksimal 10 detik untuk eksekusi
+    });
 }
 
 const cancelOrder = async (orderId, user, reason) => {
