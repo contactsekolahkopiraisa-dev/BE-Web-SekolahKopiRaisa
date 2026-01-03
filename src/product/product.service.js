@@ -168,17 +168,17 @@ const createProduct = async (newProductData) => {
                 }
             });
 
-            // 3. ✅ AUTO-CREATE entry di tabel Harga
-            await tx.harga.create({
-                data: {
-                    id_product: newProduct.id,
-                    harga: cleanProductData.price,
-                    status: 'Aktif',
-                    waktu_mulai: new Date(),
-                }
-            });
+            // // 3. ✅ AUTO-CREATE entry di tabel Harga
+            // await tx.harga.create({
+            //     data: {
+            //         id_product: newProduct.id,
+            //         harga: cleanProductData.price,
+            //         status: 'Aktif',
+            //         waktu_mulai: new Date(),
+            //     }
+            // });
 
-            console.log(`✅ Harga awal produk "${cleanProductData.name}" berhasil dicatat: Rp ${cleanProductData.price}`);
+            // console.log(`✅ Harga awal produk "${cleanProductData.name}" berhasil dicatat: Rp ${cleanProductData.price}`);
 
             return newProduct;
         });
@@ -255,34 +255,34 @@ const updateProduct = async (id, updatedProductData, userId, isAdmin) => {
                 });
             }
 
-            // 3. ✅ Jika harga berubah, catat perubahan di tabel Harga
-            if (cleanProductData.price && cleanProductData.price !== product.price) {
-                // Set harga lama jadi nonaktif
-                await tx.harga.updateMany({
-                    where: {
-                        id_product: parseInt(id),
-                        status: 'Aktif',
-                    },
-                    data: {
-                        status: 'Nonaktif',
-                        waktu_berakhir: new Date(),
-                    }
-                });
+            // // 3. ✅ Jika harga berubah, catat perubahan di tabel Harga
+            // if (cleanProductData.price && cleanProductData.price !== product.price) {
+            //     // Set harga lama jadi nonaktif
+            //     await tx.harga.updateMany({
+            //         where: {
+            //             id_product: parseInt(id),
+            //             status: 'Aktif',
+            //         },
+            //         data: {
+            //             status: 'Nonaktif',
+            //             waktu_berakhir: new Date(),
+            //         }
+            //     });
 
-                // Create harga baru
-                await tx.harga.create({
-                    data: {
-                        id_product: parseInt(id),
-                        harga: cleanProductData.price,
-                        status: 'Aktif',
-                        waktu_mulai: new Date(),
-                    }
-                });
+            //     // Create harga baru
+            //     await tx.harga.create({
+            //         data: {
+            //             id_product: parseInt(id),
+            //             harga: cleanProductData.price,
+            //             status: 'Aktif',
+            //             waktu_mulai: new Date(),
+            //         }
+            //     });
 
-                console.log(
-                    `✅ Harga produk "${updated.name}" diupdate: Rp ${product.price} → Rp ${cleanProductData.price}`
-                );
-            }
+            //     console.log(
+            //         `✅ Harga produk "${updated.name}" diupdate: Rp ${product.price} → Rp ${cleanProductData.price}`
+            //     );
+            // }
 
             return updated;
         });
@@ -299,101 +299,101 @@ const updateProduct = async (id, updatedProductData, userId, isAdmin) => {
 /**
  * Set promo harga untuk produk
  */
-const setProductPromo = async (productId, { promoPrice, waktuMulai, waktuBerakhir }, userId, isAdmin) => {
-    const product = await validateProductOwnership(productId, userId, isAdmin);
+// const setProductPromo = async (productId, { promoPrice, waktuMulai, waktuBerakhir }, userId, isAdmin) => {
+//     const product = await validateProductOwnership(productId, userId, isAdmin);
     
-    if (!product) {
-        throw new ApiError(404, 'Produk tidak ditemukan');
-    }
+//     if (!product) {
+//         throw new ApiError(404, 'Produk tidak ditemukan');
+//     }
 
-    await prisma.harga.create({
-        data: {
-            id_product: parseInt(productId),
-            harga: parseInt(promoPrice),
-            status: 'Promo',
-            waktu_mulai: waktuMulai ? new Date(waktuMulai) : new Date(),
-            waktu_berakhir: waktuBerakhir ? new Date(waktuBerakhir) : null,
-        }
-    });
+//     await prisma.harga.create({
+//         data: {
+//             id_product: parseInt(productId),
+//             harga: parseInt(promoPrice),
+//             status: 'Promo',
+//             waktu_mulai: waktuMulai ? new Date(waktuMulai) : new Date(),
+//             waktu_berakhir: waktuBerakhir ? new Date(waktuBerakhir) : null,
+//         }
+//     });
 
-    console.log(`✅ Harga promo produk "${product.name}" diset: Rp ${promoPrice}`);
+//     console.log(`✅ Harga promo produk "${product.name}" diset: Rp ${promoPrice}`);
     
-    return product;
-};
+//     return product;
+// };
 
-/**
- * Get harga aktif produk (termasuk cek promo yang masih valid)
- */
-const getActivePrice = async (productId) => {
-    const now = new Date();
+// /**
+//  * Get harga aktif produk (termasuk cek promo yang masih valid)
+//  */
+// const getActivePrice = async (productId) => {
+//     const now = new Date();
 
-    // Cek apakah ada promo yang masih valid
-    const activePromo = await prisma.harga.findFirst({
-        where: {
-            id_product: parseInt(productId),
-            status: 'Promo',
-            waktu_mulai: { lte: now },
-            OR: [
-                { waktu_berakhir: null },
-                { waktu_berakhir: { gte: now } },
-            ],
-        },
-        orderBy: { waktu_mulai: 'desc' },
-    });
+//     // Cek apakah ada promo yang masih valid
+//     const activePromo = await prisma.harga.findFirst({
+//         where: {
+//             id_product: parseInt(productId),
+//             status: 'Promo',
+//             waktu_mulai: { lte: now },
+//             OR: [
+//                 { waktu_berakhir: null },
+//                 { waktu_berakhir: { gte: now } },
+//             ],
+//         },
+//         orderBy: { waktu_mulai: 'desc' },
+//     });
 
-    if (activePromo) {
-        return {
-            harga: activePromo.harga,
-            status: 'Promo',
-            id_harga: activePromo.id_harga,
-        };
-    }
+//     if (activePromo) {
+//         return {
+//             harga: activePromo.harga,
+//             status: 'Promo',
+//             id_harga: activePromo.id_harga,
+//         };
+//     }
 
-    // Jika tidak ada promo, ambil harga aktif normal
-    const activePrice = await prisma.harga.findFirst({
-        where: {
-            id_product: parseInt(productId),
-            status: 'Aktif',
-        },
-        orderBy: { waktu_mulai: 'desc' },
-    });
+//     // Jika tidak ada promo, ambil harga aktif normal
+//     const activePrice = await prisma.harga.findFirst({
+//         where: {
+//             id_product: parseInt(productId),
+//             status: 'Aktif',
+//         },
+//         orderBy: { waktu_mulai: 'desc' },
+//     });
 
-    if (!activePrice) {
-        throw new ApiError(404, 'Harga produk tidak ditemukan');
-    }
+//     if (!activePrice) {
+//         throw new ApiError(404, 'Harga produk tidak ditemukan');
+//     }
 
-    return {
-        harga: activePrice.harga,
-        status: 'Aktif',
-        id_harga: activePrice.id_harga,
-    };
-};
+//     return {
+//         harga: activePrice.harga,
+//         status: 'Aktif',
+//         id_harga: activePrice.id_harga,
+//     };
+// };
 
-/**
- * Get history harga produk
- */
-const getPriceHistory = async (productId, userId, isAdmin) => {
-    await validateProductOwnership(productId, userId, isAdmin);
+// /**
+//  * Get history harga produk
+//  */
+// const getPriceHistory = async (productId, userId, isAdmin) => {
+//     await validateProductOwnership(productId, userId, isAdmin);
     
-    const history = await prisma.harga.findMany({
-        where: {
-            id_product: parseInt(productId),
-        },
-        orderBy: {
-            waktu_mulai: 'desc',
-        },
-        include: {
-            product: {
-                select: {
-                    id: true,
-                    name: true,
-                },
-            },
-        },
-    });
+//     const history = await prisma.harga.findMany({
+//         where: {
+//             id_product: parseInt(productId),
+//         },
+//         orderBy: {
+//             waktu_mulai: 'desc',
+//         },
+//         include: {
+//             product: {
+//                 select: {
+//                     id: true,
+//                     name: true,
+//                 },
+//             },
+//         },
+//     });
 
-    return history;
-};
+//     return history;
+// };
 
 module.exports = { 
   getAllProducts, 
@@ -402,7 +402,7 @@ module.exports = {
   updateProduct, 
   getProductById, 
   removeProductById,
-  setProductPromo,
-  getActivePrice,
-  getPriceHistory,
+//   setProductPromo,
+//   getActivePrice,
+//   getPriceHistory,
 };
