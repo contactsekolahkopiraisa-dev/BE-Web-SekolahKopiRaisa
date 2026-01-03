@@ -106,39 +106,57 @@ const getOrderHistoryByRole = async (userId, role, statusFilter) => {
         orders = await findOrdersByUser(userId, statusFilter);
     }
 
-    // ✅ Format response dengan customer info
-    return orders.map(order => ({
-        orderId: order.id,
-        statusOrder: order.status,
-        createdAt: order.created_at,
-        updatedAt: order.updated_at,
-        // ✅ TAMBAH: Customer info
-        customerName: order.user?.name || "-",
-        customerPhone: order.user?.phone_number || "-",
-        items: order.orderItems.map(item => ({
-            productId: item.product?.id,
-            productImage: item.product?.image,
-            name: item.product?.name || "-",
-            quantity: item.quantity,
-            price: item.price,
-            subtotal: item.quantity * item.price,
-            partner: {
-                id: item.partner?.id,
-                name: item.partner?.name || "Mitra"
+    return orders.map(order => {
+        // ✅ Helper untuk format status pembayaran yang lebih jelas
+        const getPaymentStatusInfo = (paymentStatus) => {
+            const statusMap = {
+                'SUCCESS': { text: 'Lunas', color: 'green', isPaid: true },
+                'PENDING': { text: 'Menunggu Pembayaran', color: 'yellow', isPaid: false },
+                'FAILED': { text: 'Gagal', color: 'red', isPaid: false },
+                'CANCEL': { text: 'Dibatalkan', color: 'gray', isPaid: false },
+                'DENY': { text: 'Ditolak', color: 'red', isPaid: false },
+                'EXPIRE': { text: 'Kedaluwarsa', color: 'orange', isPaid: false },
+            };
+            return statusMap[paymentStatus] || { text: 'Unknown', color: 'gray', isPaid: false };
+        };
+
+        const paymentStatusInfo = getPaymentStatusInfo(order.payment?.status);
+
+        return {
+            orderId: order.id,
+            statusOrder: order.status,
+            createdAt: order.created_at,
+            updatedAt: order.updated_at,
+            customerName: order.user?.name || "-",
+            customerPhone: order.user?.phone_number || "-",
+            items: order.orderItems.map(item => ({
+                productId: item.product?.id,
+                productImage: item.product?.image,
+                name: item.product?.name || "-",
+                quantity: item.quantity,
+                price: item.price,
+                subtotal: item.quantity * item.price,
+                partner: {
+                    id: item.partner?.id,
+                    name: item.partner?.name || "Mitra"
+                },
+                note: item.custom_note || "-",
+            })),
+            shippingAddress: order.shippingAddress?.address || "-",
+            payment: {
+                method: order.payment?.method,
+                status: order.payment?.status,
+                amount: order.payment?.amount,
+                // ✅ Informasi lengkap status pembayaran
+                statusInfo: paymentStatusInfo,
+                isPaid: paymentStatusInfo.isPaid,
             },
-            note: item.custom_note || "-",
-        })),
-        shippingAddress: order.shippingAddress?.address || "-",
-        payment: {
-            method: order.payment?.method,
-            status: order.payment?.status,
-            amount: order.payment?.amount,
-        },
-        cancellation: order.OrderCancellation ? {
-            reason: order.OrderCancellation.reason,
-            canceledAt: order.OrderCancellation.created_at,
-        } : null,
-    }));
+            cancellation: order.OrderCancellation ? {
+                reason: order.OrderCancellation.reason,
+                canceledAt: order.OrderCancellation.created_at,
+            } : null,
+        };
+    });
 };
 const getCompleteOrderByRole = async (userId, role) => {
     if (role === "admin") {
@@ -312,6 +330,7 @@ const handleMidtransNotification = async (notification) => {
     } = notification;
 
     console.log("🔥 Midtrans Notification:", notification);
+    
     if (!transaction_status || !payment_type || !order_id) {
         throw new ApiError(400, "Data tidak lengkap dari Midtrans");
     }
@@ -331,15 +350,24 @@ const handleMidtransNotification = async (notification) => {
     }
 
     console.log("✅ Parsed Order ID:", orderId);
-    console.log("🔍 Mapped Status:", internalStatus);
+    console.log("🔍 Mapped Payment Status:", internalStatus);
     console.log("💳 Mapped Payment Method:", paymentMethod);
 
+    // Update payment status di database
     const { order, updatedPayment } = await updateOrderPaymentStatus(orderId, {
         payment_status: internalStatus,
         payment_method: paymentMethod,
     });
 
+    // 🔥 AUTO-UPDATE ORDER STATUS jika pembayaran SUCCESS
     if (internalStatus === 'SUCCESS') {
+        // Update order status dari PENDING ke PROCESSING
+        if (order.status === 'PENDING') {
+            await updateStatusOrders(orderId, OrderStatus.PROCESSING);
+            console.log(`✅ Order ${orderId} status otomatis diubah ke PROCESSING (pembayaran berhasil)`);
+        }
+
+        // Kirim notifikasi ke customer
         try {
             await createNotificationForPaymentSuccess(order, updatedPayment);
         } catch (notificationError) {
@@ -348,6 +376,18 @@ const handleMidtransNotification = async (notification) => {
                 orderId,
                 notificationError
             );
+        }
+    }
+
+    // 🔥 Jika pembayaran FAILED/EXPIRED/CANCEL
+    if (['FAILED', 'EXPIRE', 'CANCEL', 'DENY'].includes(internalStatus)) {
+        console.log(`⚠️ Order ${orderId} pembayaran gagal/dibatalkan: ${internalStatus}`);
+        
+        // Optional: Kirim notifikasi gagal bayar
+        try {
+            await createNotificationForPaymentFailed(order, updatedPayment, internalStatus);
+        } catch (notificationError) {
+            console.error("⚠️ Gagal membuat notifikasi kegagalan pembayaran:", orderId, notificationError);
         }
     }
 
@@ -601,7 +641,27 @@ const updatedOrderStatus = async (orderId, newStatus, user) => {
         }
     }
 
-    return await updateStatusOrders(orderId, newStatus);
+    const updatedOrder = await updateStatusOrders(orderId, newStatus);
+
+    if (newStatus === OrderStatus.DELIVERED) {
+        // Update payment COD jadi SUCCESS (jika COD)
+        if (order.payment?.method === 'COD' && order.payment.status !== 'SUCCESS') {
+            await prisma.payment.update({
+                where: { id: order.payment.id },
+                data: { status: 'SUCCESS' }
+            });
+            console.log(`✅ Payment COD untuk order ${orderId} otomatis diupdate ke SUCCESS`);
+        }
+
+        // insert ke sales_report (setelah payment diupdate)
+        try {
+            await insertToSalesReport(orderId);
+        } catch (salesError) {
+            console.error('❌ Gagal insert ke sales report:', salesError);
+        }
+    }
+
+    return updatedOrder;
 }
 
 const cancelOrder = async (orderId, user, reason) => {
@@ -825,6 +885,21 @@ const getUMKMOrderHistory = async (userId, statusFilter) => {
     return orders.map(order => {
         const partnerItems = order.orderItems.filter(item => item.partner_id === partner.id);
         
+        // ✅ Helper untuk format status pembayaran
+        const getPaymentStatusInfo = (paymentStatus) => {
+            const statusMap = {
+                'SUCCESS': { text: 'Lunas', color: 'green', isPaid: true },
+                'PENDING': { text: 'Menunggu Pembayaran', color: 'yellow', isPaid: false },
+                'FAILED': { text: 'Gagal', color: 'red', isPaid: false },
+                'CANCEL': { text: 'Dibatalkan', color: 'gray', isPaid: false },
+                'DENY': { text: 'Ditolak', color: 'red', isPaid: false },
+                'EXPIRE': { text: 'Kedaluwarsa', color: 'orange', isPaid: false },
+            };
+            return statusMap[paymentStatus] || { text: 'Unknown', color: 'gray', isPaid: false };
+        };
+
+        const paymentStatusInfo = getPaymentStatusInfo(order.payment?.status);
+        
         return {
             orderId: order.id,
             statusOrder: order.status,
@@ -849,6 +924,9 @@ const getUMKMOrderHistory = async (userId, statusFilter) => {
                     (sum, item) => sum + (item.quantity * item.price), 
                     0
                 ),
+                // ✅ Informasi lengkap status pembayaran
+                statusInfo: paymentStatusInfo,
+                isPaid: paymentStatusInfo.isPaid,
             },
             cancellation: order.OrderCancellation ? {
                 reason: order.OrderCancellation.reason,
@@ -1019,6 +1097,109 @@ const getUMKMOrderDetailById = async (orderId, userId) => {
     };
 };
 
+// ==================== SALES REPORT ====================
+
+/**
+ * Insert data ke sales_report ketika order DELIVERED
+ */
+const insertToSalesReport = async (orderId) => {
+    const order = await prisma.order.findUnique({
+        where: { id: orderId },
+        include: {
+            orderItems: {
+                include: {
+                    product: true,
+                    partner: true,
+                },
+            },
+            payment: true,
+        },
+    });
+
+    if (!order) {
+        throw new Error('Order tidak ditemukan');
+    }
+
+    // Validasi: Hanya insert jika DELIVERED & SUCCESS
+    if (order.status !== 'DELIVERED' || order.payment?.status !== 'SUCCESS') {
+        console.log(`⚠️ Order ${orderId} belum memenuhi syarat untuk sales report`);
+        return;
+    }
+
+    // Cek apakah sudah pernah di-insert
+    const existingReport = await prisma.salesReport.findFirst({
+        where: { id_order: orderId },
+    });
+
+    if (existingReport) {
+        console.log(`ℹ️ Sales report untuk order ${orderId} sudah ada`);
+        return;
+    }
+
+    // Filter hanya orderItem yang punya partner_id
+    const validItems = order.orderItems.filter(item => item.partner_id);
+    
+    if (validItems.length === 0) {
+        console.warn(`⚠️ Order ${orderId} tidak ada item dengan partner`);
+        return;
+    }
+
+    // Insert ke sales_report untuk setiap orderItem
+    const salesReportData = validItems.map(item => ({
+        id_order: order.id,
+        id_order_item: item.id,
+        id_product: item.products_id,
+        partner_id: item.partner_id,
+        quantity: item.quantity,
+        price_per_unit: item.price,
+        subtotal: item.quantity * item.price,
+        tanggal_transaksi: order.created_at,
+    }));
+
+    await prisma.salesReport.createMany({
+        data: salesReportData,
+    });
+
+    console.log(`✅ Sales report berhasil dibuat untuk order ${orderId} (${validItems.length} items)`);
+};
+
+const createNotificationForPaymentFailed = async (order, payment, status) => {
+    let statusText = '';
+    let description = '';
+
+    switch(status) {
+        case 'FAILED':
+            statusText = 'Pembayaran Gagal';
+            description = `Pembayaran untuk pesanan #${order.id} gagal diproses. Silakan coba lagi atau hubungi customer service.`;
+            break;
+        case 'EXPIRE':
+            statusText = 'Pembayaran Kedaluwarsa';
+            description = `Batas waktu pembayaran untuk pesanan #${order.id} telah habis. Silakan buat pesanan baru.`;
+            break;
+        case 'CANCEL':
+            statusText = 'Pembayaran Dibatalkan';
+            description = `Pembayaran untuk pesanan #${order.id} telah dibatalkan.`;
+            break;
+        case 'DENY':
+            statusText = 'Pembayaran Ditolak';
+            description = `Pembayaran untuk pesanan #${order.id} ditolak oleh sistem pembayaran. Silakan gunakan metode pembayaran lain.`;
+            break;
+        default:
+            statusText = 'Pembayaran Bermasalah';
+            description = `Terjadi masalah dengan pembayaran pesanan #${order.id}. Status: ${status}`;
+    }
+
+    const notificationData = {
+        name: `Pesanan #${order.id} - ${statusText}`,
+        description: description,
+        user_id: order.user_id,
+        order_id: order.id,
+    };
+
+    await createNotification(notificationData);
+    console.log(`✅ Notifikasi kegagalan pembayaran dibuat untuk order ID: ${order.id}`);
+};
+
 module.exports = {
     getDomestic,
     getAllOrders,
@@ -1047,4 +1228,6 @@ module.exports = {
     getUMKMOrderDetailById,
     updateUMKMOrderStatus,
     getUMKMOrderStatuses,
+    insertToSalesReport,
+    createNotificationForPaymentFailed,
 };

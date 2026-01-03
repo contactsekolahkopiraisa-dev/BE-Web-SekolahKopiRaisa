@@ -86,6 +86,7 @@ model Partner {
   user               User?       @relation(fields: [user_id], references: [id]) 
   ordersItems        OrderItem[]
   products           Product[]
+  salesReports      SalesReport[]
 }
 
 model Product {
@@ -134,7 +135,6 @@ model Transaction {
   user                User       @relation(fields: [user_id], references: [id])
 
   detailTransactions  DetailTransaction[]
-  salesReports        SalesReport[]
   financialreportpengeluaran FinancialReportPengeluaran[] @relation("TransactionPengeluaran")
   financialreportpemasukan   FinancialReportPemasukan[]   @relation("TransactionPemasukan")
 }
@@ -177,6 +177,7 @@ model Order {
   shippingAddress   ShippingAddress?
   shippingDetail ShippingDetail?
   notifications Notification[] 
+  salesReports      SalesReport[]
 }
 
 model OrderItem {
@@ -194,6 +195,7 @@ model OrderItem {
   order                  Order     @relation(fields: [order_id], references: [id])
   partner                Partner?  @relation(fields: [partner_id], references: [id])
   product                Product   @relation(fields: [products_id], references: [id], onDelete: Cascade)
+  salesReports           SalesReport[]
 }
 
 model ShippingAddress {
@@ -519,14 +521,22 @@ model Pengeluaran {
 }
 
 model SalesReport {
-  id_salesreport Int         @id @default(autoincrement())
-  id_product     Int
-  id_transaction Int
-  tanggal        DateTime    @db.Date
+  id_salesreport      Int      @id @default(autoincrement())
+  id_order            Int
+  id_order_item       Int      // ✅ Tambah: untuk track item spesifik
+  id_product          Int
+  partner_id          Int
+  quantity            Int
+  price_per_unit      Int      // Harga saat transaksi
+  subtotal            Int
+  tanggal_transaksi   DateTime @default(now())
+  created_at          DateTime @default(now())
 
-  product        Product     @relation(fields: [id_product], references: [id])
-  transaction    Transaction @relation(fields: [id_transaction], references: [id])
-  
+  order       Order     @relation(fields: [id_order], references: [id])
+  orderItem   OrderItem @relation(fields: [id_order_item], references: [id])
+  product     Product   @relation(fields: [id_product], references: [id])
+  partner     Partner   @relation(fields: [partner_id], references: [id])
+
   @@map("sales_report")
 }
 
@@ -570,11 +580,12 @@ model Harga {
   id_harga        Int         @id @default(autoincrement())
   id_product      Int         
   harga           Int
-  status          StatusHarga
-  waktu_mulai     DateTime?   
-  waktu_berakhir  DateTime?   
+  status          StatusHarga @default(Aktif)
+  waktu_mulai     DateTime    @default(now())
+  waktu_berakhir  DateTime?
+  created_at      DateTime    @default(now())
 
-  product        Product     @relation(fields: [id_product], references: [id])
+  product         Product     @relation(fields: [id_product], references: [id])
 
   @@map("harga")
 }

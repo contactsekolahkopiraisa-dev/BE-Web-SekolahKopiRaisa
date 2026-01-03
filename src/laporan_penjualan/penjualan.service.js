@@ -106,11 +106,8 @@ const getLaporanPenjualanUMKM = async (userId, filters) => {
     summary: {
       jumlahProdukTerjual: summary.jumlahProdukTerjual,
       labaBersih: formatRupiah(summary.labaBersih),
-      labaBersihRaw: summary.labaBersih,
       labaKotor: formatRupiah(summary.labaKotor),
-      labaKotorRaw: summary.labaKotor,
       pajak: formatRupiah(summary.pajak),
-      pajakRaw: summary.pajak,
       persentasePajak: '10%',
     },
     chart: chartData,
@@ -119,7 +116,6 @@ const getLaporanPenjualanUMKM = async (userId, filters) => {
       namaProduk: product.name,
       jumlahTerjual: product.totalQuantity,
       totalPendapatan: formatRupiah(product.totalRevenue),
-      totalPendapatanRaw: product.totalRevenue,
     })),
   };
 };
@@ -175,11 +171,8 @@ const getLaporanPenjualanAdmin = async (filters) => {
     totalSummary: {
       totalJumlahProdukTerjual: totalJumlahProduk,
       totalLabaBersih: formatRupiah(totalLabaBersih),
-      totalLabaBersihRaw: totalLabaBersih,
       totalLabaKotor: formatRupiah(totalLabaKotor),
-      totalLabaKotorRaw: totalLabaKotor,
       totalPajak: formatRupiah(totalPajak),
-      totalPajakRaw: totalPajak,
     },
     umkmList: allUMKMData.map(umkm => ({
       partnerId: umkm.partnerId,
@@ -187,9 +180,7 @@ const getLaporanPenjualanAdmin = async (filters) => {
       owner: umkm.owner,
       jumlahProdukTerjual: umkm.jumlahProdukTerjual,
       labaBersih: formatRupiah(umkm.labaBersih),
-      labaBersihRaw: umkm.labaBersih,
       labaKotor: formatRupiah(umkm.labaKotorRaw),
-      labaKotorRaw: umkm.labaKotorRaw,
     })),
   };
 };
@@ -251,11 +242,8 @@ const getLaporanPenjualanByPartnerId = async (partnerId, filters) => {
     summary: {
       jumlahProdukTerjual: summary.jumlahProdukTerjual,
       labaBersih: formatRupiah(summary.labaBersih),
-      labaBersihRaw: summary.labaBersih,
       labaKotor: formatRupiah(summary.labaKotor),
-      labaKotorRaw: summary.labaKotor,
       pajak: formatRupiah(summary.pajak),
-      pajakRaw: summary.pajak,
       persentasePajak: '10%',
     },
     chart: chartData,
@@ -264,7 +252,6 @@ const getLaporanPenjualanByPartnerId = async (partnerId, filters) => {
       namaProduk: product.name,
       jumlahTerjual: product.totalQuantity,
       totalPendapatan: formatRupiah(product.totalRevenue),
-      totalPendapatanRaw: product.totalRevenue,
     })),
   };
 };
@@ -307,9 +294,39 @@ const getTopProductsUMKM = async (userId, filters) => {
       gambarProduk: product.image,
       jumlahTerjual: product.totalQuantity,
       totalPendapatan: formatRupiah(product.totalRevenue),
-      totalPendapatanRaw: product.totalRevenue,
     })),
   };
+};
+
+/**
+ * Helper untuk build date filter
+ */
+const buildDateFilter = (filters) => {
+  const where = {};
+
+  if (filters.bulan && filters.tahun) {
+    const month = parseInt(filters.bulan);
+    const year = parseInt(filters.tahun);
+    
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+
+    where.created_at = {
+      gte: startDate,
+      lte: endDate,
+    };
+  } else if (filters.tahun) {
+    const year = parseInt(filters.tahun);
+    const startDate = new Date(year, 0, 1);
+    const endDate = new Date(year, 11, 31, 23, 59, 59, 999);
+
+    where.created_at = {
+      gte: startDate,
+      lte: endDate,
+    };
+  }
+
+  return where;
 };
 
 /**
@@ -419,7 +436,6 @@ const getTopProductsAllUMKM = async (filters) => {
       partnerId: product.partnerId,
       jumlahTerjual: product.totalQuantity,
       totalPendapatan: formatRupiah(product.totalRevenue),
-      totalPendapatanRaw: product.totalRevenue,
     })),
   };
 };

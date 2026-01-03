@@ -122,7 +122,7 @@ const removeProductById = async (idProduct, userId, isAdmin) => {
 // Create new product
 const createProduct = async (newProductData) => {
     try {
-        const { image, stock, user_id, is_admin, ...rest } = newProductData
+        const { image, stock, user_id, is_admin, ...rest } = newProductData;
 
         let finalPartnerId;
 
@@ -144,7 +144,7 @@ const createProduct = async (newProductData) => {
             partner_id: finalPartnerId,
             weight: parseInt(rest.weight),
         };
-        const stockProduct = parseInt(stock)
+        const stockProduct = parseInt(stock);
 
         let imageUrl = null;
         if (image) {
@@ -155,29 +155,48 @@ const createProduct = async (newProductData) => {
             } catch (error) {
                 console.error('Error uploading image to Cloudinary:', error);
                 throw new ApiError(500, 'Gagal mengunggah gambar produk!', " " + (error.message || error));
-
             }
         }
 
-        const productNewData = await createNewProduct(
-            {
-                ...cleanProductData,
-                image: imageUrl
+        // ✅ GUNAKAN TRANSACTION untuk atomic operation
+        const productNewData = await prisma.$transaction(async (tx) => {
+            // 1. Create product
+            const newProduct = await tx.product.create({
+                data: {
+                    ...cleanProductData,
+                    image: imageUrl
+                }
             });
-        if (!productNewData) {
-            throw new ApiError(500, 'Gagal menambahkan produk!');
-        }
-        const inventoryData = {
-            products_id: productNewData.id,
-            stock: stockProduct
-        };
-        await createInventory(inventoryData);
+
+            // 2. Create inventory
+            await tx.inventory.create({
+                data: {
+                    products_id: newProduct.id,
+                    stock: stockProduct
+                }
+            });
+
+            // 3. ✅ AUTO-CREATE entry di tabel Harga
+            await tx.harga.create({
+                data: {
+                    id_product: newProduct.id,
+                    harga: cleanProductData.price,
+                    status: 'Aktif',
+                    waktu_mulai: new Date(),
+                }
+            });
+
+            console.log(`✅ Harga awal produk "${cleanProductData.name}" berhasil dicatat: Rp ${cleanProductData.price}`);
+
+            return newProduct;
+        });
+
         return productNewData;
     } catch (error) {
         console.error('Error in createProduct:', error);
         throw error instanceof ApiError ? error : new ApiError(500, (error.message || error));
     }
-}
+};
 
 // Update product
 const updateProduct = async (id, updatedProductData, userId, isAdmin) => {
@@ -191,7 +210,7 @@ const updateProduct = async (id, updatedProductData, userId, isAdmin) => {
             throw new ApiError(404, 'Produk tidak ditemukan!');
         }
 
-        const { productFile, stock, ...rest } = updatedProductData
+        const { productFile, stock, ...rest } = updatedProductData;
         console.log('productFile:', productFile);
 
         const cleanProductData = {
@@ -200,10 +219,10 @@ const updateProduct = async (id, updatedProductData, userId, isAdmin) => {
             ...(rest.price !== undefined && {price: parseInt(rest.price)}),
         };
 
-        // UMKM tidak bisa mengubah partner_id (selalu milik mereka sendiri)
-        // Admin juga tidak perlu mengubah partner_id
+        // UMKM tidak bisa mengubah partner_id
         delete cleanProductData.partner_id;
 
+        // Handle image upload
         if (productFile && productFile.buffer && productFile.originalname) {
             if (product.image) {
                 try {
@@ -219,28 +238,170 @@ const updateProduct = async (id, updatedProductData, userId, isAdmin) => {
             } catch (error) {
                 console.error('Error uploading image to Cloudinary:', error);
                 throw new ApiError(500, 'Gagal mengunggah gambar produk!', " " + (error.message || error));
-
             }
         } else {
             cleanProductData.image = product.image;
         }
 
-        const updatedProduct = await updateDataProduct(id, cleanProductData);
-
-        if (stock !== undefined) {
-            const parsedStock = parseInt(stock);
-            await updateInventoryStock({
-                products_id: updatedProduct.id,
-                stock: parsedStock,
+        // ✅ GUNAKAN TRANSACTION untuk update product + harga
+        const updatedProduct = await prisma.$transaction(async (tx) => {
+            // 1. Update product
+            const updated = await tx.product.update({
+                where: { id: parseInt(id) },
+                data: cleanProductData
             });
-        }
+
+            // 2. Update inventory jika ada perubahan stock
+            if (stock !== undefined) {
+                await tx.inventory.upsert({
+                    where: { products_id: parseInt(id) },
+                    update: { stock: parseInt(stock) },
+                    create: {
+                        products_id: parseInt(id),
+                        stock: parseInt(stock)
+                    }
+                });
+            }
+
+            // 3. ✅ Jika harga berubah, catat perubahan di tabel Harga
+            if (cleanProductData.price && cleanProductData.price !== product.price) {
+                // Set harga lama jadi nonaktif
+                await tx.harga.updateMany({
+                    where: {
+                        id_product: parseInt(id),
+                        status: 'Aktif',
+                    },
+                    data: {
+                        status: 'Nonaktif',
+                        waktu_berakhir: new Date(),
+                    }
+                });
+
+                // Create harga baru
+                await tx.harga.create({
+                    data: {
+                        id_product: parseInt(id),
+                        harga: cleanProductData.price,
+                        status: 'Aktif',
+                        waktu_mulai: new Date(),
+                    }
+                });
+
+                console.log(
+                    `✅ Harga produk "${updated.name}" diupdate: Rp ${product.price} → Rp ${cleanProductData.price}`
+                );
+            }
+
+            return updated;
+        });
 
         return updatedProduct;
     } catch (error) {
         console.error('Error in updateProduct:', error);
         throw error instanceof ApiError ? error : new ApiError(500, 'Terjadi kesalahan saat memperbarui produk.' + (error.message || error));
     }
-}
+};
+
+// ==================== FUNGSI HELPER UNTUK HARGA ====================
+
+/**
+ * Set promo harga untuk produk
+ */
+const setProductPromo = async (productId, { promoPrice, waktuMulai, waktuBerakhir }, userId, isAdmin) => {
+    const product = await validateProductOwnership(productId, userId, isAdmin);
+    
+    if (!product) {
+        throw new ApiError(404, 'Produk tidak ditemukan');
+    }
+
+    await prisma.harga.create({
+        data: {
+            id_product: parseInt(productId),
+            harga: parseInt(promoPrice),
+            status: 'Promo',
+            waktu_mulai: waktuMulai ? new Date(waktuMulai) : new Date(),
+            waktu_berakhir: waktuBerakhir ? new Date(waktuBerakhir) : null,
+        }
+    });
+
+    console.log(`✅ Harga promo produk "${product.name}" diset: Rp ${promoPrice}`);
+    
+    return product;
+};
+
+/**
+ * Get harga aktif produk (termasuk cek promo yang masih valid)
+ */
+const getActivePrice = async (productId) => {
+    const now = new Date();
+
+    // Cek apakah ada promo yang masih valid
+    const activePromo = await prisma.harga.findFirst({
+        where: {
+            id_product: parseInt(productId),
+            status: 'Promo',
+            waktu_mulai: { lte: now },
+            OR: [
+                { waktu_berakhir: null },
+                { waktu_berakhir: { gte: now } },
+            ],
+        },
+        orderBy: { waktu_mulai: 'desc' },
+    });
+
+    if (activePromo) {
+        return {
+            harga: activePromo.harga,
+            status: 'Promo',
+            id_harga: activePromo.id_harga,
+        };
+    }
+
+    // Jika tidak ada promo, ambil harga aktif normal
+    const activePrice = await prisma.harga.findFirst({
+        where: {
+            id_product: parseInt(productId),
+            status: 'Aktif',
+        },
+        orderBy: { waktu_mulai: 'desc' },
+    });
+
+    if (!activePrice) {
+        throw new ApiError(404, 'Harga produk tidak ditemukan');
+    }
+
+    return {
+        harga: activePrice.harga,
+        status: 'Aktif',
+        id_harga: activePrice.id_harga,
+    };
+};
+
+/**
+ * Get history harga produk
+ */
+const getPriceHistory = async (productId, userId, isAdmin) => {
+    await validateProductOwnership(productId, userId, isAdmin);
+    
+    const history = await prisma.harga.findMany({
+        where: {
+            id_product: parseInt(productId),
+        },
+        orderBy: {
+            waktu_mulai: 'desc',
+        },
+        include: {
+            product: {
+                select: {
+                    id: true,
+                    name: true,
+                },
+            },
+        },
+    });
+
+    return history;
+};
 
 module.exports = { 
   getAllProducts, 
@@ -248,5 +409,8 @@ module.exports = {
   createProduct, 
   updateProduct, 
   getProductById, 
-  removeProductById 
+  removeProductById,
+  setProductPromo,
+  getActivePrice,
+  getPriceHistory,
 };
