@@ -11,31 +11,30 @@ const {
 } = require("./partner.repository");
 
 // Helper function: Get atau create default admin partner
-const getOrCreateDefaultAdminPartner = async () => {
-    // Cek apakah sudah ada partner default admin
-    let defaultPartner = await prisma.partner.findFirst({
-        where: {
-            name: 'Admin Sekolah Kopi Raisa',
-            user_id: null
-        }
-    });
+// const getOrCreateDefaultAdminPartner = async () => {
+//     // Cek apakah sudah ada partner default admin
+//     let defaultPartner = await prisma.partner.findFirst({
+//         where: {
+//             name: 'Admin Sekolah Kopi Raisa',
+//             user_id: null
+//         }
+//     });
 
-    // Jika belum ada, buat baru
-    if (!defaultPartner) {
-        defaultPartner = await prisma.partner.create({
-            data: {
-                name: 'Admin Sekolah Kopi Raisa',
-                owner_name: 'Administrator',
-                phone_number: '-', // Ganti dengan nomor admin yang sebenarnya
-                address: 'Jl. Sekolah Kopi Raisa No. 1',
-                user_id: null,
-            }
-        });
-        console.log('✅ Partner default admin berhasil dibuat:', defaultPartner);
-    }
+//     // Jika belum ada, buat baru
+//     if (!defaultPartner) {
+//         defaultPartner = await prisma.partner.create({
+//             data: {
+//                 name: 'Admin Sekolah Kopi Raisa',
+//                 owner_name: 'Administrator',
+//                 phone_number: '081234567890', // masih dummy di DB
+//                 user_id: null,
+//             }
+//         });
+//         console.log('✅ Partner default admin berhasil dibuat:', defaultPartner);
+//     }
 
-    return defaultPartner;
-};
+//     return defaultPartner;
+// };
 
 const getAllPartners = async () => {
     const partners = await findPartner();
@@ -126,5 +125,5 @@ module.exports = {
     createPartner, 
     updatePartner, 
     removePartner,
-    getOrCreateDefaultAdminPartner
+    // getOrCreateDefaultAdminPartner
 };

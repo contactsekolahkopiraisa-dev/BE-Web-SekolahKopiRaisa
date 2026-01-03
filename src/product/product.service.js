@@ -12,7 +12,7 @@ const {
   findProductsByPartnerId 
 } = require('./product.repository');
 const { findPartnerById } = require('../partners/partner.repository');
-const { getOrCreateDefaultAdminPartner } = require('../partners/partner.service');
+// const { getOrCreateDefaultAdminPartner } = require('../partners/partner.service');
 const { uploadToCloudinary } = require('../services/cloudinaryUpload.service');
 const { deleteFromCloudinaryByUrl, extractPublicId } = require('../utils/cloudinary');
 const prisma = require('../db');
@@ -126,17 +126,9 @@ const createProduct = async (newProductData) => {
 
         let finalPartnerId;
 
-        // Jika admin, gunakan partner default admin
-        if (is_admin) {
-            const defaultPartner = await getOrCreateDefaultAdminPartner();
-            finalPartnerId = defaultPartner.id;
-            console.log('🏢 Admin membuat produk menggunakan partner default:', defaultPartner.name);
-        } else {
-            // Jika UMKM, ambil partner mereka
-            const partner = await getPartnerByUserId(user_id);
-            finalPartnerId = partner.id;
-            console.log('🏪 UMKM membuat produk menggunakan partner:', partner.name);
-        }
+        const partner = await getPartnerByUserId(user_id);
+        finalPartnerId = partner.id;
+        console.log(`✅ User ID ${user_id} membuat produk dengan partner: ${partner.name}`);
 
         const cleanProductData = {
             ...rest,
