@@ -4,7 +4,8 @@ const {
   getSalesDataByPartner,
   getSalesChartData,
   getTopProductsByPartner,
-  getAllUMKMSalesData
+  getAllUMKMSalesData,
+  getSalesChartDataAllUMKM
 } = require('./penjualan.repository');
 
 const PAJAK_RATE = 0.10; // 10%
@@ -123,6 +124,9 @@ const getLaporanPenjualanUMKM = async (userId, filters) => {
 /**
  * Get laporan penjualan semua UMKM (admin)
  */
+/**
+ * Get laporan penjualan semua UMKM (admin)
+ */
 const getLaporanPenjualanAdmin = async (filters) => {
   // 1. Get semua partner yang punya user_id langsung dengan Prisma
   const partners = await prisma.partner.findMany({
@@ -149,7 +153,10 @@ const getLaporanPenjualanAdmin = async (filters) => {
   // 2. Get sales data untuk semua UMKM
   const allUMKMData = await getAllUMKMSalesData(filters);
 
-  // 3. Hitung total keseluruhan
+  // 3. Get chart data untuk semua UMKM ← TAMBAHAN INI
+  const chartData = await getSalesChartDataAllUMKM(filters);
+
+  // 4. Hitung total keseluruhan
   let totalJumlahProduk = 0;
   let totalLabaKotor = 0;
 
@@ -161,7 +168,7 @@ const getLaporanPenjualanAdmin = async (filters) => {
   const totalPajak = totalLabaKotor * PAJAK_RATE;
   const totalLabaBersih = totalLabaKotor - totalPajak;
 
-  // 4. Format periode
+  // 5. Format periode
   const periode = filters.bulan && filters.tahun
     ? `${getNamaBulan(filters.bulan)} ${filters.tahun}`
     : 'Semua Periode';
@@ -174,6 +181,7 @@ const getLaporanPenjualanAdmin = async (filters) => {
       totalLabaKotor: formatRupiah(totalLabaKotor),
       totalPajak: formatRupiah(totalPajak),
     },
+    chart: chartData, 
     umkmList: allUMKMData.map(umkm => ({
       partnerId: umkm.partnerId,
       namaUMKM: umkm.namaPartner,

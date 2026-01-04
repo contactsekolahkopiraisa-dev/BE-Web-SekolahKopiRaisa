@@ -241,7 +241,7 @@ const getAllUMKMSalesData = async (filters = {}) => {
     filters.bulan = today.getMonth() + 1;
     filters.tahun = today.getFullYear();
   }
-  
+
   const dateFilter = buildDateFilter(filters);
 
   // Get semua partner yang punya user_id
@@ -318,9 +318,97 @@ const getAllUMKMSalesData = async (filters = {}) => {
   return allUMKMData;
 };
 
+/**
+ * Get chart data untuk SEMUA UMKM (admin)
+ */
+const getSalesChartDataAllUMKM = async (filters = {}) => {
+  // Default ke bulan ini jika tidak ada filter
+  if (!filters.bulan || !filters.tahun) {
+    const today = new Date();
+    filters.bulan = today.getMonth() + 1;
+    filters.tahun = today.getFullYear();
+  }
+
+  const dateFilter = buildDateFilter(filters);
+
+  // Get semua partner yang punya user_id
+  const partners = await prisma.partner.findMany({
+    where: {
+      user_id: {
+        not: null,
+      },
+    },
+  });
+
+  if (!partners || partners.length === 0) {
+    return [];
+  }
+
+  const partnerIds = partners.map(p => p.id);
+
+  // Get semua order dari semua UMKM
+  const orders = await prisma.order.findMany({
+    where: {
+      status: 'DELIVERED',
+      payment: {
+        status: 'SUCCESS',
+      },
+      orderItems: {
+        some: {
+          partner_id: { in: partnerIds },
+        },
+      },
+      ...dateFilter,
+    },
+    include: {
+      orderItems: {
+        where: {
+          partner_id: { in: partnerIds },
+        },
+      },
+    },
+    orderBy: {
+      created_at: 'asc',
+    },
+  });
+
+  // Group by tanggal (gabungan semua UMKM)
+  const salesByDate = {};
+
+  orders.forEach(order => {
+    const date = new Date(order.created_at);
+    const day = date.getDate();
+
+    if (!salesByDate[day]) {
+      salesByDate[day] = 0;
+    }
+
+    order.orderItems.forEach(item => {
+      salesByDate[day] += item.price * item.quantity;
+    });
+  });
+
+  // Convert ke array untuk chart
+  const chartData = [];
+  const year = parseInt(filters.tahun);
+  const month = parseInt(filters.bulan);
+  const daysInMonth = new Date(year, month, 0).getDate();
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    chartData.push({
+      tanggal: day,
+      totalPenjualan: salesByDate[day] || 0,
+    });
+  }
+
+  return chartData;
+};
+
+// Jangan lupa export
 module.exports = {
   getSalesDataByPartner,
   getSalesChartData,
   getTopProductsByPartner,
   getAllUMKMSalesData,
+  getSalesChartDataAllUMKM,
 };
