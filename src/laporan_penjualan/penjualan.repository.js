@@ -96,6 +96,12 @@ const getSalesDataByPartner = async (partnerId, filters = {}) => {
  * Get chart data (penjualan per hari dalam bulan)
  */
 const getSalesChartData = async (partnerId, filters = {}) => {
+  if (!filters.bulan || !filters.tahun) {
+    const today = new Date();
+    filters.bulan = today.getMonth() + 1;
+    filters.tahun = today.getFullYear();
+  }
+
   const dateFilter = buildDateFilter(filters);
 
   const orders = await prisma.order.findMany({
@@ -154,17 +160,7 @@ const getSalesChartData = async (partnerId, filters = {}) => {
         totalPenjualan: salesByDate[day] || 0,
       });
     }
-  } else {
-    // Jika tidak ada filter, tampilkan hari yang ada data saja
-    Object.keys(salesByDate)
-      .sort((a, b) => parseInt(a) - parseInt(b))
-      .forEach(day => {
-        chartData.push({
-          tanggal: parseInt(day),
-          totalPenjualan: salesByDate[day],
-        });
-      });
-  }
+  } 
 
   return chartData;
 };
