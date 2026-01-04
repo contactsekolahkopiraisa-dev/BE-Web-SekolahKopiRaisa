@@ -101,9 +101,59 @@ const getOrderHistoryByRole = async (userId, role, statusFilter) => {
     let orders;
     
     if (role === "admin") {
+        // Admin bisa lihat semua order
         orders = await findAllOrders(statusFilter);
     } else {
-        orders = await findOrdersByUser(userId, statusFilter);
+        // Cek apakah user adalah UMKM partner
+        const partner = await prisma.partner.findUnique({
+            where: { user_id: userId }
+        });
+
+        if (partner) {
+            // ✅ UMKM: Ambil order yang mengandung produk mereka
+            orders = await prisma.order.findMany({
+                where: {
+                    orderItems: {
+                        some: {
+                            partner_id: partner.id,
+                        },
+                    },
+                    ...(statusFilter?.length > 0 && {
+                        status: { in: statusFilter },
+                    }),
+                },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            name: true,
+                            phone_number: true,
+                        },
+                    },
+                    orderItems: {
+                        include: {
+                            product: true,
+                            partner: true,
+                        },
+                    },
+                    shippingAddress: true,
+                    payment: true,
+                    OrderCancellation: true,
+                },
+                orderBy: {
+                    created_at: "desc",
+                },
+            });
+
+            // Filter hanya item milik partner ini untuk setiap order
+            orders = orders.map(order => ({
+                ...order,
+                orderItems: order.orderItems.filter(item => item.partner_id === partner.id)
+            }));
+        } else {
+            // Customer biasa: Ambil order milik sendiri
+            orders = await findOrdersByUser(userId, statusFilter);
+        }
     }
 
     return orders.map(order => {
