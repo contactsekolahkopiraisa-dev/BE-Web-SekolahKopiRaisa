@@ -572,7 +572,19 @@ const getPaymentMethod = () => {
 };
 
 const updatedOrderStatus = async (orderId, newStatus, user) => {
-    const order = await findOrdersById(orderId);
+    const order = await prisma.order.findUnique({
+        where: { id: parseInt(orderId) },
+        include: {
+            orderItems: {
+                include: {
+                    product: true,
+                    partner: true,
+                },
+            },
+            payment: true, // Tambah payment disini
+            user: true,
+        },
+    });
     if (!order) {
         throw new ApiError(404, "Pesanan tidak ditemukan!");
     }
@@ -641,6 +653,8 @@ const updatedOrderStatus = async (orderId, newStatus, user) => {
         }
     }
 
+    console.log(`🔄 Starting transaction for order ${orderId} -> ${newStatus}`);
+
     return await prisma.$transaction(async (tx) => {
         // 1️⃣ Update order status
         const updatedOrder = await tx.order.update({
@@ -655,17 +669,31 @@ const updatedOrderStatus = async (orderId, newStatus, user) => {
         // 2️⃣ Jika DELIVERED, update payment COD dan insert sales report
         if (newStatus === OrderStatus.DELIVERED) {
             console.log(`📦 Processing DELIVERED actions for order ${orderId}`);
+            console.log(`💳 Payment info:`, {
+                method: order.payment?.method,
+                status: order.payment?.status,
+                id: order.payment?.id
+            });
             
-            // Update payment COD ke SUCCESS
-            if (order.payment?.method === 'COD' && order.payment.status !== 'SUCCESS') {
-                await tx.payment.update({
-                    where: { id: order.payment.id },
-                    data: { 
-                        status: 'SUCCESS',
-                        updated_at: new Date()
+            // ✅ Update payment COD ke SUCCESS
+            if (order.payment?.method === 'COD') {
+                if (order.payment.status !== 'SUCCESS') {
+                    if (!order.payment.id) {
+                        console.error(`❌ Payment ID tidak ditemukan untuk order ${orderId}`);
+                        throw new ApiError(500, "Payment ID tidak valid");
                     }
-                });
-                console.log(`✅ Payment COD untuk order ${orderId} otomatis diupdate ke SUCCESS`);
+
+                    await tx.payment.update({
+                        where: { id: order.payment.id },
+                        data: { 
+                            status: 'SUCCESS',
+                            updated_at: new Date()
+                        }
+                    });
+                    console.log(`✅ Payment COD untuk order ${orderId} otomatis diupdate ke SUCCESS`);
+                } else {
+                    console.log(`ℹ️ Payment sudah SUCCESS, skip update`);
+                }
             }
 
             // 3️⃣ Ambil order data lengkap dalam transaction (DATA TERBARU!)
