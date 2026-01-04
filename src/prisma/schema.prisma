@@ -563,6 +563,7 @@ model FinancialReportPemasukan {
 }
 
 // DI DB ADA TABEL detail_transaction
+// tabel detail ndak kepakai
 model DetailTransaction {
   id_detail      Int         @id @default(autoincrement())
   id_transaction Int
@@ -576,6 +577,8 @@ model DetailTransaction {
   @@map("detail_transaction")
 }
 
+// tabel harga untuk menyimpan riwayat harga produk (belum kepakai)
+// bisa dikembangkan buat pergantian harga produk, promo, diskon, dll
 model Harga {
   id_harga        Int         @id @default(autoincrement())
   id_product      Int         
