@@ -236,6 +236,12 @@ const getTopProductsByPartner = async (partnerId, filters = {}) => {
  * Get sales data untuk semua UMKM (admin)
  */
 const getAllUMKMSalesData = async (filters = {}) => {
+  if (!filters.bulan || !filters.tahun) {
+    const today = new Date();
+    filters.bulan = today.getMonth() + 1;
+    filters.tahun = today.getFullYear();
+  }
+  
   const dateFilter = buildDateFilter(filters);
 
   // Get semua partner yang punya user_id
