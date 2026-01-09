@@ -26,11 +26,11 @@ const allowedOrigins = [
   "https://sekolahkopiraisa.vercel.app",
   "https://be-web-sekolah-kopi-raisa.vercel.app",
   "http://localhost:3000",
-  "http://localhost:5000", // Frontend local port
+  "http://localhost:2000", // Frontend local port
   "http://localhost:2000",
   "http://127.0.0.1:2000",
   "http://127.0.0.1:3000",
-  "http://127.0.0.1:5000", // Frontend local port
+  "http://127.0.0.1:2000", // Frontend local port
 ];
 
 const corsOptions = {

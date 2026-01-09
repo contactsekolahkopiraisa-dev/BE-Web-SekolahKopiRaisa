@@ -155,7 +155,7 @@ const sendResetPasswordEmail = async (email) => {
 
     // token berlaku 5 menit
     const resetToken = jsonwebtoken.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '5m' });
-    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+    const resetLink = `sekolah-kopi-raisa.vercel.app/reset-password?token=${resetToken}`;
 
     const mail = {
         from: `"Kopi Raisa" <${process.env.EMAIL_USER || process.env.SMTP_USER}>`,
