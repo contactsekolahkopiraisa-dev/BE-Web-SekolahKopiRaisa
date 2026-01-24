@@ -22,15 +22,19 @@ const port = process.env.PORT || 3000;
 
 // === CORS Config ===
 const allowedOrigins = [
+  // Production Domains
+  "https://sekolahkopiraisa.com",
+  "https://www.sekolahkopiraisa.com",
   "https://sekolah-kopi-raisa.vercel.app",
-  "https://sekolahkopiraisa.vercel.app",
+  
+  // Staging/Backend Domains
   "https://be-web-sekolah-kopi-raisa.vercel.app",
+  
+  // Development - Local
   "http://localhost:3000",
-  "http://localhost:2000", // Frontend local port
   "http://localhost:2000",
-  "http://127.0.0.1:2000",
   "http://127.0.0.1:3000",
-  "http://127.0.0.1:2000", // Frontend local port
+  "http://127.0.0.1:2000",
 ];
 
 const corsOptions = {
